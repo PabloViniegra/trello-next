@@ -24,11 +24,11 @@ const themes = [
   },
 ]
 
-export type ThemeSwitcherProps = {
+export type TThemeSwitcherProps = {
   className?: string
 }
 
-export const ThemeSwitcher = ({ className }: ThemeSwitcherProps) => {
+export const ThemeSwitcher = ({ className }: TThemeSwitcherProps) => {
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
 
