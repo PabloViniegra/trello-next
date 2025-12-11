@@ -1,3 +1,4 @@
+import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { playfairDisplay } from '@/app/layout'
 import { auth } from '@/lib/auth'
@@ -5,7 +6,7 @@ import { SignOutButton } from './_components/sign-out-button'
 
 export default async function Home() {
   const session = await auth.api.getSession({
-    headers: await import('next/headers').then((mod) => mod.headers()),
+    headers: await headers(),
   })
 
   if (!session) {
