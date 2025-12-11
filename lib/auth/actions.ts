@@ -1,5 +1,6 @@
 'use server'
 
+import { headers as nextHeaders } from 'next/headers'
 import { auth } from '@/lib/auth'
 import { signInSchema, signUpSchema } from './schemas'
 import type { TAuthResult, TSignInInput, TSignUpInput } from './types'
@@ -15,11 +16,14 @@ export async function signIn(data: TSignInInput): Promise<TAuthResult> {
       }
     }
 
+    const headersList = await nextHeaders()
+
     const result = await auth.api.signInEmail({
       body: {
         email: validated.data.email,
         password: validated.data.password,
       },
+      headers: headersList,
     })
 
     if (!result) {
@@ -55,12 +59,15 @@ export async function signUp(data: TSignUpInput): Promise<TAuthResult> {
       }
     }
 
+    const headersList = await nextHeaders()
+
     const result = await auth.api.signUpEmail({
       body: {
         email: validated.data.email,
         password: validated.data.password,
         name: validated.data.name,
       },
+      headers: headersList,
     })
 
     if (!result) {
