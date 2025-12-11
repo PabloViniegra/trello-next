@@ -20,6 +20,15 @@ type TUserNavProps = {
   user: TUser
 }
 
+function getInitials(name: string): string {
+  return name
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
+}
+
 export function UserNav({ user }: TUserNavProps) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
@@ -35,15 +44,6 @@ export function UserNav({ user }: TUserNavProps) {
     } finally {
       setIsLoading(false)
     }
-  }
-
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2)
   }
 
   return (

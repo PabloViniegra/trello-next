@@ -3,10 +3,12 @@
 import { headers as nextHeaders } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { auth } from '@/lib/auth'
+import { AppError, logError } from '@/lib/errors'
+import { sanitizeFormData } from '@/lib/utils/form'
 import { signInSchema, signUpSchema } from './schemas'
 import type { TAuthResult, TSignInInput, TSignUpInput } from './types'
 
-export async function signIn(data: TSignInInput) {
+export async function signIn(data: TSignInInput): Promise<TAuthResult | never> {
   const validated = signInSchema.safeParse(data)
 
   if (!validated.success) {
@@ -34,7 +36,12 @@ export async function signIn(data: TSignInInput) {
       }
     }
   } catch (error) {
-    console.error('Error en signIn:', error)
+    logError(error, 'signIn')
+
+    if (error instanceof AppError) {
+      return { success: false, error: error.message }
+    }
+
     return {
       success: false,
       error: 'Error al iniciar sesión. Por favor, intenta de nuevo.',
@@ -46,7 +53,7 @@ export async function signIn(data: TSignInInput) {
   redirect('/')
 }
 
-export async function signUp(data: TSignUpInput) {
+export async function signUp(data: TSignUpInput): Promise<TAuthResult | never> {
   const validated = signUpSchema.safeParse(data)
 
   if (!validated.success) {
@@ -75,7 +82,7 @@ export async function signUp(data: TSignUpInput) {
       }
     }
   } catch (error) {
-    console.error('Error en signUp:', error)
+    logError(error, 'signUp')
 
     // Check for duplicate email error
     if (
@@ -89,6 +96,10 @@ export async function signUp(data: TSignUpInput) {
         success: false,
         error: 'Este email ya está registrado',
       }
+    }
+
+    if (error instanceof AppError) {
+      return { success: false, error: error.message }
     }
 
     return {
@@ -106,9 +117,9 @@ export async function signUp(data: TSignUpInput) {
 export async function signInAction(
   _prevState: TAuthResult | null,
   formData: FormData,
-) {
-  const email = formData.get('email')
-  const password = formData.get('password')
+): Promise<TAuthResult> {
+  const email = sanitizeFormData(formData.get('email'))
+  const password = sanitizeFormData(formData.get('password'))
 
   const validated = signInSchema.safeParse({ email, password })
 
@@ -137,7 +148,12 @@ export async function signInAction(
       }
     }
   } catch (error) {
-    console.error('Error en signIn:', error)
+    logError(error, 'signInAction')
+
+    if (error instanceof AppError) {
+      return { success: false, error: error.message }
+    }
+
     return {
       success: false,
       error: 'Error al iniciar sesión. Por favor, intenta de nuevo.',
@@ -153,11 +169,11 @@ export async function signInAction(
 export async function signUpAction(
   _prevState: TAuthResult | null,
   formData: FormData,
-) {
-  const name = formData.get('name')
-  const email = formData.get('email')
-  const password = formData.get('password')
-  const confirmPassword = formData.get('confirmPassword')
+): Promise<TAuthResult> {
+  const name = sanitizeFormData(formData.get('name'))
+  const email = sanitizeFormData(formData.get('email'))
+  const password = sanitizeFormData(formData.get('password'))
+  const confirmPassword = sanitizeFormData(formData.get('confirmPassword'))
 
   const validated = signUpSchema.safeParse({
     name,
@@ -192,7 +208,7 @@ export async function signUpAction(
       }
     }
   } catch (error) {
-    console.error('Error en signUp:', error)
+    logError(error, 'signUpAction')
 
     // Check for duplicate email error
     if (
@@ -206,6 +222,10 @@ export async function signUpAction(
         success: false,
         error: 'Este email ya está registrado',
       }
+    }
+
+    if (error instanceof AppError) {
+      return { success: false, error: error.message }
     }
 
     return {
@@ -231,6 +251,12 @@ export async function signOut(): Promise<TAuthResult> {
     }
   } catch (error) {
     console.error('Error en signOut:', error)
+    logError(error, 'signOut')
+
+    if (error instanceof AppError) {
+      return { success: false, error: error.message }
+    }
+
     return {
       success: false,
       error: 'Error al cerrar sesión',
