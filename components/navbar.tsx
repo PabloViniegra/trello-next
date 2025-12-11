@@ -1,10 +1,28 @@
 import Link from 'next/link'
+import { Suspense } from 'react'
 import { getCurrentUser } from '@/lib/auth/get-user'
+import { Avatar, AvatarFallback } from './ui/avatar'
 import { UserNav } from './user-nav'
 
-export async function Navbar() {
+async function UserSection() {
   const user = await getCurrentUser()
 
+  if (!user) {
+    return null
+  }
+
+  return <UserNav user={user} />
+}
+
+function UserSkeleton() {
+  return (
+    <Avatar className='h-9 w-9'>
+      <AvatarFallback>...</AvatarFallback>
+    </Avatar>
+  )
+}
+
+export function Navbar() {
   return (
     <nav className='border-b bg-background'>
       <div className='container mx-auto flex h-16 items-center px-4'>
@@ -23,7 +41,9 @@ export async function Navbar() {
           </div>
         </div>
 
-        {user && <UserNav user={user} />}
+        <Suspense fallback={<UserSkeleton />}>
+          <UserSection />
+        </Suspense>
       </div>
     </nav>
   )

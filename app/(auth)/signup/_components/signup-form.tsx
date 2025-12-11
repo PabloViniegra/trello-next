@@ -42,14 +42,14 @@ export function SignupForm() {
 
       if (!result.success) {
         setError(result.error || 'Error al crear la cuenta')
+        setIsLoading(false)
         return
       }
 
-      router.push('/')
-      router.refresh()
+      // Usar window.location para forzar un hard refresh
+      window.location.href = '/'
     } catch {
       setError('Error inesperado. Por favor, intenta de nuevo.')
-    } finally {
       setIsLoading(false)
     }
   }
