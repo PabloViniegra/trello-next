@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { Suspense } from 'react'
+import { ThemeSwitcher } from '@/components/kibo-ui/theme-switcher'
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { Avatar, AvatarFallback } from './ui/avatar'
 import { UserNav } from './user-nav'
@@ -41,9 +42,12 @@ export function Navbar() {
           </div>
         </div>
 
-        <Suspense fallback={<UserSkeleton />}>
-          <UserSection />
-        </Suspense>
+        <div className='flex items-center gap-4'>
+          <ThemeSwitcher />
+          <Suspense fallback={<UserSkeleton />}>
+            <UserSection />
+          </Suspense>
+        </div>
       </div>
     </nav>
   )

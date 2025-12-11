@@ -1,24 +1,8 @@
 import type { Metadata } from 'next'
-import { Inter, JetBrains_Mono, Playfair_Display } from 'next/font/google'
+import { ThemeProvider } from '@/components/theme-provider'
+import { Toaster } from '@/components/ui/sonner'
+import { inter, jetBrainsMono, playfairDisplay } from '@/lib/fonts'
 import './globals.css'
-
-export const inter = Inter({
-  display: 'swap',
-  subsets: ['latin'],
-  variable: '--font-sans',
-})
-
-export const playfairDisplay = Playfair_Display({
-  display: 'swap',
-  subsets: ['latin'],
-  variable: '--font-display',
-})
-
-export const jetBrainsMono = JetBrains_Mono({
-  display: 'swap',
-  subsets: ['latin'],
-  variable: '--font-mono',
-})
 
 export const metadata: Metadata = {
   title: 'Create Next App',
@@ -31,8 +15,15 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang='en'>
-      <body className={`${inter.variable} antialiased`}>{children}</body>
+    <html lang='en' suppressHydrationWarning>
+      <body
+        className={`${inter.variable} ${playfairDisplay.variable} ${jetBrainsMono.variable} font-sans antialiased`}
+      >
+        <ThemeProvider attribute='class' defaultTheme='system' enableSystem>
+          {children}
+          <Toaster />
+        </ThemeProvider>
+      </body>
     </html>
   )
 }

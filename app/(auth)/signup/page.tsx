@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { playfairDisplay } from '@/app/layout'
+import { playfairDisplay } from '@/lib/fonts'
 import { SignupForm } from './_components/signup-form'
 
 export const metadata: Metadata = {

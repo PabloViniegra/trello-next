@@ -1,7 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import { useActionState, useId } from 'react'
+import { useRouter } from 'next/navigation'
+import { useActionState, useEffect, useId } from 'react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -16,9 +18,23 @@ import { Label } from '@/components/ui/label'
 import { signInAction } from '@/lib/auth/actions'
 
 export function LoginForm() {
+  const router = useRouter()
   const emailId = useId()
   const passwordId = useId()
   const [state, formAction, isPending] = useActionState(signInAction, null)
+
+  useEffect(() => {
+    if (state?.error) {
+      toast.error(state.error)
+    }
+    if (state?.success) {
+      toast.success('Sesión iniciada correctamente')
+      setTimeout(() => {
+        router.push('/')
+        router.refresh()
+      }, 500)
+    }
+  }, [state, router])
 
   return (
     <Card className='w-full border-border/50 shadow-lg backdrop-blur-sm'>
@@ -32,26 +48,6 @@ export function LoginForm() {
       </CardHeader>
       <form action={formAction}>
         <CardContent className='space-y-5'>
-          {state?.error && (
-            <div className='bg-destructive/10 border border-destructive/20 text-destructive-foreground px-4 py-3 rounded-lg flex items-start gap-3'>
-              <svg
-                className='w-5 h-5 mt-0.5 flex-shrink-0'
-                fill='none'
-                stroke='currentColor'
-                viewBox='0 0 24 24'
-                aria-hidden='true'
-              >
-                <title>Error icon</title>
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth={2}
-                  d='M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
-                />
-              </svg>
-              <span className='text-sm'>{state.error}</span>
-            </div>
-          )}
           <div className='space-y-2'>
             <Label htmlFor={emailId} className='text-foreground font-medium'>
               Correo electrónico

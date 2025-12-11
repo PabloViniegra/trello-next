@@ -1,15 +1,28 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { useTransition } from 'react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { signOut } from '@/lib/auth/actions'
 
 export function SignOutButton() {
+  const router = useRouter()
   const [isPending, startTransition] = useTransition()
 
   const handleSignOut = () => {
     startTransition(async () => {
-      await signOut()
+      const result = await signOut()
+
+      if (result.success) {
+        toast.success('Sesión cerrada correctamente')
+        setTimeout(() => {
+          router.push('/login')
+          router.refresh()
+        }, 500)
+      } else {
+        toast.error(result.error || 'Error al cerrar sesión')
+      }
     })
   }
 

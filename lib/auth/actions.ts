@@ -144,8 +144,9 @@ export async function signInAction(
     }
   }
 
-  // redirect() must be outside try/catch
-  redirect('/')
+  return {
+    success: true,
+  }
 }
 
 // Server Action for form submission with useActionState
@@ -213,20 +214,26 @@ export async function signUpAction(
     }
   }
 
-  // redirect() must be outside try/catch
-  redirect('/')
+  return {
+    success: true,
+  }
 }
 
-export async function signOut(): Promise<void> {
+export async function signOut(): Promise<TAuthResult> {
   try {
     const headersList = await nextHeaders()
     await auth.api.signOut({
       headers: headersList,
     })
+
+    return {
+      success: true,
+    }
   } catch (error) {
     console.error('Error en signOut:', error)
-    throw new Error('Error al cerrar sesión')
+    return {
+      success: false,
+      error: 'Error al cerrar sesión',
+    }
   }
-
-  redirect('/login')
 }
