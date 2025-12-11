@@ -1,8 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { useId, useState } from 'react'
+import { useActionState, useId } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -14,52 +13,14 @@ import {
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { signUp } from '@/lib/auth/actions'
-import type { TSignUpInput } from '@/lib/auth/types'
+import { signUpAction } from '@/lib/auth/actions'
 
 export function SignupForm() {
   const nameId = useId()
   const emailId = useId()
   const passwordId = useId()
   const confirmPasswordId = useId()
-  const router = useRouter()
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [formData, setFormData] = useState<TSignUpInput>({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-  })
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setError(null)
-    setIsLoading(true)
-
-    try {
-      const result = await signUp(formData)
-
-      if (!result.success) {
-        setError(result.error || 'Error al crear la cuenta')
-        return
-      }
-
-      router.push('/')
-      router.refresh()
-    } catch {
-      setError('Error inesperado. Por favor, intenta de nuevo.')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }))
-  }
+  const [state, formAction, isPending] = useActionState(signUpAction, null)
 
   return (
     <Card className='w-full border-border/50 shadow-lg backdrop-blur-sm'>
@@ -71,9 +32,9 @@ export function SignupForm() {
           Únete para empezar a gestionar tus proyectos
         </CardDescription>
       </CardHeader>
-      <form onSubmit={handleSubmit}>
+      <form action={formAction}>
         <CardContent className='space-y-4'>
-          {error && (
+          {state?.error && (
             <div className='bg-destructive/10 border border-destructive/20 text-destructive-foreground px-4 py-3 rounded-lg flex items-start gap-3'>
               <svg
                 className='w-5 h-5 mt-0.5 flex-shrink-0'
@@ -90,7 +51,7 @@ export function SignupForm() {
                   d='M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
                 />
               </svg>
-              <span className='text-sm'>{error}</span>
+              <span className='text-sm'>{state.error}</span>
             </div>
           )}
           <div className='space-y-2'>
@@ -102,9 +63,7 @@ export function SignupForm() {
               name='name'
               type='text'
               placeholder='Juan Pérez'
-              value={formData.name}
-              onChange={handleChange}
-              disabled={isLoading}
+              disabled={isPending}
               required
               className='h-11 bg-card border-input focus:border-ring focus:ring-ring/20'
             />
@@ -118,9 +77,7 @@ export function SignupForm() {
               name='email'
               type='email'
               placeholder='nombre@ejemplo.com'
-              value={formData.email}
-              onChange={handleChange}
-              disabled={isLoading}
+              disabled={isPending}
               required
               className='h-11 bg-card border-input focus:border-ring focus:ring-ring/20'
             />
@@ -134,9 +91,7 @@ export function SignupForm() {
               name='password'
               type='password'
               placeholder='Mínimo 8 caracteres'
-              value={formData.password}
-              onChange={handleChange}
-              disabled={isLoading}
+              disabled={isPending}
               required
               className='h-11 bg-card border-input focus:border-ring focus:ring-ring/20'
             />
@@ -171,9 +126,7 @@ export function SignupForm() {
               name='confirmPassword'
               type='password'
               placeholder='Repite tu contraseña'
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              disabled={isLoading}
+              disabled={isPending}
               required
               className='h-11 bg-card border-input focus:border-ring focus:ring-ring/20'
             />
@@ -183,9 +136,9 @@ export function SignupForm() {
           <Button
             type='submit'
             className='w-full h-11 bg-primary hover:bg-primary/90 text-primary-foreground font-medium transition-all duration-200 shadow-sm hover:shadow'
-            disabled={isLoading}
+            disabled={isPending}
           >
-            {isLoading ? (
+            {isPending ? (
               <span className='flex items-center gap-2'>
                 <svg
                   className='animate-spin h-4 w-4'

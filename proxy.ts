@@ -13,7 +13,15 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Verificar sesión para rutas protegidas
+  // Para la página principal (/), permitir que la página maneje la redirección
+  // Esto es importante para que funcionen correctamente las redirecciones de Server Actions
+  // después del login, ya que las cookies se establecen en el response pero el proxy
+  // se ejecuta antes de que lleguen al navegador
+  if (pathname === '/') {
+    return NextResponse.next()
+  }
+
+  // Verificar sesión para otras rutas protegidas
   const session = await auth.api.getSession({
     headers: request.headers,
   })
