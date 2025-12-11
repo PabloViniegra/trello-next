@@ -1,35 +1,26 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useTransition } from 'react'
 import { Button } from '@/components/ui/button'
 import { signOut } from '@/lib/auth/actions'
 
 export function SignOutButton() {
-  const router = useRouter()
-  const [isLoading, setIsLoading] = useState(false)
+  const [isPending, startTransition] = useTransition()
 
-  const handleSignOut = async () => {
-    setIsLoading(true)
-    try {
+  const handleSignOut = () => {
+    startTransition(async () => {
       await signOut()
-      router.push('/login')
-      router.refresh()
-    } catch (error) {
-      console.error('Error signing out:', error)
-    } finally {
-      setIsLoading(false)
-    }
+    })
   }
 
   return (
     <Button
       onClick={handleSignOut}
-      disabled={isLoading}
+      disabled={isPending}
       variant='outline'
       className='border-destructive/20 text-destructive hover:bg-destructive/10 hover:text-destructive'
     >
-      {isLoading ? (
+      {isPending ? (
         <span className='flex items-center gap-2'>
           <svg
             className='animate-spin h-4 w-4'
