@@ -1,6 +1,7 @@
 import 'dotenv/config'
 import { drizzle } from 'drizzle-orm/node-postgres'
-import * as schema from '@/auth-schema'
+import * as authSchema from '@/auth-schema'
+import * as boardSchema from '@/db/schema'
 import { env } from '@/lib/env'
 
 export const db = drizzle({
@@ -8,5 +9,5 @@ export const db = drizzle({
     connectionString: env.DATABASE_URL,
     ssl: true,
   },
-  schema,
+  schema: { ...authSchema, ...boardSchema },
 })

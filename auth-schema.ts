@@ -76,6 +76,7 @@ export const verification = pgTable(
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
   accounts: many(account),
+  // Board relations are defined in db/schema.ts to avoid circular imports
 }))
 
 export const sessionRelations = relations(session, ({ one }) => ({
