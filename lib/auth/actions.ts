@@ -126,7 +126,7 @@ export async function signInAction(
   if (!validated.success) {
     return {
       success: false,
-      error: 'Datos de inicio de sesión inválidos',
+      error: 'Datos de inicio de sesion invalidos',
     }
   }
 
@@ -150,13 +150,34 @@ export async function signInAction(
   } catch (error) {
     logError(error, 'signInAction')
 
+    // Verificar si es un error de email no verificado
+    if (
+      error &&
+      typeof error === 'object' &&
+      'message' in error &&
+      typeof error.message === 'string'
+    ) {
+      const message = error.message.toLowerCase()
+      if (
+        message.includes('email') &&
+        (message.includes('verified') || message.includes('verification'))
+      ) {
+        return {
+          success: false,
+          error:
+            'Debes verificar tu email antes de iniciar sesion. Revisa tu bandeja de entrada.',
+          requiresEmailVerification: true,
+        }
+      }
+    }
+
     if (error instanceof AppError) {
       return { success: false, error: error.message }
     }
 
     return {
       success: false,
-      error: 'Error al iniciar sesión. Por favor, intenta de nuevo.',
+      error: 'Error al iniciar sesion. Por favor, intenta de nuevo.',
     }
   }
 
@@ -185,7 +206,7 @@ export async function signUpAction(
   if (!validated.success) {
     return {
       success: false,
-      error: 'Datos de registro inválidos',
+      error: 'Datos de registro invalidos',
     }
   }
 
@@ -207,6 +228,11 @@ export async function signUpAction(
         error: 'Error al crear la cuenta',
       }
     }
+
+    return {
+      success: true,
+      requiresEmailVerification: true,
+    }
   } catch (error) {
     logError(error, 'signUpAction')
 
@@ -220,7 +246,7 @@ export async function signUpAction(
     ) {
       return {
         success: false,
-        error: 'Este email ya está registrado',
+        error: 'Este email ya esta registrado',
       }
     }
 
@@ -232,10 +258,6 @@ export async function signUpAction(
       success: false,
       error: 'Error al crear la cuenta. Por favor, intenta de nuevo.',
     }
-  }
-
-  return {
-    success: true,
   }
 }
 

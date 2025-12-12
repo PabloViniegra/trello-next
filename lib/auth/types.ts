@@ -11,6 +11,7 @@ export type TAuthResult = {
     userId: string
   }
   error?: string
+  requiresEmailVerification?: boolean
 }
 
 export type TAuthError =
