@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { Suspense } from 'react'
+import { CreateBoardDialog } from '@/app/_components/create-board-dialog'
 import { AnimatedNavbar } from '@/components/animations/animated-navbar'
 import { ThemeSwitcher } from '@/components/kibo-ui/theme-switcher'
 import { getCurrentUser } from '@/lib/auth/get-user'
@@ -13,7 +14,12 @@ async function UserSection() {
     return null
   }
 
-  return <UserNav user={user} />
+  return (
+    <>
+      <CreateBoardDialog />
+      <UserNav user={user} />
+    </>
+  )
 }
 
 function UserSkeleton() {
