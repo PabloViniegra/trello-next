@@ -1,0 +1,2 @@
+ALTER TABLE "board_member" ADD CONSTRAINT "board_member_unique" UNIQUE("board_id","user_id");--> statement-breakpoint
+ALTER TABLE "card_label" ADD CONSTRAINT "card_label_unique" UNIQUE("card_id","label_id");

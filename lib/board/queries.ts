@@ -12,6 +12,7 @@ import {
   lte,
   type SQL,
 } from 'drizzle-orm'
+import { z } from 'zod'
 import { db } from '@/db'
 import { board } from '@/db/schema'
 import { getCurrentUser } from '@/lib/auth/get-user'
@@ -22,6 +23,13 @@ import {
   type TFilterOperator,
 } from './filter-types'
 import type { TBoard } from './types'
+
+// =============================================================================
+// CONSTANTS
+// =============================================================================
+
+const MAX_PAGE_SIZE = 100
+const MAX_FILTER_VALUE_LENGTH = 500
 
 // =============================================================================
 // TYPES
@@ -46,6 +54,25 @@ export type TBoardsQueryResult = {
 }
 
 // =============================================================================
+// SECURITY HELPERS
+// =============================================================================
+
+/**
+ * Escapes special characters for LIKE/ILIKE patterns to prevent SQL injection.
+ * Characters %, _, and \ have special meaning in LIKE patterns.
+ */
+function escapeForLike(value: string): string {
+  return value.replace(/[%_\\]/g, '\\$&')
+}
+
+/**
+ * Validates and sanitizes a filter value.
+ */
+function sanitizeFilterValue(value: string): string {
+  return value.trim().slice(0, MAX_FILTER_VALUE_LENGTH)
+}
+
+// =============================================================================
 // FILTER BUILDERS
 // =============================================================================
 
@@ -54,17 +81,19 @@ function buildTextFilter(
   operator: TFilterOperator,
   value: string,
 ): SQL | undefined {
-  if (!value.trim()) return undefined
+  const sanitizedValue = sanitizeFilterValue(value)
+  if (!sanitizedValue) return undefined
 
   const column = board[field]
+  const escapedValue = escapeForLike(sanitizedValue)
 
   switch (operator) {
     case 'contains':
-      return ilike(column, `%${value}%`)
+      return ilike(column, `%${escapedValue}%`)
     case 'equals':
-      return eq(column, value)
+      return eq(column, sanitizedValue) // equals no necesita escape
     case 'startsWith':
-      return like(column, `${value}%`)
+      return like(column, `${escapedValue}%`)
     default:
       return undefined
   }
@@ -171,7 +200,14 @@ export async function getBoardsWithFilters(
 
   const { page = 1, pageSize = DEFAULT_PAGE_SIZE, filters = [] } = params
 
-  const offset = (page - 1) * pageSize
+  // Validar y sanitizar parámetros de paginación
+  const validatedPage = Math.max(1, Math.floor(page))
+  const validatedPageSize = Math.min(
+    Math.max(1, Math.floor(pageSize)),
+    MAX_PAGE_SIZE,
+  )
+
+  const offset = (validatedPage - 1) * validatedPageSize
   const whereClause = buildWhereClause(user.id, filters)
 
   try {
@@ -182,13 +218,13 @@ export async function getBoardsWithFilters(
         .from(board)
         .where(whereClause)
         .orderBy(desc(board.createdAt))
-        .limit(pageSize)
+        .limit(validatedPageSize)
         .offset(offset),
       db.select({ count: count() }).from(board).where(whereClause),
     ])
 
     const totalCount = countResult[0]?.count ?? 0
-    const totalPages = Math.ceil(totalCount / pageSize)
+    const totalPages = Math.ceil(totalCount / validatedPageSize)
 
     return {
       success: true,
@@ -196,8 +232,8 @@ export async function getBoardsWithFilters(
         boards: boardsResult,
         totalCount,
         totalPages,
-        currentPage: page,
-        pageSize,
+        currentPage: validatedPage,
+        pageSize: validatedPageSize,
       },
     }
   } catch (error) {
@@ -210,9 +246,20 @@ export async function getBoardsWithFilters(
   }
 }
 
+const uuidSchema = z.string().uuid('ID de tablero inválido')
+
 export async function getBoardById(
   boardId: string,
 ): Promise<{ success: boolean; data?: TBoard; error?: string }> {
+  // Validar formato de UUID
+  const validatedId = uuidSchema.safeParse(boardId)
+  if (!validatedId.success) {
+    return {
+      success: false,
+      error: 'ID de tablero inválido',
+    }
+  }
+
   const user = await getCurrentUser()
 
   if (!user) {
