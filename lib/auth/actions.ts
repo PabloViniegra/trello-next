@@ -5,10 +5,35 @@ import { redirect } from 'next/navigation'
 import { auth } from '@/lib/auth'
 import { AppError, logError } from '@/lib/errors'
 import { sanitizeFormData } from '@/lib/utils/form'
+import { authRateLimit } from '@/lib/utils/rate-limit'
 import { signInSchema, signUpSchema } from './schemas'
 import type { TAuthResult, TSignInInput, TSignUpInput } from './types'
 
+// =============================================================================
+// HELPERS
+// =============================================================================
+
+async function getClientIp(): Promise<string> {
+  const headersList = await nextHeaders()
+  return (
+    headersList.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    headersList.get('x-real-ip') ||
+    'anonymous'
+  )
+}
+
 export async function signIn(data: TSignInInput): Promise<TAuthResult | never> {
+  // Rate limiting
+  const clientIp = await getClientIp()
+  const rateLimitResult = authRateLimit.signIn(clientIp)
+
+  if (!rateLimitResult.success) {
+    return {
+      success: false,
+      error: `Demasiados intentos. Intenta de nuevo en ${Math.ceil(rateLimitResult.resetIn / 1000)} segundos.`,
+    }
+  }
+
   const validated = signInSchema.safeParse(data)
 
   if (!validated.success) {
@@ -54,6 +79,17 @@ export async function signIn(data: TSignInInput): Promise<TAuthResult | never> {
 }
 
 export async function signUp(data: TSignUpInput): Promise<TAuthResult | never> {
+  // Rate limiting
+  const clientIp = await getClientIp()
+  const rateLimitResult = authRateLimit.signUp(clientIp)
+
+  if (!rateLimitResult.success) {
+    return {
+      success: false,
+      error: `Demasiados intentos. Intenta de nuevo en ${Math.ceil(rateLimitResult.resetIn / 1000)} segundos.`,
+    }
+  }
+
   const validated = signUpSchema.safeParse(data)
 
   if (!validated.success) {
@@ -118,6 +154,17 @@ export async function signInAction(
   _prevState: TAuthResult | null,
   formData: FormData,
 ): Promise<TAuthResult> {
+  // Rate limiting
+  const clientIp = await getClientIp()
+  const rateLimitResult = authRateLimit.signIn(clientIp)
+
+  if (!rateLimitResult.success) {
+    return {
+      success: false,
+      error: `Demasiados intentos. Intenta de nuevo en ${Math.ceil(rateLimitResult.resetIn / 1000)} segundos.`,
+    }
+  }
+
   const email = sanitizeFormData(formData.get('email'))
   const password = sanitizeFormData(formData.get('password'))
 
@@ -191,6 +238,17 @@ export async function signUpAction(
   _prevState: TAuthResult | null,
   formData: FormData,
 ): Promise<TAuthResult> {
+  // Rate limiting
+  const clientIp = await getClientIp()
+  const rateLimitResult = authRateLimit.signUp(clientIp)
+
+  if (!rateLimitResult.success) {
+    return {
+      success: false,
+      error: `Demasiados intentos. Intenta de nuevo en ${Math.ceil(rateLimitResult.resetIn / 1000)} segundos.`,
+    }
+  }
+
   const name = sanitizeFormData(formData.get('name'))
   const email = sanitizeFormData(formData.get('email'))
   const password = sanitizeFormData(formData.get('password'))

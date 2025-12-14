@@ -5,6 +5,7 @@ import {
   pgTable,
   text,
   timestamp,
+  unique,
   varchar,
 } from 'drizzle-orm/pg-core'
 import { user } from '@/auth-schema'
@@ -128,6 +129,7 @@ export const cardLabel = pgTable(
   (table) => [
     index('card_label_card_id_idx').on(table.cardId),
     index('card_label_label_id_idx').on(table.labelId),
+    unique('card_label_unique').on(table.cardId, table.labelId),
   ],
 )
 
@@ -151,6 +153,7 @@ export const boardMember = pgTable(
   (table) => [
     index('board_member_board_id_idx').on(table.boardId),
     index('board_member_user_id_idx').on(table.userId),
+    unique('board_member_unique').on(table.boardId, table.userId),
   ],
 )
 

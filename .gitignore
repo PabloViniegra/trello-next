@@ -45,3 +45,5 @@ AGENTS.md
 opencode.jsonc
 .opencode/*
 CLAUDE.md
+.serena/*
+.gga

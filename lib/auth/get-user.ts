@@ -2,13 +2,7 @@
 
 import { headers as nextHeaders } from 'next/headers'
 import { auth } from '@/lib/auth'
-
-export type TUser = {
-  id: string
-  name: string
-  email: string
-  image?: string
-}
+import type { TUser } from './types'
 
 export async function getCurrentUser(): Promise<TUser | null> {
   try {

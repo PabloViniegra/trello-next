@@ -15,6 +15,13 @@
       "when": 1765503733665,
       "tag": "0001_real_green_goblin",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1765644871990,
+      "tag": "0002_flashy_warhawk",
+      "breakpoints": true
     }
   ]
 }

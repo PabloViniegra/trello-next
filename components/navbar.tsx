@@ -4,6 +4,7 @@ import { CreateBoardDialog } from '@/app/_components/create-board-dialog'
 import { AnimatedNavbar } from '@/components/animations/animated-navbar'
 import { ThemeSwitcher } from '@/components/kibo-ui/theme-switcher'
 import { getCurrentUser } from '@/lib/auth/get-user'
+import { NavLinks } from './nav-links'
 import { Avatar, AvatarFallback } from './ui/avatar'
 import { UserNav } from './user-nav'
 
@@ -34,21 +35,19 @@ export function Navbar() {
   return (
     <AnimatedNavbar className='border-b bg-background'>
       <div className='container mx-auto flex h-16 items-center px-4'>
-        <div className='flex items-center gap-6 flex-1'>
+        {/* Logo - izquierda */}
+        <div className='flex items-center'>
           <Link href='/' className='text-xl font-bold'>
             Trello Clone
           </Link>
-
-          <div className='flex items-center gap-4'>
-            <Link
-              href='/boards'
-              className='text-sm font-medium text-muted-foreground hover:text-foreground transition-colors'
-            >
-              Boards
-            </Link>
-          </div>
         </div>
 
+        {/* NavLinks - centro */}
+        <div className='flex-1 flex justify-center'>
+          <NavLinks />
+        </div>
+
+        {/* Acciones - derecha */}
         <div className='flex items-center gap-4'>
           <ThemeSwitcher />
           <Suspense fallback={<UserSkeleton />}>
