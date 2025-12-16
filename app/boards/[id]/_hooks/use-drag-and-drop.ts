@@ -118,8 +118,56 @@ export function useDragAndDrop(initialLists: TListWithCards[]) {
       return
     }
 
-    // Calculate new position and create optimistic update
+    // Calculate new position BEFORE creating optimistic update
+    let newPosition = 0
+
+    if (sourceListId === targetListId) {
+      // Reordering within the same list
+      const currentList = optimisticLists.find((l) => l.id === targetListId)
+      if (currentList) {
+        const targetCardIndex = currentList.cards.findIndex(
+          (c) => c.id === overId,
+        )
+        if (targetCardIndex >= 0) {
+          newPosition = targetCardIndex
+        } else {
+          // Dropped on the list itself, put at the end
+          newPosition = currentList.cards.length - 1
+        }
+      }
+    } else {
+      // Moving to a different list
+      const targetList = optimisticLists.find((l) => l.id === targetListId)
+      if (targetList) {
+        const targetCardIndex = targetList.cards.findIndex(
+          (c) => c.id === overId,
+        )
+        if (targetCardIndex >= 0) {
+          newPosition = targetCardIndex
+        } else {
+          // Dropped on the list itself, put at the end
+          newPosition = targetList.cards.length
+        }
+      }
+    }
+
+    // Create optimistic update
     const updatedLists = optimisticLists.map((list) => {
+      if (list.id === sourceListId && list.id === targetListId) {
+        // Reordering within the same list
+        const newCards = [...list.cards]
+        const oldIndex = newCards.findIndex((c) => c.id === cardId)
+
+        if (oldIndex >= 0) {
+          // Remove from old position
+          const [movedCard] = newCards.splice(oldIndex, 1)
+          // Insert at new position
+          newCards.splice(newPosition, 0, movedCard)
+        }
+
+        return { ...list, cards: newCards }
+      }
+
       if (list.id === sourceListId) {
         // Remove card from source list
         return {
@@ -127,34 +175,20 @@ export function useDragAndDrop(initialLists: TListWithCards[]) {
           cards: list.cards.filter((c) => c.id !== cardId),
         }
       }
+
       if (list.id === targetListId) {
         // Add card to target list
-        const targetCardIndex = list.cards.findIndex((c) => c.id === overId)
         const newCards = [...list.cards]
+        newCards.splice(newPosition, 0, {
+          ...draggedCard,
+          listId: targetListId,
+        })
 
-        if (targetCardIndex >= 0) {
-          // Insert at specific position
-          newCards.splice(targetCardIndex, 0, {
-            ...draggedCard,
-            listId: targetListId,
-          })
-        } else {
-          // Add to end if dropped on list
-          newCards.push({ ...draggedCard, listId: targetListId })
-        }
-
-        return {
-          ...list,
-          cards: newCards,
-        }
+        return { ...list, cards: newCards }
       }
+
       return list
     })
-
-    // Calculate final position
-    const finalTargetList = updatedLists.find((l) => l.id === targetListId)
-    const newPosition =
-      finalTargetList?.cards.findIndex((c) => c.id === cardId) ?? 0
 
     // Apply optimistic update and call server action
     startTransition(async () => {
