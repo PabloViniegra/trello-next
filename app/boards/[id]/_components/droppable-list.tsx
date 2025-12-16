@@ -5,6 +5,7 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import type { TBoard } from '@/lib/board/types'
 import type { TListWithCards } from '@/lib/list/types'
+import { cn } from '@/lib/utils'
 import { CreateCardDialog } from './create-card-dialog'
 import { DraggableCard } from './draggable-card'
 
@@ -21,7 +22,7 @@ type TDroppableListProps = {
  * @param board - The parent board (used for styling)
  */
 export function DroppableList({ list, board }: TDroppableListProps) {
-  const { setNodeRef } = useDroppable({
+  const { setNodeRef, isOver } = useDroppable({
     id: list.id,
   })
 
@@ -29,7 +30,12 @@ export function DroppableList({ list, board }: TDroppableListProps) {
 
   return (
     <div className='shrink-0 w-80'>
-      <Card className='h-full flex flex-col bg-muted/50'>
+      <Card
+        className={cn(
+          'h-full flex flex-col bg-muted/50 transition-all duration-200',
+          isOver && 'ring-2 ring-primary ring-offset-2 bg-muted/70',
+        )}
+      >
         <CardHeader
           className='pb-3 border-b-2'
           style={{

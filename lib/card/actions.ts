@@ -291,8 +291,51 @@ export async function deleteCard(
 }
 
 /**
+ * Helper function to reorder card positions in a list.
+ * Updates all cards in the list to have sequential positions (0, 1, 2, ...).
+ * Excludes a specific card ID if provided.
+ *
+ * @param tx - Database transaction
+ * @param listId - The list ID to reorder cards in
+ * @param insertPosition - The position where a new card will be inserted
+ * @param excludeCardId - Card ID to exclude from reordering (the card being moved)
+ */
+async function reorderCardPositions(
+  // biome-ignore lint/suspicious/noExplicitAny: Drizzle transaction type is complex
+  tx: any,
+  listId: string,
+  insertPosition: number,
+  excludeCardId: string,
+): Promise<void> {
+  // Get all cards in the list except the one being moved
+  const cards = await tx
+    .select({
+      id: card.id,
+      position: card.position,
+    })
+    .from(card)
+    .where(eq(card.listId, listId))
+    .orderBy(card.position)
+
+  // Filter out the moved card
+  const otherCards = cards.filter((c: { id: string }) => c.id !== excludeCardId)
+
+  // Update positions sequentially
+  for (let i = 0; i < otherCards.length; i++) {
+    const newPosition = i >= insertPosition ? i + 1 : i
+    if (otherCards[i].position !== newPosition) {
+      await tx
+        .update(card)
+        .set({ position: newPosition })
+        .where(eq(card.id, otherCards[i].id))
+    }
+  }
+}
+
+/**
  * Moves a card to a different list or position within the same list.
  * Uses database transactions to prevent race conditions during concurrent moves.
+ * Automatically reorders card positions to maintain sequential order (0, 1, 2, ...).
  *
  * Security:
  * - Validates user authentication
@@ -303,6 +346,7 @@ export async function deleteCard(
  * Performance:
  * - Uses serializable transaction isolation
  * - Locks target list to prevent position conflicts
+ * - Reorders positions to prevent gaps and duplicates
  *
  * @param data - Card ID, target list ID, and new position
  * @returns Success status with optional error message
@@ -393,20 +437,43 @@ export async function moveCardAction(
     }
 
     // 5. Update the card in a transaction to prevent race conditions
+    const sourceListId = cardRecord.listId
+    const targetListId = validated.data.targetListId
+
     await db.transaction(
       async (tx) => {
         // Lock the target list to prevent concurrent position conflicts
         await tx
           .select({ id: list.id })
           .from(list)
-          .where(eq(list.id, validated.data.targetListId))
+          .where(eq(list.id, targetListId))
           .for('update')
 
-        // Update the card position and list
+        // If moving to a different list, also lock the source list
+        if (sourceListId !== targetListId) {
+          await tx
+            .select({ id: list.id })
+            .from(list)
+            .where(eq(list.id, sourceListId))
+            .for('update')
+
+          // Reorder cards in source list (close the gap)
+          await reorderCardPositions(tx, sourceListId, 0, validated.data.cardId)
+        }
+
+        // Reorder cards in target list (make space for new card)
+        await reorderCardPositions(
+          tx,
+          targetListId,
+          validated.data.position,
+          validated.data.cardId,
+        )
+
+        // Insert the moved card at the specified position
         await tx
           .update(card)
           .set({
-            listId: validated.data.targetListId,
+            listId: targetListId,
             position: validated.data.position,
           })
           .where(eq(card.id, validated.data.cardId))
