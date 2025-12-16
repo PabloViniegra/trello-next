@@ -9,9 +9,15 @@ import { logError } from '@/lib/errors'
 import type {
   TCreateCardInput,
   TDeleteCardInput,
+  TMoveCardInput,
   TUpdateCardInput,
 } from './schemas'
-import { createCardSchema, deleteCardSchema, updateCardSchema } from './schemas'
+import {
+  createCardSchema,
+  deleteCardSchema,
+  moveCardSchema,
+  updateCardSchema,
+} from './schemas'
 
 export type TCardResult = {
   success: boolean
@@ -20,6 +26,11 @@ export type TCardResult = {
 }
 
 export type TDeleteCardResult = {
+  success: boolean
+  error?: string
+}
+
+export type TMoveCardResult = {
   success: boolean
   error?: string
 }
@@ -275,6 +286,147 @@ export async function deleteCard(
     return {
       success: false,
       error: 'Failed to delete card',
+    }
+  }
+}
+
+/**
+ * Moves a card to a different list or position within the same list.
+ * Uses database transactions to prevent race conditions during concurrent moves.
+ *
+ * Security:
+ * - Validates user authentication
+ * - Verifies board ownership
+ * - Ensures target list belongs to the same board
+ * - Uses Zod schema validation
+ *
+ * Performance:
+ * - Uses serializable transaction isolation
+ * - Locks target list to prevent position conflicts
+ *
+ * @param data - Card ID, target list ID, and new position
+ * @returns Success status with optional error message
+ *
+ * @example
+ * ```ts
+ * const result = await moveCardAction({
+ *   cardId: 'card-123',
+ *   targetListId: 'list-456',
+ *   position: 2
+ * })
+ * if (result.success) {
+ *   toast.success('Card moved')
+ * }
+ * ```
+ */
+export async function moveCardAction(
+  data: TMoveCardInput,
+): Promise<TMoveCardResult> {
+  // 1. Verify authentication
+  const user = await getCurrentUser()
+
+  if (!user) {
+    return {
+      success: false,
+      error: 'You must be logged in to move a card',
+    }
+  }
+
+  // 2. Validate input data
+  const validated = moveCardSchema.safeParse(data)
+
+  if (!validated.success) {
+    const firstError = validated.error.issues[0]
+    return {
+      success: false,
+      error: firstError?.message ?? 'Invalid data',
+    }
+  }
+
+  try {
+    // 3. Get the card and verify board ownership
+    const cardRecord = await db.query.card.findFirst({
+      where: eq(card.id, validated.data.cardId),
+      with: {
+        list: {
+          with: {
+            board: true,
+          },
+        },
+      },
+    })
+
+    if (!cardRecord) {
+      return {
+        success: false,
+        error: 'Card not found',
+      }
+    }
+
+    if (cardRecord.list.board.ownerId !== user.id) {
+      return {
+        success: false,
+        error: 'You do not have permission to move this card',
+      }
+    }
+
+    // 4. Verify target list exists and belongs to the same board
+    const targetListRecord = await db.query.list.findFirst({
+      where: eq(list.id, validated.data.targetListId),
+      with: {
+        board: true,
+      },
+    })
+
+    if (!targetListRecord) {
+      return {
+        success: false,
+        error: 'Target list not found',
+      }
+    }
+
+    if (targetListRecord.boardId !== cardRecord.list.boardId) {
+      return {
+        success: false,
+        error: 'Cannot move card to a different board',
+      }
+    }
+
+    // 5. Update the card in a transaction to prevent race conditions
+    await db.transaction(
+      async (tx) => {
+        // Lock the target list to prevent concurrent position conflicts
+        await tx
+          .select({ id: list.id })
+          .from(list)
+          .where(eq(list.id, validated.data.targetListId))
+          .for('update')
+
+        // Update the card position and list
+        await tx
+          .update(card)
+          .set({
+            listId: validated.data.targetListId,
+            position: validated.data.position,
+          })
+          .where(eq(card.id, validated.data.cardId))
+      },
+      {
+        isolationLevel: 'serializable',
+      },
+    )
+
+    // 6. Revalidate board detail page
+    revalidatePath(`/boards/${cardRecord.list.boardId}`)
+
+    return {
+      success: true,
+    }
+  } catch (error) {
+    logError(error, 'Error moving card')
+    return {
+      success: false,
+      error: 'Failed to move card',
     }
   }
 }
