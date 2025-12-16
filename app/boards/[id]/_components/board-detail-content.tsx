@@ -10,7 +10,7 @@ import {
   useSensors,
 } from '@dnd-kit/core'
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable'
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import type { TBoard } from '@/lib/board/types'
 import type { TCard } from '@/lib/card/types'
 import type { TListWithCards } from '@/lib/list/types'
@@ -55,16 +55,22 @@ export function BoardDetailContent({ board, lists }: TBoardDetailContentProps) {
   )
 
   // Wrapper for drag start to set active card for overlay
-  const onDragStart = (event: Parameters<typeof handleDragStart>[0]) => {
-    const card = handleDragStart(event)
-    setActiveCard(card)
-  }
+  const onDragStart = useCallback(
+    (event: Parameters<typeof handleDragStart>[0]) => {
+      const card = handleDragStart(event)
+      setActiveCard(card)
+    },
+    [handleDragStart],
+  )
 
   // Wrapper for drag end to clear active card
-  const onDragEnd = async (event: Parameters<typeof handleDragEnd>[0]) => {
-    await handleDragEnd(event)
-    setActiveCard(null)
-  }
+  const onDragEnd = useCallback(
+    async (event: Parameters<typeof handleDragEnd>[0]) => {
+      await handleDragEnd(event)
+      setActiveCard(null)
+    },
+    [handleDragEnd],
+  )
 
   return (
     <DndContext

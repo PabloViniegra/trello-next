@@ -1,6 +1,7 @@
 'use server'
 
 import { eq, sql } from 'drizzle-orm'
+import type { NodePgDatabase } from 'drizzle-orm/node-postgres'
 import { revalidatePath } from 'next/cache'
 import { db } from '@/db'
 import { card, list } from '@/db/schema'
@@ -301,8 +302,9 @@ export async function deleteCard(
  * @param excludeCardId - Card ID to exclude from reordering (the card being moved)
  */
 async function reorderCardPositions(
-  // biome-ignore lint/suspicious/noExplicitAny: Drizzle transaction type is complex
-  tx: any,
+  tx: NodePgDatabase<
+    typeof import('@/db/schema') & typeof import('@/auth-schema')
+  >,
   listId: string,
   insertPosition: number,
   excludeCardId: string,
@@ -318,7 +320,7 @@ async function reorderCardPositions(
     .orderBy(card.position)
 
   // Filter out the moved card
-  const otherCards = cards.filter((c: { id: string }) => c.id !== excludeCardId)
+  const otherCards = cards.filter((c) => c.id !== excludeCardId)
 
   // Update positions sequentially
   for (let i = 0; i < otherCards.length; i++) {

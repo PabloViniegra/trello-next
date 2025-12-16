@@ -2,6 +2,7 @@
 
 import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import type { TBoard } from '@/lib/board/types'
 import type { TListWithCards } from '@/lib/list/types'
@@ -26,7 +27,7 @@ export function DroppableList({ list, board }: TDroppableListProps) {
     id: list.id,
   })
 
-  const cardIds = list.cards.map((card) => card.id)
+  const cardIds = useMemo(() => list.cards.map((card) => card.id), [list.cards])
 
   return (
     <div className='shrink-0 w-80'>
