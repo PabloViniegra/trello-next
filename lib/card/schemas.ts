@@ -30,3 +30,11 @@ export const deleteCardSchema = z.object({
 export type TCreateCardInput = z.infer<typeof createCardSchema>
 export type TUpdateCardInput = z.infer<typeof updateCardSchema>
 export type TDeleteCardInput = z.infer<typeof deleteCardSchema>
+
+export const moveCardSchema = z.object({
+  cardId: z.string().min(1, 'Card ID is required'),
+  targetListId: z.string().min(1, 'Target list ID is required'),
+  position: z.number().int().min(0, 'Position must be a non-negative integer'),
+})
+
+export type TMoveCardInput = z.infer<typeof moveCardSchema>
