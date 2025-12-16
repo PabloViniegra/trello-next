@@ -18,3 +18,7 @@ export const createBoardSchema = z.object({
     .regex(/^#[0-9A-Fa-f]{6}$/, 'Color inválido')
     .default('#0079bf'),
 })
+
+export const deleteBoardSchema = z.object({
+  boardId: z.string().uuid('ID de tablero inválido'),
+})
