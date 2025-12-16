@@ -1,7 +1,8 @@
 import type { z } from 'zod'
-import type { createBoardSchema } from './schemas'
+import type { createBoardSchema, deleteBoardSchema } from './schemas'
 
 export type TCreateBoardInput = z.infer<typeof createBoardSchema>
+export type TDeleteBoardInput = z.infer<typeof deleteBoardSchema>
 
 export type TBoard = {
   id: string
@@ -17,6 +18,11 @@ export type TBoard = {
 export type TBoardResult = {
   success: boolean
   data?: TBoard
+  error?: string
+}
+
+export type TDeleteBoardResult = {
+  success: boolean
   error?: string
 }
 
