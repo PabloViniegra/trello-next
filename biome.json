@@ -6,7 +6,8 @@
     "useIgnoreFile": true
   },
   "files": {
-    "ignoreUnknown": true
+    "ignoreUnknown": true,
+    "includes": ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"]
   },
   "formatter": {
     "enabled": true,
@@ -24,6 +25,18 @@
       }
     }
   },
+  "overrides": [
+    {
+      "includes": [
+        "**/components/base-autocomplete/default.tsx",
+        "**/components/ui/base-label.tsx",
+        "**/components/ui/base-autocomplete.tsx"
+      ],
+      "linter": {
+        "enabled": false
+      }
+    }
+  ],
   "javascript": {
     "formatter": {
       "quoteStyle": "single",

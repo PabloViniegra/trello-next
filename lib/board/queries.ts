@@ -17,6 +17,7 @@ import { z } from 'zod'
 import { db } from '@/db'
 import { board } from '@/db/schema'
 import { getCurrentUser } from '@/lib/auth/get-user'
+import { hasUserBoardAccess } from '@/lib/board-member/queries'
 import { logError } from '@/lib/errors'
 import {
   DEFAULT_PAGE_SIZE,
@@ -279,16 +280,27 @@ async function _getBoardById(
   userId: string,
 ): Promise<{ success: boolean; data?: TBoard; error?: string }> {
   try {
+    // Primero obtenemos el tablero
     const [result] = await db
       .select()
       .from(board)
-      .where(and(eq(board.id, boardId), eq(board.ownerId, userId)))
+      .where(eq(board.id, boardId))
       .limit(1)
 
     if (!result) {
       return {
         success: false,
         error: 'Tablero no encontrado',
+      }
+    }
+
+    // Verificamos que el usuario tenga acceso (propietario o colaborador)
+    const hasAccess = await hasUserBoardAccess(boardId, userId)
+
+    if (!hasAccess) {
+      return {
+        success: false,
+        error: 'No tienes permiso para acceder a este tablero',
       }
     }
 
