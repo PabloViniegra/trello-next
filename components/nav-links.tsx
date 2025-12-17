@@ -9,7 +9,7 @@ type TNavLink = {
   label: string
 }
 
-const NAV_LINKS: TNavLink[] = [{ href: '/boards', label: 'Boards' }]
+const NAV_LINKS: TNavLink[] = [{ href: '/boards', label: 'Tableros' }]
 
 export function NavLinks() {
   const pathname = usePathname()

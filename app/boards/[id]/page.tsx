@@ -3,6 +3,7 @@ import { Suspense } from 'react'
 import { Navbar } from '@/components/navbar'
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { getBoardById } from '@/lib/board/queries'
+import { hasUserBoardAccess } from '@/lib/board-member/queries'
 import { getListsByBoardId } from '@/lib/list/queries'
 import { BoardDetailContent } from './_components/board-detail-content'
 import { BoardDetailSkeleton } from './_components/board-detail-skeleton'
@@ -48,19 +49,23 @@ async function BoardDetailData({ boardId }: { boardId: string }) {
     )
   }
 
-  // Verify ownership
-  if (board.ownerId !== user.id) {
+  // Verify access (owner or member)
+  const hasAccess = await hasUserBoardAccess(boardId, user.id)
+
+  if (!hasAccess) {
     return (
       <CenteredMessage
-        title='Access Denied'
-        description='You do not have permission to view this board'
+        title='Acceso Denegado'
+        description='No tienes permiso para ver este tablero'
       />
     )
   }
 
   const lists = await getListsByBoardId(boardId)
 
-  return <BoardDetailContent board={board} lists={lists} />
+  return (
+    <BoardDetailContent board={board} lists={lists} currentUserId={user.id} />
+  )
 }
 
 export default async function BoardDetailPage({

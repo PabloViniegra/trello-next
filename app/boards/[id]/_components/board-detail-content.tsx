@@ -15,6 +15,7 @@ import type { TBoard } from '@/lib/board/types'
 import type { TCard } from '@/lib/card/types'
 import type { TListWithCards } from '@/lib/list/types'
 import { useDragAndDrop } from '../_hooks/use-drag-and-drop'
+import { AddBoardMemberDialog } from './add-board-member-dialog'
 import { CardItem } from './card-item'
 import { CreateListDialog } from './create-list-dialog'
 import { DroppableList } from './droppable-list'
@@ -22,6 +23,7 @@ import { DroppableList } from './droppable-list'
 type TBoardDetailContentProps = {
   board: TBoard
   lists: TListWithCards[]
+  currentUserId: string
 }
 
 /**
@@ -35,7 +37,11 @@ type TBoardDetailContentProps = {
  * @param board - The board data including title, description, and color
  * @param lists - Array of lists with their cards
  */
-export function BoardDetailContent({ board, lists }: TBoardDetailContentProps) {
+export function BoardDetailContent({
+  board,
+  lists,
+  currentUserId,
+}: TBoardDetailContentProps) {
   const [activeCard, setActiveCard] = useState<TCard | null>(null)
 
   // Use custom hook for drag and drop logic
@@ -87,23 +93,32 @@ export function BoardDetailContent({ board, lists }: TBoardDetailContentProps) {
             borderColor: board.backgroundColor ?? '#0079bf',
           }}
         >
-          <div className='flex items-center gap-3'>
-            <div
-              className='w-1 h-8 rounded-full'
-              style={{
-                backgroundColor: board.backgroundColor ?? '#0079bf',
-              }}
-            />
-            <div>
-              <h1 className='text-3xl font-display font-bold text-foreground tracking-tight'>
-                {board.title}
-              </h1>
-              {board.description && (
-                <p className='text-muted-foreground text-sm mt-1.5 font-sans'>
-                  {board.description}
-                </p>
-              )}
+          <div className='flex items-center justify-between'>
+            <div className='flex items-center gap-3'>
+              <div
+                className='w-1 h-8 rounded-full'
+                style={{
+                  backgroundColor: board.backgroundColor ?? '#0079bf',
+                }}
+              />
+              <div>
+                <h1 className='text-3xl font-display font-bold text-foreground tracking-tight'>
+                  {board.title}
+                </h1>
+                {board.description && (
+                  <p className='text-muted-foreground text-sm mt-1.5 font-sans'>
+                    {board.description}
+                  </p>
+                )}
+              </div>
             </div>
+
+            {/* Botón de colaboradores (solo visible para el propietario) */}
+            <AddBoardMemberDialog
+              boardId={board.id}
+              ownerId={board.ownerId}
+              currentUserId={currentUserId}
+            />
           </div>
         </div>
 
