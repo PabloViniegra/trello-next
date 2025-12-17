@@ -1,7 +1,7 @@
 'use server'
 
 import { eq } from 'drizzle-orm'
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { db } from '@/db'
 import { board } from '@/db/schema'
 import { getCurrentUser } from '@/lib/auth/get-user'
@@ -62,6 +62,7 @@ export async function createBoard(
     }
 
     // 5. Revalidar cache de la página de tableros
+    revalidateTag('boards-list', { expire: 0 }) // Invalida cache tag de la lista de tableros
     revalidatePath('/boards')
     revalidatePath('/')
 
@@ -129,6 +130,9 @@ export async function deleteBoard(
     await db.delete(board).where(eq(board.id, validated.data.boardId))
 
     // 5. Revalidar cache de la página de tableros
+    revalidateTag('boards-list', { expire: 0 }) // Invalida cache tag de la lista de tableros
+    revalidateTag(`board:${validated.data.boardId}`, { expire: 0 }) // Invalida cache tag del tablero específico
+    revalidateTag(`board:${validated.data.boardId}:lists`, { expire: 0 }) // Invalida cache tag de las listas del tablero
     revalidatePath('/boards')
     revalidatePath('/')
 

@@ -1,9 +1,10 @@
 'use client'
 
-import { Plus } from 'lucide-react'
+import { CalendarIcon, Plus } from 'lucide-react'
 import { useId, useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { Calendar } from '@/components/ui/calendar'
 import {
   Dialog,
   DialogContent,
@@ -15,8 +16,15 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import { Spinner } from '@/components/ui/spinner'
+import { Textarea } from '@/components/ui/textarea'
 import { createCard } from '@/lib/card/actions'
+import { cn } from '@/lib/utils'
 
 type TCreateCardDialogProps = {
   listId: string
@@ -24,37 +32,60 @@ type TCreateCardDialogProps = {
 
 export function CreateCardDialog({ listId }: TCreateCardDialogProps) {
   const [isOpen, setIsOpen] = useState(false)
-  const [title, setTitle] = useState('')
+  const [title, setTítulo] = useState('')
+  const [description, setDescripción] = useState('')
+  const [dueDate, setDueDate] = useState<Date | undefined>(undefined)
   const [isLoading, setIsLoading] = useState(false)
   const titleId = useId()
+  const descriptionId = useId()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!title.trim()) {
-      toast.error('Card title is required')
+      toast.error('El título de la tarjeta es obligatorio')
       return
     }
 
     setIsLoading(true)
 
     try {
-      const result = await createCard({ title, listId })
+      const result = await createCard({
+        title: title.trim(),
+        description: description.trim() || undefined,
+        listId,
+        dueDate,
+      })
 
       if (result.success) {
-        toast.success('Card created successfully')
-        setTitle('')
+        toast.success('Tarjeta creada correctamente')
+        setTítulo('')
+        setDescripción('')
+        setDueDate(undefined)
         setIsOpen(false)
       } else {
-        toast.error(result.error ?? 'Failed to create card')
+        toast.error(result.error ?? 'Error al crear la tarjeta')
       }
     } finally {
       setIsLoading(false)
     }
   }
 
+  const resetForm = () => {
+    setTítulo('')
+    setDescripción('')
+    setDueDate(undefined)
+  }
+
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open)
+    if (!open) {
+      resetForm()
+    }
+  }
+
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button
           variant='ghost'
@@ -62,27 +93,99 @@ export function CreateCardDialog({ listId }: TCreateCardDialogProps) {
           className='w-full justify-start font-mono'
         >
           <Plus className='w-4 h-4 mr-2' />
-          Add a card
+          Añadir una tarjeta
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className='sm:max-w-[525px]'>
         <DialogHeader>
-          <DialogTitle>Create New Card</DialogTitle>
-          <DialogDescription>Add a new card to this list</DialogDescription>
+          <DialogTitle>Crear Nueva Tarjeta</DialogTitle>
+          <DialogDescription>
+            Añade una nueva tarjeta con descripción y fecha de vencimiento
+            opcionales
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit}>
           <div className='space-y-4 py-4'>
+            {/* Título Field */}
             <div className='space-y-2'>
-              <Label htmlFor={titleId}>Card Title</Label>
+              <Label htmlFor={titleId}>
+                Título <span className='text-destructive'>*</span>
+              </Label>
               <Input
                 id={titleId}
-                placeholder='Enter card title...'
+                placeholder='Ingresa el título de la tarjeta...'
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                onChange={(e) => setTítulo(e.target.value)}
                 disabled={isLoading}
                 autoFocus
+                required
               />
+            </div>
+
+            {/* Descripción Field */}
+            <div className='space-y-2'>
+              <Label htmlFor={descriptionId}>Descripción</Label>
+              <Textarea
+                id={descriptionId}
+                placeholder='Añade una descripción más detallada... (opcional)'
+                value={description}
+                onChange={(e) => setDescripción(e.target.value)}
+                disabled={isLoading}
+                rows={4}
+                className='resize-none'
+              />
+            </div>
+
+            {/* Fecha de vencimiento Field */}
+            <div className='space-y-2'>
+              <Label>Fecha de vencimiento</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant='outline'
+                    className={cn(
+                      'w-full justify-start text-left font-normal',
+                      !dueDate && 'text-muted-foreground',
+                    )}
+                    disabled={isLoading}
+                  >
+                    <CalendarIcon className='mr-2 h-4 w-4' />
+                    {dueDate ? (
+                      dueDate.toLocaleDateString('en-US', {
+                        month: 'long',
+                        day: 'numeric',
+                        year: 'numeric',
+                      })
+                    ) : (
+                      <span>Elige una fecha (opcional)</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className='w-auto p-0' align='start'>
+                  <Calendar
+                    mode='single'
+                    selected={dueDate}
+                    onSelect={setDueDate}
+                    initialFocus
+                    disabled={(date) =>
+                      date < new Date(new Date().setHours(0, 0, 0, 0))
+                    }
+                  />
+                  {dueDate && (
+                    <div className='p-3 border-t'>
+                      <Button
+                        variant='ghost'
+                        size='sm'
+                        className='w-full'
+                        onClick={() => setDueDate(undefined)}
+                      >
+                        Limpiar fecha
+                      </Button>
+                    </div>
+                  )}
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
 
@@ -90,19 +193,19 @@ export function CreateCardDialog({ listId }: TCreateCardDialogProps) {
             <Button
               type='button'
               variant='outline'
-              onClick={() => setIsOpen(false)}
+              onClick={() => handleOpenChange(false)}
               disabled={isLoading}
             >
-              Cancel
+              Cancelar
             </Button>
-            <Button type='submit' disabled={isLoading}>
+            <Button type='submit' disabled={isLoading || !title.trim()}>
               {isLoading ? (
                 <>
                   <Spinner className='w-4 h-4 mr-2' />
-                  Creating...
+                  Creando...
                 </>
               ) : (
-                'Create Card'
+                'Crear Tarjeta'
               )}
             </Button>
           </DialogFooter>

@@ -86,7 +86,7 @@ export function CreateBoardDialog() {
         toast.success('Tablero creado correctamente')
         setOpen(false)
         resetForm()
-        router.push(`/board/${result.data.id}`)
+        router.push(`/boards/${result.data.id}`)
       } else {
         toast.error(result.error ?? 'Error al crear el tablero')
       }

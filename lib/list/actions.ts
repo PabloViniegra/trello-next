@@ -1,7 +1,7 @@
 'use server'
 
 import { eq, sql } from 'drizzle-orm'
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { db } from '@/db'
 import { board, list } from '@/db/schema'
 import { getCurrentUser } from '@/lib/auth/get-user'
@@ -105,7 +105,8 @@ export async function createList(data: TCreateListInput): Promise<TListResult> {
       },
     )
 
-    // 6. Revalidate board detail page
+    // 6. Revalidate board detail page - DESPUÉS de transacción exitosa
+    revalidateTag(`board:${validated.data.boardId}:lists`, { expire: 0 })
     revalidatePath(`/boards/${validated.data.boardId}`)
 
     return {
@@ -178,7 +179,8 @@ export async function updateList(data: TUpdateListInput): Promise<TListResult> {
       .where(eq(list.id, validated.data.id))
       .returning({ id: list.id, title: list.title })
 
-    // 5. Revalidate board detail page
+    // 5. Revalidate board detail page - DESPUÉS de mutación exitosa
+    revalidateTag(`board:${listRecord.boardId}:lists`, { expire: 0 })
     revalidatePath(`/boards/${listRecord.boardId}`)
 
     return {
@@ -244,7 +246,8 @@ export async function deleteList(
     // 4. Delete the list (cards will be cascade deleted)
     await db.delete(list).where(eq(list.id, validated.data.id))
 
-    // 5. Revalidate board detail page
+    // 5. Revalidate board detail page - DESPUÉS de mutación exitosa
+    revalidateTag(`board:${listRecord.boardId}:lists`, { expire: 0 })
     revalidatePath(`/boards/${listRecord.boardId}`)
 
     return {

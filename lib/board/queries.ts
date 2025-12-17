@@ -12,6 +12,7 @@ import {
   lte,
   type SQL,
 } from 'drizzle-orm'
+import { unstable_cache } from 'next/cache'
 import { z } from 'zod'
 import { db } from '@/db'
 import { board } from '@/db/schema'
@@ -186,21 +187,12 @@ function buildWhereClause(
 // QUERIES
 // =============================================================================
 
-export async function getBoardsWithFilters(
-  params: TBoardsQueryParams = {},
+async function _getBoardsWithFilters(
+  userId: string,
+  page: number,
+  pageSize: number,
+  filters: TActiveFilter[],
 ): Promise<TBoardsQueryResult> {
-  const user = await getCurrentUser()
-
-  if (!user) {
-    return {
-      success: false,
-      error: 'Debes iniciar sesión para ver tus tableros',
-    }
-  }
-
-  const { page = 1, pageSize = DEFAULT_PAGE_SIZE, filters = [] } = params
-
-  // Validar y sanitizar parámetros de paginación
   const validatedPage = Math.max(1, Math.floor(page))
   const validatedPageSize = Math.min(
     Math.max(1, Math.floor(pageSize)),
@@ -208,7 +200,7 @@ export async function getBoardsWithFilters(
   )
 
   const offset = (validatedPage - 1) * validatedPageSize
-  const whereClause = buildWhereClause(user.id, filters)
+  const whereClause = buildWhereClause(userId, filters)
 
   try {
     // Execute both queries in parallel
@@ -246,7 +238,73 @@ export async function getBoardsWithFilters(
   }
 }
 
+export async function getBoardsWithFilters(
+  params: TBoardsQueryParams = {},
+): Promise<TBoardsQueryResult> {
+  const user = await getCurrentUser()
+
+  if (!user) {
+    return {
+      success: false,
+      error: 'Debes iniciar sesión para ver tus tableros',
+    }
+  }
+
+  const { page = 1, pageSize = DEFAULT_PAGE_SIZE, filters = [] } = params
+
+  // Solo cachear queries SIN filtros (queries de listado simple)
+  // Queries con filtros no se cachean porque son muy específicas y cambian frecuentemente
+  const hasFilters = filters.length > 0
+
+  if (hasFilters) {
+    // No cachear queries con filtros - ejecutar directamente
+    return _getBoardsWithFilters(user.id, page, pageSize, filters)
+  }
+
+  // Cachear queries sin filtros (listado completo)
+  return unstable_cache(
+    async () => _getBoardsWithFilters(user.id, page, pageSize, filters),
+    [`boards-list-${user.id}-p${page}-ps${pageSize}`],
+    {
+      tags: ['boards-list'],
+      revalidate: false, // Only revalidate on-demand via revalidateTag
+    },
+  )()
+}
+
 const uuidSchema = z.string().uuid('ID de tablero inválido')
+
+async function _getBoardById(
+  boardId: string,
+  userId: string,
+): Promise<{ success: boolean; data?: TBoard; error?: string }> {
+  try {
+    const [result] = await db
+      .select()
+      .from(board)
+      .where(and(eq(board.id, boardId), eq(board.ownerId, userId)))
+      .limit(1)
+
+    if (!result) {
+      return {
+        success: false,
+        error: 'Tablero no encontrado',
+      }
+    }
+
+    return {
+      success: true,
+      data: result,
+    }
+  } catch (error) {
+    logError(error, 'getBoardById')
+
+    return {
+      success: false,
+      error: 'Error al obtener el tablero',
+    }
+  }
+}
 
 export async function getBoardById(
   boardId: string,
@@ -269,30 +327,13 @@ export async function getBoardById(
     }
   }
 
-  try {
-    const [result] = await db
-      .select()
-      .from(board)
-      .where(and(eq(board.id, boardId), eq(board.ownerId, user.id)))
-      .limit(1)
-
-    if (!result) {
-      return {
-        success: false,
-        error: 'Tablero no encontrado',
-      }
-    }
-
-    return {
-      success: true,
-      data: result,
-    }
-  } catch (error) {
-    logError(error, 'getBoardById')
-
-    return {
-      success: false,
-      error: 'Error al obtener el tablero',
-    }
-  }
+  // Cache the board query with tags for granular invalidation
+  return unstable_cache(
+    async () => _getBoardById(boardId, user.id),
+    [`board-${boardId}-${user.id}`],
+    {
+      tags: [`board:${boardId}`],
+      revalidate: false, // Only revalidate on-demand via revalidateTag
+    },
+  )()
 }

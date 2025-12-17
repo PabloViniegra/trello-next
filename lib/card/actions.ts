@@ -2,7 +2,7 @@
 
 import { eq, sql } from 'drizzle-orm'
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres'
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { db } from '@/db'
 import { card, list } from '@/db/schema'
 import { getCurrentUser } from '@/lib/auth/get-user'
@@ -122,7 +122,8 @@ export async function createCard(data: TCreateCardInput): Promise<TCardResult> {
       },
     )
 
-    // 6. Revalidate board detail page
+    // 6. Revalidate board detail page - DESPUÉS de transacción exitosa
+    revalidateTag(`board:${listRecord.boardId}:lists`, { expire: 0 })
     revalidatePath(`/boards/${listRecord.boardId}`)
 
     return {
@@ -206,7 +207,8 @@ export async function updateCard(data: TUpdateCardInput): Promise<TCardResult> {
       .where(eq(card.id, validated.data.id))
       .returning({ id: card.id, title: card.title })
 
-    // 5. Revalidate board detail page
+    // 5. Revalidate board detail page - DESPUÉS de mutación exitosa
+    revalidateTag(`board:${cardRecord.list.boardId}:lists`, { expire: 0 })
     revalidatePath(`/boards/${cardRecord.list.boardId}`)
 
     return {
@@ -276,7 +278,8 @@ export async function deleteCard(
     // 4. Delete the card
     await db.delete(card).where(eq(card.id, validated.data.id))
 
-    // 5. Revalidate board detail page
+    // 5. Revalidate board detail page - DESPUÉS de mutación exitosa
+    revalidateTag(`board:${cardRecord.list.boardId}:lists`, { expire: 0 })
     revalidatePath(`/boards/${cardRecord.list.boardId}`)
 
     return {
@@ -485,7 +488,8 @@ export async function moveCardAction(
       },
     )
 
-    // 6. Revalidate board detail page
+    // 6. Revalidate board detail page - DESPUÉS de transacción exitosa
+    revalidateTag(`board:${cardRecord.list.boardId}:lists`, { expire: 0 })
     revalidatePath(`/boards/${cardRecord.list.boardId}`)
 
     return {
