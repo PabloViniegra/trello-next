@@ -103,16 +103,18 @@ export function CreateCardDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        <Button
-          variant='ghost'
-          size='sm'
-          className='w-full justify-start font-mono'
-        >
-          <Plus className='w-4 h-4 mr-2' />
-          Añadir una tarjeta
-        </Button>
-      </DialogTrigger>
+      {!isControlled && (
+        <DialogTrigger asChild>
+          <Button
+            variant='ghost'
+            size='sm'
+            className='w-full justify-start font-mono'
+          >
+            <Plus className='w-4 h-4 mr-2' />
+            Añadir una tarjeta
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className='sm:max-w-[525px]'>
         <DialogHeader>
           <DialogTitle>Crear Nueva Tarjeta</DialogTitle>
