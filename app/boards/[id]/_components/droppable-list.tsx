@@ -100,19 +100,19 @@ export function DroppableList({ list, board }: TDroppableListProps) {
           }}
         >
           {isRenaming ? (
-            <div className='flex items-center gap-2'>
+            <div className='flex items-center gap-1.5'>
               <Input
                 value={newTitle}
                 onChange={(e) => setNewTitle(e.target.value)}
                 onKeyDown={handleKeyDown}
                 disabled={isPending}
                 autoFocus
-                className='h-8 text-lg font-semibold font-sans'
+                className='h-9 text-lg font-semibold font-sans flex-1'
               />
               <Button
-                variant='ghost'
+                variant='outline'
                 size='sm'
-                className='h-8 w-8 p-0 text-green-600 hover:text-green-700'
+                className='h-9 w-9 p-0 bg-green-50 border-green-200 hover:bg-green-100 hover:border-green-300 text-green-700 dark:bg-green-950 dark:border-green-800 dark:hover:bg-green-900 dark:hover:border-green-700 dark:text-green-400'
                 onClick={handleConfirmRename}
                 disabled={isPending}
                 aria-label='Confirmar cambio de nombre'
@@ -124,9 +124,9 @@ export function DroppableList({ list, board }: TDroppableListProps) {
                 )}
               </Button>
               <Button
-                variant='ghost'
+                variant='outline'
                 size='sm'
-                className='h-8 w-8 p-0 text-destructive hover:text-destructive/80'
+                className='h-9 w-9 p-0 bg-red-50 border-red-200 hover:bg-red-100 hover:border-red-300 text-red-700 dark:bg-red-950 dark:border-red-800 dark:hover:bg-red-900 dark:hover:border-red-700 dark:text-red-400'
                 onClick={handleCancelRename}
                 disabled={isPending}
                 aria-label='Cancelar cambio de nombre'
