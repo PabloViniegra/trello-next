@@ -18,20 +18,27 @@ import { cn } from '@/lib/utils'
 
 type TDeleteCardDialogProps = {
   cardId: string
-  cardTítulo: string
+  cardTitle: string
 }
 
 export function DeleteCardDialog({
   cardId,
-  cardTítulo,
+  cardTitle,
 }: TDeleteCardDialogProps) {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
   const descriptionId = useId()
 
-  const handleOpenChange = useCallback((isOpen: boolean) => {
-    setOpen(isOpen)
-  }, [])
+  const handleOpenChange = useCallback(
+    (isOpen: boolean) => {
+      // Prevent closing during pending operations
+      if (!isOpen && isPending) {
+        return
+      }
+      setOpen(isOpen)
+    },
+    [isPending],
+  )
 
   const handleDelete = useCallback(() => {
     startTransition(async () => {
@@ -65,8 +72,8 @@ export function DeleteCardDialog({
           'focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-destructive focus:ring-offset-2',
         )}
         onClick={handleButtonClick}
-        aria-label={`Eliminar tarjeta "${cardTítulo}". Esta acción no se puede deshacer.`}
-        title={`Eliminar tarjeta "${cardTítulo}"`}
+        aria-label={`Eliminar tarjeta "${cardTitle}". Esta acción no se puede deshacer.`}
+        title={`Eliminar tarjeta "${cardTitle}"`}
       >
         <Trash2 className='h-3.5 w-3.5' aria-hidden='true' />
       </button>
@@ -78,7 +85,7 @@ export function DeleteCardDialog({
             <DialogDescription id={descriptionId}>
               ¿Estás seguro de que deseas eliminar la tarjeta{' '}
               <span className='font-semibold text-foreground'>
-                &quot;{cardTítulo}&quot;
+                &quot;{cardTitle}&quot;
               </span>
               ? Esta acción no se puede deshacer.
             </DialogDescription>
