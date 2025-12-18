@@ -28,12 +28,20 @@ import { cn } from '@/lib/utils'
 
 type TCreateCardDialogProps = {
   listId: string
+  open?: boolean
+  onOpenChangeAction?: (open: boolean) => void
 }
 
-export function CreateCardDialog({ listId }: TCreateCardDialogProps) {
-  const [isOpen, setIsOpen] = useState(false)
-  const [title, setTítulo] = useState('')
-  const [description, setDescripción] = useState('')
+export function CreateCardDialog({
+  listId,
+  open: controlledOpen,
+  onOpenChangeAction,
+}: TCreateCardDialogProps) {
+  const [internalOpen, setInternalOpen] = useState(false)
+  const isControlled = controlledOpen !== undefined
+  const isOpen = isControlled ? controlledOpen : internalOpen
+  const [title, setTitle] = useState('')
+  const [description, setDescription] = useState('')
   const [dueDate, setDueDate] = useState<Date | undefined>(undefined)
   const [isLoading, setIsLoading] = useState(false)
   const titleId = useId()
@@ -59,10 +67,10 @@ export function CreateCardDialog({ listId }: TCreateCardDialogProps) {
 
       if (result.success) {
         toast.success('Tarjeta creada correctamente')
-        setTítulo('')
-        setDescripción('')
+        setTitle('')
+        setDescription('')
         setDueDate(undefined)
-        setIsOpen(false)
+        handleOpenChange(false)
       } else {
         toast.error(result.error ?? 'Error al crear la tarjeta')
       }
@@ -72,13 +80,22 @@ export function CreateCardDialog({ listId }: TCreateCardDialogProps) {
   }
 
   const resetForm = () => {
-    setTítulo('')
-    setDescripción('')
+    setTitle('')
+    setDescription('')
     setDueDate(undefined)
   }
 
   const handleOpenChange = (open: boolean) => {
-    setIsOpen(open)
+    // Prevent closing during pending operations
+    if (!open && isLoading) {
+      return
+    }
+
+    if (isControlled) {
+      onOpenChangeAction?.(open)
+    } else {
+      setInternalOpen(open)
+    }
     if (!open) {
       resetForm()
     }
@@ -86,16 +103,18 @@ export function CreateCardDialog({ listId }: TCreateCardDialogProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        <Button
-          variant='ghost'
-          size='sm'
-          className='w-full justify-start font-mono'
-        >
-          <Plus className='w-4 h-4 mr-2' />
-          Añadir una tarjeta
-        </Button>
-      </DialogTrigger>
+      {!isControlled && (
+        <DialogTrigger asChild>
+          <Button
+            variant='ghost'
+            size='sm'
+            className='w-full justify-start font-mono'
+          >
+            <Plus className='w-4 h-4 mr-2' />
+            Añadir una tarjeta
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className='sm:max-w-[525px]'>
         <DialogHeader>
           <DialogTitle>Crear Nueva Tarjeta</DialogTitle>
@@ -116,7 +135,7 @@ export function CreateCardDialog({ listId }: TCreateCardDialogProps) {
                 id={titleId}
                 placeholder='Ingresa el título de la tarjeta...'
                 value={title}
-                onChange={(e) => setTítulo(e.target.value)}
+                onChange={(e) => setTitle(e.target.value)}
                 disabled={isLoading}
                 autoFocus
                 required
@@ -130,7 +149,7 @@ export function CreateCardDialog({ listId }: TCreateCardDialogProps) {
                 id={descriptionId}
                 placeholder='Añade una descripción más detallada... (opcional)'
                 value={description}
-                onChange={(e) => setDescripción(e.target.value)}
+                onChange={(e) => setDescription(e.target.value)}
                 disabled={isLoading}
                 rows={4}
                 className='resize-none'
@@ -152,7 +171,7 @@ export function CreateCardDialog({ listId }: TCreateCardDialogProps) {
                   >
                     <CalendarIcon className='mr-2 h-4 w-4' />
                     {dueDate ? (
-                      dueDate.toLocaleDateString('en-US', {
+                      dueDate.toLocaleDateString('es-ES', {
                         month: 'long',
                         day: 'numeric',
                         year: 'numeric',

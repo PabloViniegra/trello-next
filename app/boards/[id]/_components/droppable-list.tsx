@@ -2,13 +2,19 @@
 
 import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
-import { useMemo } from 'react'
+import { Check, X } from 'lucide-react'
+import { useMemo, useState, useTransition } from 'react'
+import { toast } from 'sonner'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Spinner } from '@/components/ui/spinner'
 import type { TBoard } from '@/lib/board/types'
+import { updateList } from '@/lib/list/actions'
 import type { TListWithCards } from '@/lib/list/types'
 import { cn } from '@/lib/utils'
-import { CreateCardDialog } from './create-card-dialog'
 import { DraggableCard } from './draggable-card'
+import { ListActionsMenu } from './list-actions-menu'
 
 type TDroppableListProps = {
   list: TListWithCards
@@ -17,7 +23,7 @@ type TDroppableListProps = {
 
 /**
  * A droppable list container that accepts draggable cards.
- * Displays list title, cards, and "Add Card" button.
+ * Displays list title, cards, and actions menu.
  *
  * @param list - The list data with its cards
  * @param board - The parent board (used for styling)
@@ -27,7 +33,57 @@ export function DroppableList({ list, board }: TDroppableListProps) {
     id: list.id,
   })
 
+  const [isRenaming, setIsRenaming] = useState(false)
+  const [newTitle, setNewTitle] = useState(list.title)
+  const [isPending, startTransition] = useTransition()
+
   const cardIds = useMemo(() => list.cards.map((card) => card.id), [list.cards])
+
+  const handleRename = () => {
+    setIsRenaming(true)
+    setNewTitle(list.title)
+  }
+
+  const handleCancelRename = () => {
+    setIsRenaming(false)
+    setNewTitle(list.title)
+  }
+
+  const handleConfirmRename = () => {
+    if (!newTitle.trim()) {
+      toast.error('El título de la lista no puede estar vacío')
+      return
+    }
+
+    if (newTitle.trim() === list.title) {
+      setIsRenaming(false)
+      return
+    }
+
+    startTransition(async () => {
+      const result = await updateList({
+        id: list.id,
+        title: newTitle.trim(),
+      })
+
+      if (result.success) {
+        toast.success('Lista renombrada correctamente')
+        setIsRenaming(false)
+      } else {
+        toast.error(result.error ?? 'Error al renombrar la lista')
+      }
+    })
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      handleConfirmRename()
+    } else if (e.key === 'Escape') {
+      e.preventDefault()
+      handleCancelRename()
+    }
+  }
 
   return (
     <div className='shrink-0 w-80'>
@@ -43,9 +99,53 @@ export function DroppableList({ list, board }: TDroppableListProps) {
             borderColor: board.backgroundColor ?? '#0079bf',
           }}
         >
-          <CardTitle className='text-lg font-semibold font-sans'>
-            {list.title}
-          </CardTitle>
+          {isRenaming ? (
+            <div className='flex items-center gap-1.5'>
+              <Input
+                value={newTitle}
+                onChange={(e) => setNewTitle(e.target.value)}
+                onKeyDown={handleKeyDown}
+                disabled={isPending}
+                autoFocus
+                className='h-9 text-lg font-semibold font-sans flex-1'
+              />
+              <Button
+                variant='outline'
+                size='sm'
+                className='h-9 w-9 p-0 bg-green-50 border-green-200 hover:bg-green-100 hover:border-green-300 text-green-700 dark:bg-green-950 dark:border-green-800 dark:hover:bg-green-900 dark:hover:border-green-700 dark:text-green-400'
+                onClick={handleConfirmRename}
+                disabled={isPending}
+                aria-label='Confirmar cambio de nombre'
+              >
+                {isPending ? (
+                  <Spinner className='h-4 w-4' />
+                ) : (
+                  <Check className='h-4 w-4' />
+                )}
+              </Button>
+              <Button
+                variant='outline'
+                size='sm'
+                className='h-9 w-9 p-0 bg-red-50 border-red-200 hover:bg-red-100 hover:border-red-300 text-red-700 dark:bg-red-950 dark:border-red-800 dark:hover:bg-red-900 dark:hover:border-red-700 dark:text-red-400'
+                onClick={handleCancelRename}
+                disabled={isPending}
+                aria-label='Cancelar cambio de nombre'
+              >
+                <X className='h-4 w-4' />
+              </Button>
+            </div>
+          ) : (
+            <div className='flex items-center justify-between'>
+              <CardTitle className='text-lg font-semibold font-sans'>
+                {list.title}
+              </CardTitle>
+              <ListActionsMenu
+                listId={list.id}
+                listTitle={list.title}
+                onRenameAction={handleRename}
+              />
+            </div>
+          )}
         </CardHeader>
         <CardContent
           ref={setNodeRef}
@@ -64,15 +164,10 @@ export function DroppableList({ list, board }: TDroppableListProps) {
               </div>
             ) : (
               <p className='text-sm text-muted-foreground text-center py-4'>
-                No cards yet
+                No hay tarjetas aún
               </p>
             )}
           </SortableContext>
-
-          {/* Add Card Button */}
-          <div className='mt-auto pt-2'>
-            <CreateCardDialog listId={list.id} />
-          </div>
         </CardContent>
       </Card>
     </div>
