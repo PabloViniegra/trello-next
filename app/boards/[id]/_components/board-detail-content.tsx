@@ -22,6 +22,7 @@ import { CardDetailDialog } from './card-detail-dialog'
 import { CardItem } from './card-item'
 import { CreateListDialog } from './create-list-dialog'
 import { DroppableList } from './droppable-list'
+import { EditBoardDialog } from './edit-board-dialog'
 import { LabelManagerDialog } from './label-manager-dialog'
 
 type TBoardDetailContentProps = {
@@ -126,6 +127,12 @@ export function BoardDetailContent({
             </div>
 
             <div className='flex gap-2'>
+              {/* Botón de editar tablero (solo visible para el propietario) */}
+              <EditBoardDialog
+                board={board}
+                isOwner={currentUserId === board.ownerId}
+              />
+
               {/* Botón de colaboradores (solo visible para el propietario) */}
               <AddBoardMemberDialog
                 boardId={board.id}

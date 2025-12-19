@@ -1,8 +1,8 @@
 'use client'
 
-import { Plus } from 'lucide-react'
+import { Pencil } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { useId, useState, useTransition } from 'react'
+import { useEffect, useId, useState, useTransition } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
@@ -16,8 +16,9 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { createBoard } from '@/lib/board/actions'
-import { createBoardSchema } from '@/lib/board/schemas'
+import { updateBoard } from '@/lib/board/actions'
+import { updateBoardSchema } from '@/lib/board/schemas'
+import type { TBoard } from '@/lib/board/types'
 import { BOARD_COLORS, DEFAULT_BOARD_COLOR } from '@/lib/board/types'
 import { cn } from '@/lib/utils'
 
@@ -27,37 +28,48 @@ type TFormErrors = {
   backgroundColor?: string
 }
 
-export function CreateBoardDialog() {
+type TEditBoardDialogProps = {
+  board: TBoard
+  isOwner: boolean
+}
+
+export function EditBoardDialog({ board, isOwner }: TEditBoardDialogProps) {
   const router = useRouter()
   const titleId = useId()
   const descriptionId = useId()
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
 
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-  const [backgroundColor, setBackgroundColor] = useState(DEFAULT_BOARD_COLOR)
+  const [title, setTitle] = useState(board.title)
+  const [description, setDescription] = useState(board.description || '')
+  const [backgroundColor, setBackgroundColor] = useState(
+    board.backgroundColor || DEFAULT_BOARD_COLOR,
+  )
   const [errors, setErrors] = useState<TFormErrors>({})
 
-  function resetForm() {
-    setTitle('')
-    setDescription('')
-    setBackgroundColor(DEFAULT_BOARD_COLOR)
-    setErrors({})
-  }
+  // Reset form when dialog opens or board changes
+  useEffect(() => {
+    if (open) {
+      setTitle(board.title)
+      setDescription(board.description || '')
+      setBackgroundColor(board.backgroundColor || DEFAULT_BOARD_COLOR)
+      setErrors({})
+    }
+  }, [open, board])
 
   function handleOpenChange(isOpen: boolean) {
     setOpen(isOpen)
     if (!isOpen) {
-      resetForm()
+      setErrors({})
     }
   }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
 
-    // Validar en cliente primero
-    const validated = createBoardSchema.safeParse({
+    // Client-side validation
+    const validated = updateBoardSchema.safeParse({
+      boardId: board.id,
       title,
       description: description || null,
       backgroundColor,
@@ -66,8 +78,14 @@ export function CreateBoardDialog() {
     if (!validated.success) {
       const fieldErrors: TFormErrors = {}
       for (const issue of validated.error.issues) {
-        const field = issue.path[0] as keyof TFormErrors
-        fieldErrors[field] = issue.message
+        const field = issue.path[0]
+        if (
+          field === 'title' ||
+          field === 'description' ||
+          field === 'backgroundColor'
+        ) {
+          fieldErrors[field] = issue.message
+        }
       }
       setErrors(fieldErrors)
       return
@@ -76,36 +94,41 @@ export function CreateBoardDialog() {
     setErrors({})
 
     startTransition(async () => {
-      const result = await createBoard({
+      const result = await updateBoard({
+        boardId: board.id,
         title: validated.data.title,
         description: validated.data.description,
         backgroundColor: validated.data.backgroundColor,
       })
 
-      if (result.success && result.data) {
-        toast.success('Tablero creado correctamente')
+      if (result.success) {
+        toast.success('Tablero actualizado correctamente')
         setOpen(false)
-        resetForm()
-        router.push(`/boards/${result.data.id}`)
+        router.refresh()
       } else {
-        toast.error(result.error ?? 'Error al crear el tablero')
+        toast.error(result.error ?? 'Error al actualizar el tablero')
       }
     })
+  }
+
+  // Don't render if not owner
+  if (!isOwner) {
+    return null
   }
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button size='sm' className='gap-2'>
-          <Plus className='h-4 w-4' />
-          Crear tablero
+        <Button variant='outline' size='sm' className='gap-2'>
+          <Pencil className='h-4 w-4' />
+          Editar tablero
         </Button>
       </DialogTrigger>
       <DialogContent className='sm:max-w-md'>
         <DialogHeader>
-          <DialogTitle>Crear nuevo tablero</DialogTitle>
+          <DialogTitle>Editar tablero</DialogTitle>
           <DialogDescription>
-            Crea un tablero para organizar tus tareas y proyectos.
+            Modifica el título, descripción o color de tu tablero.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
@@ -177,7 +200,7 @@ export function CreateBoardDialog() {
             </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className='gap-2'>
             <Button
               type='button'
               variant='outline'
@@ -210,10 +233,10 @@ export function CreateBoardDialog() {
                       d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
                     />
                   </svg>
-                  Creando...
+                  Guardando...
                 </span>
               ) : (
-                'Crear tablero'
+                'Guardar cambios'
               )}
             </Button>
           </DialogFooter>
