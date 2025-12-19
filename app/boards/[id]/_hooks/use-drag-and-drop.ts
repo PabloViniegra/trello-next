@@ -4,12 +4,12 @@ import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core'
 import { useCallback, useOptimistic, useTransition } from 'react'
 import { toast } from 'sonner'
 import { moveCardAction } from '@/lib/card/actions'
-import type { TCard } from '@/lib/card/types'
-import type { TListWithCards } from '@/lib/list/types'
+import type { TCardWithLabels } from '@/lib/card/types'
+import type { TListWithCardsAndLabels } from '@/lib/list/types'
 
 type TCardLocation = {
   listId: string
-  card: TCard
+  card: TCardWithLabels
 }
 
 /**
@@ -19,15 +19,15 @@ type TCardLocation = {
  * @param initialLists - The initial lists with cards from the server
  * @returns Drag and drop handlers and optimistic state
  */
-export function useDragAndDrop(initialLists: TListWithCards[]) {
+export function useDragAndDrop(initialLists: TListWithCardsAndLabels[]) {
   const [isPending, startTransition] = useTransition()
   const [optimisticLists, setOptimisticLists] =
-    useOptimistic<TListWithCards[]>(initialLists)
+    useOptimistic<TListWithCardsAndLabels[]>(initialLists)
 
   // Create lookup maps for O(1) access
-  const createLookupMaps = useCallback((lists: TListWithCards[]) => {
+  const createLookupMaps = useCallback((lists: TListWithCardsAndLabels[]) => {
     const cardToList = new Map<string, string>()
-    const listMap = new Map<string, TListWithCards>()
+    const listMap = new Map<string, TListWithCardsAndLabels>()
 
     for (const list of lists) {
       listMap.set(list.id, list)
@@ -43,7 +43,10 @@ export function useDragAndDrop(initialLists: TListWithCards[]) {
    * Finds a card and its containing list using efficient lookup.
    */
   const findCard = useCallback(
-    (cardId: string, lists: TListWithCards[]): TCardLocation | null => {
+    (
+      cardId: string,
+      lists: TListWithCardsAndLabels[],
+    ): TCardLocation | null => {
       const { cardToList, listMap } = createLookupMaps(lists)
       const listId = cardToList.get(cardId)
 
@@ -62,7 +65,7 @@ export function useDragAndDrop(initialLists: TListWithCards[]) {
   /**
    * Handles the start of a drag operation.
    */
-  const handleDragStart = (event: DragStartEvent): TCard | null => {
+  const handleDragStart = (event: DragStartEvent): TCardWithLabels | null => {
     const cardId = event.active.id
 
     // Type guard: ensure id is a string
@@ -203,10 +206,10 @@ export function useDragAndDrop(initialLists: TListWithCards[]) {
 
         if (result.success) {
           if (sourceListId !== targetListId) {
-            toast.success('Card moved successfully')
+            toast.success('Tarjeta movida correctamente')
           }
         } else {
-          toast.error(result.error ?? 'Failed to move card')
+          toast.error(result.error ?? 'Error al mover la tarjeta')
           // Optimistic update will be reverted automatically by Next.js
         }
       })

@@ -26,9 +26,12 @@ import {
 } from '@/components/ui/popover'
 import { Textarea } from '@/components/ui/textarea'
 import { updateCard } from '@/lib/card/actions'
-import type { TCard } from '@/lib/card/types'
+import type { TCardWithLabels } from '@/lib/card/types'
+import type { TLabel } from '@/lib/label/types'
 import { cn } from '@/lib/utils'
 import { useBoardStore } from '@/store/board-store'
+import { CardLabelsSelector } from './card-labels-selector'
+import { LabelBadge } from './label-badge'
 
 // Schema for the edit card form
 const editCardSchema = z.object({
@@ -46,10 +49,14 @@ const editCardSchema = z.object({
 type TEditCardFormData = z.infer<typeof editCardSchema>
 
 type TCardDetailDialogProps = {
-  card: TCard
+  card: TCardWithLabels
+  boardLabels: TLabel[]
 }
 
-export function CardDetailDialog({ card }: TCardDetailDialogProps) {
+export function CardDetailDialog({
+  card,
+  boardLabels,
+}: TCardDetailDialogProps) {
   const router = useRouter()
   const { isCardModalOpen, closeCardModal, activeCard } = useBoardStore()
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -174,6 +181,31 @@ export function CardDetailDialog({ card }: TCardDetailDialogProps) {
             )}
           </div>
 
+          {/* Labels Section */}
+          <div className='space-y-2'>
+            <Label>Etiquetas</Label>
+            <div className='flex flex-wrap gap-2 items-center'>
+              {card.labels && card.labels.length > 0 ? (
+                <>
+                  {card.labels.map((label) => (
+                    <LabelBadge key={label.id} label={label} size='md' />
+                  ))}
+                  <CardLabelsSelector
+                    cardId={card.id}
+                    boardLabels={boardLabels}
+                    assignedLabels={card.labels}
+                  />
+                </>
+              ) : (
+                <CardLabelsSelector
+                  cardId={card.id}
+                  boardLabels={boardLabels}
+                  assignedLabels={[]}
+                />
+              )}
+            </div>
+          </div>
+
           {/* Description Field */}
           <div className='space-y-2'>
             <div className='flex justify-between items-center'>
@@ -208,7 +240,7 @@ export function CardDetailDialog({ card }: TCardDetailDialogProps) {
                     type='button'
                     variant='outline'
                     className={cn(
-                      'w-full justify-start text-left font-normal',
+                      'flex-1 justify-start text-left font-normal',
                       !dueDate && 'text-muted-foreground',
                     )}
                     disabled={isSubmitting}
@@ -241,6 +273,7 @@ export function CardDetailDialog({ card }: TCardDetailDialogProps) {
                   variant='outline'
                   onClick={handleClearDate}
                   disabled={isSubmitting}
+                  className='shrink-0'
                 >
                   Limpiar
                 </Button>
@@ -249,7 +282,7 @@ export function CardDetailDialog({ card }: TCardDetailDialogProps) {
           </div>
 
           {/* Footer Actions */}
-          <DialogFooter className='gap-2 sm:gap-0'>
+          <DialogFooter className='gap-2'>
             <Button
               type='button'
               variant='outline'

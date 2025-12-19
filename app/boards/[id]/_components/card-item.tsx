@@ -4,13 +4,14 @@ import { AlignLeft, Clock } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import type { TCard } from '@/lib/card/types'
+import type { TCard, TCardWithLabels } from '@/lib/card/types'
 import { cn } from '@/lib/utils'
 import { useBoardStore } from '@/store/board-store'
 import { DeleteCardDialog } from './delete-card-dialog'
+import { LabelBadge } from './label-badge'
 
 type TCardItemProps = {
-  card: TCard
+  card: TCard | TCardWithLabels
 }
 
 type TDueDateStatus = {
@@ -66,6 +67,10 @@ export function CardItem({ card }: TCardItemProps) {
     ? getDueDateStatus(card.dueDate, currentDate)
     : null
   const hasDescription = Boolean(card.description)
+  const cardWithLabels = card as TCardWithLabels
+  const hasLabels = cardWithLabels.labels && cardWithLabels.labels.length > 0
+  const visibleLabels = hasLabels ? cardWithLabels.labels.slice(0, 3) : []
+  const remainingLabels = hasLabels ? cardWithLabels.labels.length - 3 : 0
 
   return (
     <div className='relative group'>
@@ -80,6 +85,20 @@ export function CardItem({ card }: TCardItemProps) {
       >
         <Card className='shadow-sm hover:shadow-lg hover:border-primary/40 transition-all duration-200 border-l-4 border-l-primary/20 group-hover:border-l-primary'>
           <CardContent className='p-4 space-y-3'>
+            {/* Labels */}
+            {hasLabels && (
+              <div className='flex flex-wrap gap-1.5'>
+                {visibleLabels.map((label) => (
+                  <LabelBadge key={label.id} label={label} size='sm' />
+                ))}
+                {remainingLabels > 0 && (
+                  <span className='inline-flex items-center h-5 px-2 text-xs font-medium text-muted-foreground bg-muted rounded-md'>
+                    +{remainingLabels}
+                  </span>
+                )}
+              </div>
+            )}
+
             {/* Card Title */}
             <h3 className='text-sm font-semibold leading-tight text-foreground group-hover:text-primary transition-colors'>
               {card.title}
