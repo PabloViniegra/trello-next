@@ -240,7 +240,7 @@ export function CardDetailDialog({
                     type='button'
                     variant='outline'
                     className={cn(
-                      'w-full justify-start text-left font-normal',
+                      'flex-1 justify-start text-left font-normal',
                       !dueDate && 'text-muted-foreground',
                     )}
                     disabled={isSubmitting}
@@ -273,6 +273,7 @@ export function CardDetailDialog({
                   variant='outline'
                   onClick={handleClearDate}
                   disabled={isSubmitting}
+                  className='shrink-0'
                 >
                   Limpiar
                 </Button>
@@ -281,7 +282,7 @@ export function CardDetailDialog({
           </div>
 
           {/* Footer Actions */}
-          <DialogFooter className='gap-2 sm:gap-0'>
+          <DialogFooter className='gap-2'>
             <Button
               type='button'
               variant='outline'
