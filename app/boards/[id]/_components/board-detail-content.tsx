@@ -15,7 +15,9 @@ import type { TBoard } from '@/lib/board/types'
 import type { TCard } from '@/lib/card/types'
 import type { TListWithCards } from '@/lib/list/types'
 import { useDragAndDrop } from '../_hooks/use-drag-and-drop'
+import { useBoardStore } from '@/store/board-store'
 import { AddBoardMemberDialog } from './add-board-member-dialog'
+import { CardDetailDialog } from './card-detail-dialog'
 import { CardItem } from './card-item'
 import { CreateListDialog } from './create-list-dialog'
 import { DroppableList } from './droppable-list'
@@ -43,10 +45,16 @@ export function BoardDetailContent({
   currentUserId,
 }: TBoardDetailContentProps) {
   const [activeCard, setActiveCard] = useState<TCard | null>(null)
+  const { activeCard: activeCardId } = useBoardStore()
 
   // Use custom hook for drag and drop logic
   const { optimisticLists, handleDragStart, handleDragEnd } =
     useDragAndDrop(lists)
+
+  // Find the active card for the modal
+  const activeCardForModal = optimisticLists
+    .flatMap((list) => list.cards)
+    .find((card) => card.id === activeCardId)
 
   // Configure sensors with keyboard support for accessibility
   const sensors = useSensors(
@@ -136,6 +144,9 @@ export function BoardDetailContent({
       <DragOverlay>
         {activeCard ? <CardItem card={activeCard} /> : null}
       </DragOverlay>
+
+      {/* Card Detail Modal - Rendered at board level */}
+      {activeCardForModal && <CardDetailDialog card={activeCardForModal} />}
     </DndContext>
   )
 }

@@ -43,7 +43,7 @@ export async function createCard(data: TCreateCardInput): Promise<TCardResult> {
   if (!user) {
     return {
       success: false,
-      error: 'You must be logged in to create a card',
+      error: 'Debes iniciar sesión para crear una tarjeta',
     }
   }
 
@@ -54,7 +54,7 @@ export async function createCard(data: TCreateCardInput): Promise<TCardResult> {
     const firstError = validated.error.issues[0]
     return {
       success: false,
-      error: firstError?.message ?? 'Invalid data',
+      error: firstError?.message ?? 'Datos inválidos',
     }
   }
 
@@ -70,14 +70,14 @@ export async function createCard(data: TCreateCardInput): Promise<TCardResult> {
     if (!listRecord) {
       return {
         success: false,
-        error: 'List not found',
+        error: 'Lista no encontrada',
       }
     }
 
     if (listRecord.board.ownerId !== user.id) {
       return {
         success: false,
-        error: 'You do not have permission to add cards to this list',
+        error: 'No tienes permiso para añadir tarjetas a esta lista',
       }
     }
 
@@ -134,7 +134,7 @@ export async function createCard(data: TCreateCardInput): Promise<TCardResult> {
     logError(error, 'Error creating card')
     return {
       success: false,
-      error: 'Failed to create card',
+      error: 'Error al crear la tarjeta',
     }
   }
 }
@@ -146,7 +146,7 @@ export async function updateCard(data: TUpdateCardInput): Promise<TCardResult> {
   if (!user) {
     return {
       success: false,
-      error: 'You must be logged in to update a card',
+      error: 'Debes iniciar sesión para actualizar una tarjeta',
     }
   }
 
@@ -157,7 +157,7 @@ export async function updateCard(data: TUpdateCardInput): Promise<TCardResult> {
     const firstError = validated.error.issues[0]
     return {
       success: false,
-      error: firstError?.message ?? 'Invalid data',
+      error: firstError?.message ?? 'Datos inválidos',
     }
   }
 
@@ -177,37 +177,44 @@ export async function updateCard(data: TUpdateCardInput): Promise<TCardResult> {
     if (!cardRecord) {
       return {
         success: false,
-        error: 'Card not found',
+        error: 'Tarjeta no encontrada',
       }
     }
 
     if (cardRecord.list.board.ownerId !== user.id) {
       return {
         success: false,
-        error: 'You do not have permission to update this card',
+        error: 'No tienes permiso para actualizar esta tarjeta',
       }
     }
 
-    // 4. Update the card
+    // 4. Build update object with only provided fields
+    const updateData: Record<string, unknown> = {}
+
+    if (validated.data.title !== undefined) {
+      updateData.title = validated.data.title
+    }
+    if (validated.data.description !== undefined) {
+      updateData.description = validated.data.description
+    }
+    if (validated.data.position !== undefined) {
+      updateData.position = validated.data.position
+    }
+    if (validated.data.dueDate !== undefined) {
+      updateData.dueDate = validated.data.dueDate
+    }
+    if (validated.data.listId !== undefined) {
+      updateData.listId = validated.data.listId
+    }
+
+    // 5. Update the card
     const [updatedCard] = await db
       .update(card)
-      .set({
-        ...(validated.data.title && { title: validated.data.title }),
-        ...(validated.data.description !== undefined && {
-          description: validated.data.description,
-        }),
-        ...(validated.data.position !== undefined && {
-          position: validated.data.position,
-        }),
-        ...(validated.data.dueDate !== undefined && {
-          dueDate: validated.data.dueDate,
-        }),
-        ...(validated.data.listId && { listId: validated.data.listId }),
-      })
+      .set(updateData)
       .where(eq(card.id, validated.data.id))
       .returning({ id: card.id, title: card.title })
 
-    // 5. Revalidate board detail page - DESPUÉS de mutación exitosa
+    // 6. Revalidate board detail page - DESPUÉS de mutación exitosa
     revalidateTag(`board:${cardRecord.list.boardId}:lists`, { expire: 0 })
     revalidatePath(`/boards/${cardRecord.list.boardId}`)
 
@@ -219,7 +226,7 @@ export async function updateCard(data: TUpdateCardInput): Promise<TCardResult> {
     logError(error, 'Error updating card')
     return {
       success: false,
-      error: 'Failed to update card',
+      error: 'Error al actualizar la tarjeta',
     }
   }
 }
@@ -233,7 +240,7 @@ export async function deleteCard(
   if (!user) {
     return {
       success: false,
-      error: 'You must be logged in to delete a card',
+      error: 'Debes iniciar sesión para eliminar una tarjeta',
     }
   }
 
@@ -244,7 +251,7 @@ export async function deleteCard(
     const firstError = validated.error.issues[0]
     return {
       success: false,
-      error: firstError?.message ?? 'Invalid data',
+      error: firstError?.message ?? 'Datos inválidos',
     }
   }
 
@@ -264,14 +271,14 @@ export async function deleteCard(
     if (!cardRecord) {
       return {
         success: false,
-        error: 'Card not found',
+        error: 'Tarjeta no encontrada',
       }
     }
 
     if (cardRecord.list.board.ownerId !== user.id) {
       return {
         success: false,
-        error: 'You do not have permission to delete this card',
+        error: 'No tienes permiso para eliminar esta tarjeta',
       }
     }
 
@@ -289,7 +296,7 @@ export async function deleteCard(
     logError(error, 'Error deleting card')
     return {
       success: false,
-      error: 'Failed to delete card',
+      error: 'Error al eliminar la tarjeta',
     }
   }
 }
@@ -377,7 +384,7 @@ export async function moveCardAction(
   if (!user) {
     return {
       success: false,
-      error: 'You must be logged in to move a card',
+      error: 'Debes iniciar sesión para mover una tarjeta',
     }
   }
 
@@ -388,7 +395,7 @@ export async function moveCardAction(
     const firstError = validated.error.issues[0]
     return {
       success: false,
-      error: firstError?.message ?? 'Invalid data',
+      error: firstError?.message ?? 'Datos inválidos',
     }
   }
 
@@ -408,14 +415,14 @@ export async function moveCardAction(
     if (!cardRecord) {
       return {
         success: false,
-        error: 'Card not found',
+        error: 'Tarjeta no encontrada',
       }
     }
 
     if (cardRecord.list.board.ownerId !== user.id) {
       return {
         success: false,
-        error: 'You do not have permission to move this card',
+        error: 'No tienes permiso para mover esta tarjeta',
       }
     }
 
@@ -430,14 +437,14 @@ export async function moveCardAction(
     if (!targetListRecord) {
       return {
         success: false,
-        error: 'Target list not found',
+        error: 'Lista de destino no encontrada',
       }
     }
 
     if (targetListRecord.boardId !== cardRecord.list.boardId) {
       return {
         success: false,
-        error: 'Cannot move card to a different board',
+        error: 'No se puede mover la tarjeta a otro tablero',
       }
     }
 
@@ -499,7 +506,7 @@ export async function moveCardAction(
     logError(error, 'Error moving card')
     return {
       success: false,
-      error: 'Failed to move card',
+      error: 'Error al mover la tarjeta',
     }
   }
 }
