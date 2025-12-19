@@ -39,14 +39,35 @@ This project is a production-ready Trello clone that demonstrates modern web dev
 - **Session Management** - Persistent user sessions
 
 ### 📊 Board Management
-- **Create Boards** - Create new boards with custom titles and colors
+- **Create Boards** - Create new boards with custom titles, descriptions, and colors
 - **View Boards** - Grid view of all user boards with preview cards
+- **Board Collaboration** - Add members to boards with role-based access
+- **Board Details** - Detailed view with lists and cards
 - **Filter Boards** - Advanced filtering by:
   - Text (search by title/description)
   - Color (filter by background color)
   - Date (filter by creation date)
 - **Delete Boards** - Soft delete with confirmation dialog
 - **Board Pagination** - Efficient pagination for large board collections
+
+### 📝 List & Card Management
+- **Create Lists** - Add vertical columns to organize cards within boards
+- **Create Cards** - Add tasks with titles, descriptions, and due dates
+- **Edit Cards** - Update card details inline with form validation
+- **Delete Cards** - Remove cards with confirmation
+- **Delete Lists** - Remove entire lists with all their cards
+- **Drag & Drop** - Intuitive card movement between lists with keyboard support
+- **Card Details Modal** - Full-screen modal for editing card information
+- **Due Dates** - Set and track card deadlines with calendar picker
+
+### 🏷️ Label System
+- **Create Labels** - Add color-coded labels to organize cards (board owners only)
+- **10 Predefined Colors** - Choose from a curated color palette
+- **Label Names** - Optional names for labels (color-only labels supported)
+- **Assign Labels** - Add/remove labels from cards (all board members)
+- **Visual Indicators** - Labels displayed on cards (max 3 visible + counter)
+- **Label Management** - CRUD operations for board owners
+- **Usage Tracking** - See how many cards use each label
 
 ### 🎨 User Experience
 - **Dark/Light Theme** - System-aware theme switching
@@ -57,10 +78,11 @@ This project is a production-ready Trello clone that demonstrates modern web dev
 
 ### 🏗️ Database Structure
 - **Boards** - Main project containers with customization options
-- **Lists** - Vertical columns within boards (planned feature)
-- **Cards** - Individual tasks with descriptions and due dates (planned feature)
-- **Labels** - Color-coded tags for cards (planned feature)
-- **Board Members** - Collaboration and role-based access (planned feature)
+- **Lists** - Vertical columns within boards for card organization
+- **Cards** - Individual tasks with descriptions, due dates, and labels
+- **Labels** - Color-coded tags for categorizing cards
+- **Card Labels** - Many-to-many relationship for flexible tagging
+- **Board Members** - Collaboration with owner/member roles
 
 ## 🛠 Tech Stack
 
@@ -93,12 +115,13 @@ This project is a production-ready Trello clone that demonstrates modern web dev
 - **[React Hook Form](https://react-hook-form.com/)** - Performant form validation
 - **[@hookform/resolvers](https://github.com/react-hook-form/resolvers)** - Zod integration
 
+### Drag & Drop
+- **[@dnd-kit/core](https://dndkit.com/)** - Core drag and drop functionality
+- **[@dnd-kit/sortable](https://docs.dndkit.com/presets/sortable)** - Sortable list implementation
+
 ### Developer Tools
 - **[Biome](https://biomejs.dev/)** - Fast linter and formatter
 - **[date-fns](https://date-fns.org/)** - Modern date utility library
-
-### Planned Features
-- **[@dnd-kit](https://dndkit.com/)** - Drag and drop functionality for cards
 
 ## 🚀 Getting Started
 
@@ -230,8 +253,31 @@ trello-clone/
 │   ├── api/                      # API routes
 │   │   └── auth/                 # better-auth API handler
 │   ├── boards/                   # Boards page
-│   │   └── _components/          # Board-specific components
-│   │       └── filters/          # Filtering UI components
+│   │   ├── [id]/                 # Board detail page (dynamic route)
+│   │   │   ├── _components/      # Board detail components
+│   │   │   │   ├── add-board-member-dialog.tsx
+│   │   │   │   ├── board-detail-content.tsx
+│   │   │   │   ├── card-detail-dialog.tsx
+│   │   │   │   ├── card-item.tsx
+│   │   │   │   ├── card-labels-selector.tsx
+│   │   │   │   ├── create-card-dialog.tsx
+│   │   │   │   ├── create-list-dialog.tsx
+│   │   │   │   ├── delete-card-dialog.tsx
+│   │   │   │   ├── delete-list-dialog.tsx
+│   │   │   │   ├── draggable-card.tsx
+│   │   │   │   ├── droppable-list.tsx
+│   │   │   │   ├── label-badge.tsx
+│   │   │   │   ├── label-manager-dialog.tsx
+│   │   │   │   └── list-actions-menu.tsx
+│   │   │   ├── _hooks/           # Custom hooks
+│   │   │   │   └── use-drag-and-drop.ts
+│   │   │   └── page.tsx          # Board detail page
+│   │   └── _components/          # Board list components
+│   │       ├── filters/          # Filtering UI components
+│   │       ├── board-card.tsx
+│   │       ├── boards-grid.tsx
+│   │       ├── boards-pagination.tsx
+│   │       └── delete-board-dialog.tsx
 │   ├── error.tsx                 # Error boundary
 │   ├── layout.tsx                # Root layout
 │   ├── loading.tsx               # Global loading state
@@ -257,6 +303,27 @@ trello-clone/
 │   │   ├── schemas.ts            # Validation schemas
 │   │   ├── types.ts              # TypeScript types
 │   │   └── filter-types.ts       # Filter type definitions
+│   ├── board-member/             # Board collaboration
+│   │   ├── actions.ts            # Server actions for members
+│   │   ├── queries.ts            # Member queries
+│   │   ├── schemas.ts            # Validation schemas
+│   │   └── types.ts              # TypeScript types
+│   ├── list/                     # List management
+│   │   ├── actions.ts            # Server actions for lists
+│   │   ├── queries.ts            # List queries
+│   │   ├── schemas.ts            # Validation schemas
+│   │   └── types.ts              # TypeScript types
+│   ├── card/                     # Card management
+│   │   ├── actions.ts            # Server actions for cards
+│   │   ├── queries.ts            # Card queries
+│   │   ├── schemas.ts            # Validation schemas
+│   │   └── types.ts              # TypeScript types
+│   ├── label/                    # Label system
+│   │   ├── actions.ts            # Server actions for labels
+│   │   ├── queries.ts            # Label queries
+│   │   ├── schemas.ts            # Validation schemas
+│   │   ├── types.ts              # TypeScript types
+│   │   └── constants.ts          # Color palette
 │   ├── utils/                    # Utility functions
 │   │   ├── form.ts               # Form helpers
 │   │   └── rate-limit.ts         # Rate limiting
@@ -417,12 +484,14 @@ The application uses PostgreSQL with Drizzle ORM. The schema includes:
 ### Tables
 
 - **`user`** - User accounts (managed by better-auth)
-- **`board`** - Task boards with customization
-- **`list`** - Columns within boards (planned feature)
-- **`card`** - Individual tasks (planned feature)
-- **`label`** - Color-coded tags (planned feature)
-- **`card_label`** - Many-to-many relationship (planned feature)
-- **`board_member`** - Board collaboration (planned feature)
+- **`session`** - User sessions (managed by better-auth)
+- **`verification`** - Email verification tokens (managed by better-auth)
+- **`board`** - Task boards with titles, descriptions, and colors
+- **`board_member`** - Board collaboration with owner/member roles
+- **`list`** - Vertical columns within boards with positioning
+- **`card`** - Individual tasks with titles, descriptions, and due dates
+- **`label`** - Color-coded tags with optional names
+- **`card_label`** - Many-to-many relationship between cards and labels
 
 ### Key Relationships
 
@@ -440,11 +509,52 @@ board (many) ──< (many) user (through board_member)
 Optimized indexes on:
 - `board.owner_id` - Fast user board lookups
 - `board.created_at` - Date-based filtering
+- `board_member.board_id`, `board_member.user_id` - Member lookups
 - `list.board_id`, `list.position` - Efficient list ordering
-- `card.list_id`, `card.position` - Card ordering
-- `card.due_date` - Date filtering
+- `card.list_id`, `card.position` - Card ordering within lists
+- `card.due_date` - Date filtering for deadlines
+- `label.board_id` - Fast label retrieval per board
+- `card_label.card_id`, `card_label.label_id` - Label assignment lookups
+
+### Constraints
+
+- **Unique constraints**:
+  - `board_member(board_id, user_id)` - One membership per user per board
+  - `card_label(card_id, label_id)` - One assignment per label per card
+- **Foreign keys** - Cascading deletes for data integrity
+- **Position fields** - Integer-based ordering for drag & drop
 
 View the complete schema in [`db/schema.ts`](./db/schema.ts).
+
+## 🎯 Key Implementation Features
+
+### Drag & Drop System
+- **Keyboard accessible** - WCAG 2.1 AA compliant with arrow key navigation
+- **Optimistic updates** - Instant UI feedback with server reconciliation
+- **Mouse & touch support** - Works on desktop and mobile devices
+- **Position management** - Automatic position recalculation on card moves
+- **Cross-list dragging** - Move cards between different lists seamlessly
+
+### Label System Architecture
+- **Permission-based CRUD** - Board owners manage labels, members assign them
+- **Efficient queries** - Single query loads with Drizzle relations (no N+1)
+- **Race condition safe** - Database constraints prevent duplicate assignments
+- **Color normalization** - Automatic uppercase conversion for consistency
+- **Usage tracking** - Real-time card count per label
+- **Flexible naming** - Labels can have names or be color-only
+
+### Board Collaboration
+- **Role-based access** - Owner vs Member permissions
+- **Invite system** - Add members by email
+- **Access control** - Members can view and edit, owners can manage
+- **Cascading permissions** - Board access extends to lists and cards
+
+### Performance Optimizations
+- **Server Components** - Minimized client-side JavaScript
+- **Efficient caching** - Next.js cache with revalidation strategies
+- **Optimistic UI** - Instant feedback without waiting for server
+- **Indexed queries** - Strategic database indexes for fast lookups
+- **Lazy loading** - Dynamic imports for heavy components
 
 ## 🔐 Authentication
 
