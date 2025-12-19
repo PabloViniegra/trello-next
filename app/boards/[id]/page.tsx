@@ -4,7 +4,8 @@ import { Navbar } from '@/components/navbar'
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { getBoardById } from '@/lib/board/queries'
 import { hasUserBoardAccess } from '@/lib/board-member/queries'
-import { getListsByBoardId } from '@/lib/list/queries'
+import { getLabelsWithCardCount } from '@/lib/label/queries'
+import { getListsWithCardsAndLabelsByBoardId } from '@/lib/list/queries'
 import { BoardDetailContent } from './_components/board-detail-content'
 import { BoardDetailSkeleton } from './_components/board-detail-skeleton'
 
@@ -61,10 +62,16 @@ async function BoardDetailData({ boardId }: { boardId: string }) {
     )
   }
 
-  const lists = await getListsByBoardId(boardId)
+  const lists = await getListsWithCardsAndLabelsByBoardId(boardId)
+  const labels = await getLabelsWithCardCount(boardId)
 
   return (
-    <BoardDetailContent board={board} lists={lists} currentUserId={user.id} />
+    <BoardDetailContent
+      board={board}
+      lists={lists}
+      labels={labels}
+      currentUserId={user.id}
+    />
   )
 }
 

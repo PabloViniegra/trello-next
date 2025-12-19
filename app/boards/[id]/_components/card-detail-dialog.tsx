@@ -26,9 +26,12 @@ import {
 } from '@/components/ui/popover'
 import { Textarea } from '@/components/ui/textarea'
 import { updateCard } from '@/lib/card/actions'
-import type { TCard } from '@/lib/card/types'
+import type { TCardWithLabels } from '@/lib/card/types'
+import type { TLabel } from '@/lib/label/types'
 import { cn } from '@/lib/utils'
 import { useBoardStore } from '@/store/board-store'
+import { CardLabelsSelector } from './card-labels-selector'
+import { LabelBadge } from './label-badge'
 
 // Schema for the edit card form
 const editCardSchema = z.object({
@@ -46,10 +49,14 @@ const editCardSchema = z.object({
 type TEditCardFormData = z.infer<typeof editCardSchema>
 
 type TCardDetailDialogProps = {
-  card: TCard
+  card: TCardWithLabels
+  boardLabels: TLabel[]
 }
 
-export function CardDetailDialog({ card }: TCardDetailDialogProps) {
+export function CardDetailDialog({
+  card,
+  boardLabels,
+}: TCardDetailDialogProps) {
   const router = useRouter()
   const { isCardModalOpen, closeCardModal, activeCard } = useBoardStore()
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -172,6 +179,31 @@ export function CardDetailDialog({ card }: TCardDetailDialogProps) {
             {errors.title && (
               <p className='text-sm text-destructive'>{errors.title.message}</p>
             )}
+          </div>
+
+          {/* Labels Section */}
+          <div className='space-y-2'>
+            <Label>Etiquetas</Label>
+            <div className='flex flex-wrap gap-2 items-center'>
+              {card.labels && card.labels.length > 0 ? (
+                <>
+                  {card.labels.map((label) => (
+                    <LabelBadge key={label.id} label={label} size='md' />
+                  ))}
+                  <CardLabelsSelector
+                    cardId={card.id}
+                    boardLabels={boardLabels}
+                    assignedLabels={card.labels}
+                  />
+                </>
+              ) : (
+                <CardLabelsSelector
+                  cardId={card.id}
+                  boardLabels={boardLabels}
+                  assignedLabels={[]}
+                />
+              )}
+            </div>
           </div>
 
           {/* Description Field */}

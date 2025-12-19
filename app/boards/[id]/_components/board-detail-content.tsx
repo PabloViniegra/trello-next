@@ -12,8 +12,9 @@ import {
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable'
 import { useCallback, useState } from 'react'
 import type { TBoard } from '@/lib/board/types'
-import type { TCard } from '@/lib/card/types'
-import type { TListWithCards } from '@/lib/list/types'
+import type { TCardWithLabels } from '@/lib/card/types'
+import type { TLabelWithCardCount } from '@/lib/label/types'
+import type { TListWithCardsAndLabels } from '@/lib/list/types'
 import { useBoardStore } from '@/store/board-store'
 import { useDragAndDrop } from '../_hooks/use-drag-and-drop'
 import { AddBoardMemberDialog } from './add-board-member-dialog'
@@ -21,10 +22,12 @@ import { CardDetailDialog } from './card-detail-dialog'
 import { CardItem } from './card-item'
 import { CreateListDialog } from './create-list-dialog'
 import { DroppableList } from './droppable-list'
+import { LabelManagerDialog } from './label-manager-dialog'
 
 type TBoardDetailContentProps = {
   board: TBoard
-  lists: TListWithCards[]
+  lists: TListWithCardsAndLabels[]
+  labels: TLabelWithCardCount[]
   currentUserId: string
 }
 
@@ -42,9 +45,10 @@ type TBoardDetailContentProps = {
 export function BoardDetailContent({
   board,
   lists,
+  labels,
   currentUserId,
 }: TBoardDetailContentProps) {
-  const [activeCard, setActiveCard] = useState<TCard | null>(null)
+  const [activeCard, setActiveCard] = useState<TCardWithLabels | null>(null)
   const { activeCard: activeCardId } = useBoardStore()
 
   // Use custom hook for drag and drop logic
@@ -121,12 +125,21 @@ export function BoardDetailContent({
               </div>
             </div>
 
-            {/* Botón de colaboradores (solo visible para el propietario) */}
-            <AddBoardMemberDialog
-              boardId={board.id}
-              ownerId={board.ownerId}
-              currentUserId={currentUserId}
-            />
+            <div className='flex gap-2'>
+              {/* Botón de colaboradores (solo visible para el propietario) */}
+              <AddBoardMemberDialog
+                boardId={board.id}
+                ownerId={board.ownerId}
+                currentUserId={currentUserId}
+              />
+
+              {/* Botón de gestionar etiquetas (solo visible para el propietario) */}
+              <LabelManagerDialog
+                boardId={board.id}
+                labels={labels}
+                isOwner={currentUserId === board.ownerId}
+              />
+            </div>
           </div>
         </div>
 
@@ -146,7 +159,9 @@ export function BoardDetailContent({
       </DragOverlay>
 
       {/* Card Detail Modal - Rendered at board level */}
-      {activeCardForModal && <CardDetailDialog card={activeCardForModal} />}
+      {activeCardForModal && (
+        <CardDetailDialog card={activeCardForModal} boardLabels={labels} />
+      )}
     </DndContext>
   )
 }
