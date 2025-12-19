@@ -6,12 +6,17 @@ import { db } from '@/db'
 import { board } from '@/db/schema'
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { logError } from '@/lib/errors'
-import { createBoardSchema, deleteBoardSchema } from './schemas'
+import {
+  createBoardSchema,
+  deleteBoardSchema,
+  updateBoardSchema,
+} from './schemas'
 import type {
   TBoardResult,
   TCreateBoardInput,
   TDeleteBoardInput,
   TDeleteBoardResult,
+  TUpdateBoardInput,
 } from './types'
 
 export async function createBoard(
@@ -145,6 +150,113 @@ export async function deleteBoard(
     return {
       success: false,
       error: 'Error al eliminar el tablero. Por favor, intenta de nuevo.',
+    }
+  }
+}
+
+export async function updateBoard(
+  data: TUpdateBoardInput,
+): Promise<TBoardResult> {
+  // 1. Verificar autenticación
+  const user = await getCurrentUser()
+
+  if (!user) {
+    return {
+      success: false,
+      error: 'Debes iniciar sesión para editar un tablero',
+    }
+  }
+
+  // 2. Validar datos de entrada
+  const validated = updateBoardSchema.safeParse(data)
+
+  if (!validated.success) {
+    const firstError = validated.error.issues[0]
+    return {
+      success: false,
+      error: firstError?.message ?? 'Datos inválidos',
+    }
+  }
+
+  try {
+    // 3. Verificar que el tablero existe y pertenece al usuario
+    const [existingBoard] = await db
+      .select({ id: board.id, ownerId: board.ownerId })
+      .from(board)
+      .where(eq(board.id, validated.data.boardId))
+      .limit(1)
+
+    if (!existingBoard) {
+      return {
+        success: false,
+        error: 'El tablero no existe',
+      }
+    }
+
+    if (existingBoard.ownerId !== user.id) {
+      return {
+        success: false,
+        error: 'Solo el propietario puede editar este tablero',
+      }
+    }
+
+    // 4. Preparar datos para actualizar (solo campos que vienen en el request)
+    const updateData: Partial<{
+      title: string
+      description: string | null
+      backgroundColor: string
+    }> = {}
+
+    if (validated.data.title !== undefined) {
+      updateData.title = validated.data.title
+    }
+
+    if (validated.data.description !== undefined) {
+      updateData.description = validated.data.description
+    }
+
+    if (validated.data.backgroundColor !== undefined) {
+      updateData.backgroundColor = validated.data.backgroundColor
+    }
+
+    // 4.1. Verificar que hay campos para actualizar
+    if (Object.keys(updateData).length === 0) {
+      return {
+        success: false,
+        error: 'No se proporcionaron campos para actualizar',
+      }
+    }
+
+    // 5. Actualizar el tablero
+    const [updatedBoard] = await db
+      .update(board)
+      .set(updateData)
+      .where(eq(board.id, validated.data.boardId))
+      .returning()
+
+    if (!updatedBoard) {
+      return {
+        success: false,
+        error: 'Error al actualizar el tablero',
+      }
+    }
+
+    // 6. Revalidar cache
+    revalidateTag('boards-list', { expire: 0 })
+    revalidateTag(`board:${validated.data.boardId}`, { expire: 0 })
+    revalidatePath('/boards')
+    revalidatePath(`/boards/${validated.data.boardId}`)
+
+    return {
+      success: true,
+      data: updatedBoard,
+    }
+  } catch (error) {
+    logError(error, 'updateBoard')
+
+    return {
+      success: false,
+      error: 'Error al actualizar el tablero. Por favor, intenta de nuevo.',
     }
   }
 }

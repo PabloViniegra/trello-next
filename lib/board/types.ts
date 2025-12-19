@@ -1,7 +1,12 @@
 import type { z } from 'zod'
-import type { createBoardSchema, deleteBoardSchema } from './schemas'
+import type {
+  createBoardSchema,
+  deleteBoardSchema,
+  updateBoardSchema,
+} from './schemas'
 
 export type TCreateBoardInput = z.infer<typeof createBoardSchema>
+export type TUpdateBoardInput = z.infer<typeof updateBoardSchema>
 export type TDeleteBoardInput = z.infer<typeof deleteBoardSchema>
 
 export type TBoard = {
@@ -32,8 +37,10 @@ export type TBoardError =
   | 'DB_ERROR'
   | 'UNKNOWN_ERROR'
 
+export const DEFAULT_BOARD_COLOR = '#0079bf'
+
 export const BOARD_COLORS = [
-  { name: 'Azul', value: '#0079bf' },
+  { name: 'Azul', value: DEFAULT_BOARD_COLOR },
   { name: 'Naranja', value: '#d29034' },
   { name: 'Verde', value: '#519839' },
   { name: 'Rojo', value: '#b04632' },
