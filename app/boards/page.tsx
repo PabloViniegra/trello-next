@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation'
 import { Suspense } from 'react'
-import { CreateBoardDialog } from '@/app/_components/create-board-dialog'
 import { Navbar } from '@/components/navbar'
 import { Skeleton } from '@/components/ui/skeleton'
 import { getCurrentUser } from '@/lib/auth/get-user'
@@ -124,17 +123,11 @@ export default async function BoardsPage({ searchParams }: TBoardsPageProps) {
       <main className='container mx-auto px-4 py-8'>
         <div className='space-y-6'>
           {/* Header */}
-          <div className='flex items-center justify-between'>
-            <div>
-              <h1 className='text-3xl font-bold tracking-tight'>
-                Mis Tableros
-              </h1>
-              <p className='text-muted-foreground mt-1'>
-                Gestiona y organiza todos tus tableros de trabajo
-              </p>
-            </div>
-
-            <CreateBoardDialog />
+          <div>
+            <h1 className='text-3xl font-bold tracking-tight'>Mis Tableros</h1>
+            <p className='text-muted-foreground mt-1'>
+              Gestiona y organiza todos tus tableros de trabajo
+            </p>
           </div>
 
           {/* Filters */}
