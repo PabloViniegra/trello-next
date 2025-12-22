@@ -2,13 +2,18 @@
 // FILTER TYPES FOR BOARDS
 // =============================================================================
 
-export type TFilterFieldType = 'text' | 'date' | 'color'
+export type TFilterFieldType = 'text' | 'date' | 'color' | 'privacy'
 
 export type TTextOperator = 'contains' | 'equals' | 'startsWith'
 export type TDateOperator = 'before' | 'after' | 'equals'
 export type TColorOperator = 'equals'
+export type TPrivacyOperator = 'equals'
 
-export type TFilterOperator = TTextOperator | TDateOperator | TColorOperator
+export type TFilterOperator =
+  | TTextOperator
+  | TDateOperator
+  | TColorOperator
+  | TPrivacyOperator
 
 export type TFilterField = {
   key: string
@@ -34,6 +39,12 @@ export const BOARD_FILTER_FIELDS: TFilterField[] = [
     key: 'backgroundColor',
     label: 'Color de fondo',
     type: 'color',
+    operators: ['equals'],
+  },
+  {
+    key: 'isPrivate',
+    label: 'Privacidad',
+    type: 'privacy',
     operators: ['equals'],
   },
   {

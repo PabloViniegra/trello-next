@@ -1,6 +1,6 @@
 'use server'
 
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 import { revalidatePath, revalidateTag } from 'next/cache'
 import { db } from '@/db'
 import { board } from '@/db/schema'
@@ -9,6 +9,7 @@ import { logError } from '@/lib/errors'
 import {
   createBoardSchema,
   deleteBoardSchema,
+  updateBoardPrivacySchema,
   updateBoardSchema,
 } from './schemas'
 import type {
@@ -17,6 +18,7 @@ import type {
   TDeleteBoardInput,
   TDeleteBoardResult,
   TUpdateBoardInput,
+  TUpdateBoardPrivacyInput,
 } from './types'
 
 export async function createBoard(
@@ -257,6 +259,93 @@ export async function updateBoard(
     return {
       success: false,
       error: 'Error al actualizar el tablero. Por favor, intenta de nuevo.',
+    }
+  }
+}
+
+/**
+ * Actualiza la privacidad de un tablero.
+ * Solo el propietario del tablero puede cambiar su privacidad.
+ *
+ * @param data - Datos de entrada con boardId e isPrivate
+ * @returns Resultado con el tablero actualizado o error
+ *
+ * @example
+ * const result = await updateBoardPrivacy({
+ *   boardId: 'uuid-here',
+ *   isPrivate: 'private'
+ * })
+ */
+export async function updateBoardPrivacy(
+  data: TUpdateBoardPrivacyInput,
+): Promise<TBoardResult> {
+  // 1. Verificar autenticación
+  const user = await getCurrentUser()
+
+  if (!user) {
+    return {
+      success: false,
+      error: 'Debes iniciar sesión para cambiar la privacidad del tablero',
+    }
+  }
+
+  // 2. Validar datos de entrada
+  const validated = updateBoardPrivacySchema.safeParse(data)
+
+  if (!validated.success) {
+    const firstError = validated.error.issues[0]
+    return {
+      success: false,
+      error: firstError?.message ?? 'Datos inválidos',
+    }
+  }
+
+  try {
+    // 3. Actualizar solo si el usuario es el propietario (verificación atómica)
+    const [updatedBoard] = await db
+      .update(board)
+      .set({ isPrivate: validated.data.isPrivate })
+      .where(
+        and(
+          eq(board.id, validated.data.boardId),
+          eq(board.ownerId, user.id), // Verificación atómica para evitar race conditions
+        ),
+      )
+      .returning()
+
+    if (!updatedBoard) {
+      // Verificar si el tablero existe o si no tiene permisos
+      const [existingBoard] = await db
+        .select({ id: board.id })
+        .from(board)
+        .where(eq(board.id, validated.data.boardId))
+        .limit(1)
+
+      return {
+        success: false,
+        error: existingBoard
+          ? 'Solo el propietario puede cambiar la privacidad del tablero'
+          : 'El tablero no existe',
+      }
+    }
+
+    // 4. Revalidar cache
+    revalidateTag('boards-list', { expire: 0 })
+    revalidateTag(`board:${validated.data.boardId}`, { expire: 0 })
+    revalidatePath('/boards')
+    revalidatePath(`/boards/${validated.data.boardId}`)
+
+    return {
+      success: true,
+      data: updatedBoard,
+    }
+  } catch (error) {
+    logError(error, 'updateBoardPrivacy')
+
+    return {
+      success: false,
+      error:
+        'Error al cambiar la privacidad del tablero. Por favor, intenta de nuevo.',
     }
   }
 }

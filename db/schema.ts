@@ -2,6 +2,7 @@ import { relations } from 'drizzle-orm'
 import {
   index,
   integer,
+  pgEnum,
   pgTable,
   text,
   timestamp,
@@ -9,6 +10,12 @@ import {
   varchar,
 } from 'drizzle-orm/pg-core'
 import { user } from '@/auth-schema'
+
+// =============================================================================
+// ENUMS
+// =============================================================================
+
+export const boardPrivacyEnum = pgEnum('board_privacy', ['public', 'private'])
 
 // =============================================================================
 // BOARDS
@@ -24,6 +31,7 @@ export const board = pgTable(
       '#0079bf',
     ),
     backgroundImage: text('background_image'),
+    isPrivate: boardPrivacyEnum('is_private').notNull().default('public'),
     ownerId: text('owner_id')
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
@@ -36,6 +44,8 @@ export const board = pgTable(
   (table) => [
     index('board_owner_id_idx').on(table.ownerId),
     index('board_created_at_idx').on(table.createdAt),
+    index('board_is_private_idx').on(table.isPrivate),
+    index('board_access_idx').on(table.isPrivate, table.ownerId),
   ],
 )
 

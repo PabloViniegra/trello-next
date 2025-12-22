@@ -44,3 +44,10 @@ export const updateBoardSchema = z.object({
 export const deleteBoardSchema = z.object({
   boardId: z.string().uuid('ID de tablero inválido'),
 })
+
+export const updateBoardPrivacySchema = z.object({
+  boardId: z.string().uuid('ID de tablero inválido'),
+  isPrivate: z.enum(['public', 'private'], {
+    message: 'Valor de privacidad inválido',
+  }),
+})

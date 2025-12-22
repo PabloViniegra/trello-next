@@ -17,6 +17,7 @@ import {
 } from '@/lib/board/filter-types'
 import { ColorFilter } from './filter-inputs/color-filter'
 import { DateFilter } from './filter-inputs/date-filter'
+import { PrivacyFilter } from './filter-inputs/privacy-filter'
 import { TextFilter } from './filter-inputs/text-filter'
 
 type TFilterRowProps = {
@@ -51,6 +52,13 @@ export function FilterRow({
       case 'color':
         return (
           <ColorFilter
+            value={filter.value}
+            onChange={(value) => onValueChange(filter.id, value)}
+          />
+        )
+      case 'privacy':
+        return (
+          <PrivacyFilter
             value={filter.value}
             onChange={(value) => onValueChange(filter.id, value)}
           />
