@@ -10,6 +10,7 @@ import {
   useSensors,
 } from '@dnd-kit/core'
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable'
+import { Lock } from 'lucide-react'
 import { useCallback, useState } from 'react'
 import type { TBoard } from '@/lib/board/types'
 import type { TCardWithLabels } from '@/lib/card/types'
@@ -18,6 +19,7 @@ import type { TListWithCardsAndLabels } from '@/lib/list/types'
 import { useBoardStore } from '@/store/board-store'
 import { useDragAndDrop } from '../_hooks/use-drag-and-drop'
 import { AddBoardMemberDialog } from './add-board-member-dialog'
+import { BoardPrivacyToggle } from './board-privacy-toggle'
 import { CardDetailDialog } from './card-detail-dialog'
 import { CardItem } from './card-item'
 import { CreateListDialog } from './create-list-dialog'
@@ -115,8 +117,11 @@ export function BoardDetailContent({
                 }}
               />
               <div>
-                <h1 className='text-3xl font-display font-bold text-foreground tracking-tight'>
+                <h1 className='text-3xl font-display font-bold text-foreground tracking-tight flex items-center gap-2'>
                   {board.title}
+                  {board.isPrivate === 'private' && (
+                    <Lock className='h-6 w-6 text-muted-foreground' />
+                  )}
                 </h1>
                 {board.description && (
                   <p className='text-muted-foreground text-sm mt-1.5 font-sans'>
@@ -144,6 +149,13 @@ export function BoardDetailContent({
               <LabelManagerDialog
                 boardId={board.id}
                 labels={labels}
+                isOwner={currentUserId === board.ownerId}
+              />
+
+              {/* Botón de privacidad (solo visible para el propietario) */}
+              <BoardPrivacyToggle
+                boardId={board.id}
+                currentPrivacy={board.isPrivate}
                 isOwner={currentUserId === board.ownerId}
               />
             </div>

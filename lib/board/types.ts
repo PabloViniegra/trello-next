@@ -2,12 +2,16 @@ import type { z } from 'zod'
 import type {
   createBoardSchema,
   deleteBoardSchema,
+  updateBoardPrivacySchema,
   updateBoardSchema,
 } from './schemas'
 
 export type TCreateBoardInput = z.infer<typeof createBoardSchema>
 export type TUpdateBoardInput = z.infer<typeof updateBoardSchema>
 export type TDeleteBoardInput = z.infer<typeof deleteBoardSchema>
+export type TUpdateBoardPrivacyInput = z.infer<typeof updateBoardPrivacySchema>
+
+export type TBoardPrivacy = 'public' | 'private'
 
 export type TBoard = {
   id: string
@@ -15,6 +19,7 @@ export type TBoard = {
   description: string | null
   backgroundColor: string | null
   backgroundImage: string | null
+  isPrivate: TBoardPrivacy
   ownerId: string
   createdAt: Date
   updatedAt: Date

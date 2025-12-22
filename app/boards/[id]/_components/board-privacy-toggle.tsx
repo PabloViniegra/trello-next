@@ -1,0 +1,163 @@
+'use client'
+
+import { Lock, Unlock } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { useState, useTransition } from 'react'
+import { toast } from 'sonner'
+import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
+import { Toggle } from '@/components/ui/toggle'
+import { updateBoardPrivacy } from '@/lib/board/actions'
+import type { TBoardPrivacy } from '@/lib/board/types'
+import { cn } from '@/lib/utils'
+
+type TBoardPrivacyToggleProps = {
+  boardId: string
+  currentPrivacy: TBoardPrivacy
+  isOwner: boolean
+}
+
+export function BoardPrivacyToggle({
+  boardId,
+  currentPrivacy,
+  isOwner,
+}: TBoardPrivacyToggleProps) {
+  const router = useRouter()
+  const [open, setOpen] = useState(false)
+  const [isPending, startTransition] = useTransition()
+  const [privacy, setPrivacy] = useState<TBoardPrivacy>(currentPrivacy)
+
+  function handleOpenChange(isOpen: boolean) {
+    setOpen(isOpen)
+    if (isOpen) {
+      setPrivacy(currentPrivacy)
+    }
+  }
+
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+
+    // Guardar el estado anterior para revertir en caso de error
+    const previousPrivacy = currentPrivacy
+
+    startTransition(async () => {
+      const result = await updateBoardPrivacy({
+        boardId,
+        isPrivate: privacy,
+      })
+
+      if (result.success) {
+        toast.success(
+          privacy === 'private'
+            ? 'Tablero configurado como privado'
+            : 'Tablero configurado como público',
+        )
+        setOpen(false)
+        router.refresh()
+      } else {
+        // Revertir el estado en caso de error
+        setPrivacy(previousPrivacy)
+        toast.error(
+          result.error ?? 'Error al cambiar la privacidad del tablero',
+        )
+      }
+    })
+  }
+
+  // Don't render if not owner
+  if (!isOwner) {
+    return null
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogTrigger asChild>
+        <Button variant='outline' size='sm' className='gap-2'>
+          {currentPrivacy === 'private' ? (
+            <Lock className='h-4 w-4' />
+          ) : (
+            <Unlock className='h-4 w-4' />
+          )}
+          Privacidad
+        </Button>
+      </DialogTrigger>
+      <DialogContent className='sm:max-w-md'>
+        <DialogHeader>
+          <DialogTitle>Privacidad del tablero</DialogTitle>
+          <DialogDescription>
+            Configura quién puede ver este tablero.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit}>
+          <div className='space-y-4 py-4'>
+            <div className='space-y-4'>
+              <Label>Nivel de acceso</Label>
+              <div className='flex flex-col gap-3'>
+                <Toggle
+                  pressed={privacy === 'public'}
+                  onPressedChange={() => setPrivacy('public')}
+                  disabled={isPending}
+                  className={cn(
+                    'justify-start gap-3 h-auto py-3 px-4 data-[state=on]:bg-primary/10 data-[state=on]:border-primary',
+                    isPending && 'opacity-50 cursor-not-allowed',
+                  )}
+                  aria-label='Configurar como público'
+                >
+                  <Unlock className='h-4 w-4' />
+                  <div className='flex flex-col items-start gap-1'>
+                    <span className='font-medium'>Público</span>
+                    <span className='text-xs text-muted-foreground font-normal'>
+                      Cualquiera con el enlace puede ver el tablero
+                    </span>
+                  </div>
+                </Toggle>
+
+                <Toggle
+                  pressed={privacy === 'private'}
+                  onPressedChange={() => setPrivacy('private')}
+                  disabled={isPending}
+                  className={cn(
+                    'justify-start gap-3 h-auto py-3 px-4 data-[state=on]:bg-primary/10 data-[state=on]:border-primary',
+                    isPending && 'opacity-50 cursor-not-allowed',
+                  )}
+                  aria-label='Configurar como privado'
+                >
+                  <Lock className='h-4 w-4' />
+                  <div className='flex flex-col items-start gap-1'>
+                    <span className='font-medium'>Privado</span>
+                    <span className='text-xs text-muted-foreground font-normal'>
+                      Solo los miembros invitados pueden ver el tablero
+                    </span>
+                  </div>
+                </Toggle>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className='gap-2'>
+            <Button
+              type='button'
+              variant='outline'
+              onClick={() => setOpen(false)}
+              disabled={isPending}
+            >
+              Cancelar
+            </Button>
+            <Button type='submit' disabled={isPending}>
+              {isPending ? 'Guardando...' : 'Guardar cambios'}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
+}

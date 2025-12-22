@@ -1,6 +1,6 @@
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { Calendar } from 'lucide-react'
+import { Calendar, Lock } from 'lucide-react'
 import Link from 'next/link'
 import {
   Card,
@@ -33,7 +33,7 @@ export function BoardCard({ board }: TBoardCardProps) {
         >
           {/* Color header */}
           <div
-            className='h-24 w-full flex-shrink-0'
+            className='h-24 w-full shrink-0'
             style={{
               backgroundColor: board.backgroundColor ?? '#0079bf',
               backgroundImage: board.backgroundImage
@@ -44,16 +44,19 @@ export function BoardCard({ board }: TBoardCardProps) {
             }}
           />
 
-          <CardHeader className='pb-2 flex-shrink-0'>
-            <CardTitle className='line-clamp-1 text-lg group-hover:text-primary transition-colors'>
+          <CardHeader className='pb-2 shrink-0'>
+            <CardTitle className='line-clamp-1 text-lg group-hover:text-primary transition-colors flex items-center gap-2'>
               {board.title}
+              {board.isPrivate === 'private' && (
+                <Lock className='h-4 w-4 text-muted-foreground' />
+              )}
             </CardTitle>
-            <CardDescription className='line-clamp-2 min-h-[2.5rem]'>
+            <CardDescription className='line-clamp-2 min-h-10'>
               {board.description || '\u00A0'}
             </CardDescription>
           </CardHeader>
 
-          <CardContent className='pt-0 flex-shrink-0 mt-auto'>
+          <CardContent className='pt-0 shrink-0 mt-auto'>
             <div className='flex items-center gap-1.5 text-xs text-muted-foreground'>
               <Calendar className='h-3 w-3' />
               <span>Creado {createdAtFormatted}</span>

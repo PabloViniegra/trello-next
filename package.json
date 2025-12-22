@@ -23,6 +23,7 @@
     "@radix-ui/react-popover": "^1.1.15",
     "@radix-ui/react-select": "^2.2.6",
     "@radix-ui/react-slot": "^1.2.4",
+    "@radix-ui/react-toggle": "^1.1.10",
     "@radix-ui/react-use-controllable-state": "^1.2.2",
     "better-auth": "^1.4.6",
     "class-variance-authority": "^0.7.1",

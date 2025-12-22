@@ -22,6 +22,20 @@
       "when": 1765644871990,
       "tag": "0002_flashy_warhawk",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1766332283320,
+      "tag": "0003_brief_morg",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1766332747161,
+      "tag": "0004_aromatic_leo",
+      "breakpoints": true
     }
   ]
 }

@@ -7,15 +7,17 @@ import {
   eq,
   gte,
   ilike,
+  inArray,
   like,
   lt,
   lte,
+  or,
   type SQL,
 } from 'drizzle-orm'
 import { unstable_cache } from 'next/cache'
 import { z } from 'zod'
 import { db } from '@/db'
-import { board } from '@/db/schema'
+import { board, boardMember } from '@/db/schema'
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { hasUserBoardAccess } from '@/lib/board-member/queries'
 import { logError } from '@/lib/errors'
@@ -144,6 +146,19 @@ function buildColorFilter(
   return undefined
 }
 
+function buildPrivacyFilter(
+  operator: TFilterOperator,
+  value: string,
+): SQL | undefined {
+  if (!value) return undefined
+
+  if (operator === 'equals' && (value === 'public' || value === 'private')) {
+    return eq(board.isPrivate, value)
+  }
+
+  return undefined
+}
+
 function buildFilterCondition(filter: TActiveFilter): SQL | undefined {
   const { field, operator, value } = filter
 
@@ -162,16 +177,36 @@ function buildFilterCondition(filter: TActiveFilter): SQL | undefined {
       )
     case 'color':
       return buildColorFilter(operator, value)
+    case 'privacy':
+      return buildPrivacyFilter(operator, value)
     default:
       return undefined
   }
 }
 
-function buildWhereClause(
+async function buildWhereClause(
   userId: string,
   filters: TActiveFilter[],
-): SQL | undefined {
-  const conditions: (SQL | undefined)[] = [eq(board.ownerId, userId)]
+): Promise<SQL | undefined> {
+  // Get boards where user is a member
+  const memberBoards = await db
+    .select({ boardId: boardMember.boardId })
+    .from(boardMember)
+    .where(eq(boardMember.userId, userId))
+
+  const memberBoardIds = memberBoards.map((b) => b.boardId)
+
+  // Base condition: user is owner OR (board is public) OR (user is member of the board)
+  const baseCondition =
+    memberBoardIds.length > 0
+      ? or(
+          eq(board.ownerId, userId),
+          and(eq(board.isPrivate, 'public')),
+          inArray(board.id, memberBoardIds),
+        )
+      : or(eq(board.ownerId, userId), eq(board.isPrivate, 'public'))
+
+  const conditions: (SQL | undefined)[] = [baseCondition]
 
   for (const filter of filters) {
     const condition = buildFilterCondition(filter)
@@ -201,7 +236,7 @@ async function _getBoardsWithFilters(
   )
 
   const offset = (validatedPage - 1) * validatedPageSize
-  const whereClause = buildWhereClause(userId, filters)
+  const whereClause = await buildWhereClause(userId, filters)
 
   try {
     // Execute both queries in parallel
@@ -294,15 +329,20 @@ async function _getBoardById(
       }
     }
 
-    // Verificamos que el usuario tenga acceso (propietario o colaborador)
-    const hasAccess = await hasUserBoardAccess(boardId, userId)
+    // Verificamos acceso basado en privacidad del tablero
+    if (result.isPrivate === 'private') {
+      // Para tableros privados, verificar que el usuario tenga acceso (propietario o miembro)
+      const hasAccess = await hasUserBoardAccess(boardId, userId)
 
-    if (!hasAccess) {
-      return {
-        success: false,
-        error: 'No tienes permiso para acceder a este tablero',
+      if (!hasAccess) {
+        return {
+          success: false,
+          error: 'No tienes permiso para acceder a este tablero',
+        }
       }
     }
+    // Para tableros públicos, cualquiera con el enlace puede acceder
+    // No se necesita verificación adicional
 
     return {
       success: true,
