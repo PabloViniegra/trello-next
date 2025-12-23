@@ -561,7 +561,7 @@ export async function moveCardAction(
     const fromList = await db.query.list.findFirst({
       where: eq(list.id, sourceListId),
     })
-    
+
     await logActivity({
       userId: user.id,
       actionType: ACTIVITY_TYPES.CARD_MOVED,

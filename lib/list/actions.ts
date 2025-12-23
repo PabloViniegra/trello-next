@@ -200,9 +200,10 @@ export async function updateList(data: TUpdateListInput): Promise<TListResult> {
     // 5. Log activity
     await logActivity({
       userId: user.id,
-      actionType: validated.data.position !== undefined 
-        ? ACTIVITY_TYPES.LIST_REORDERED 
-        : ACTIVITY_TYPES.LIST_UPDATED,
+      actionType:
+        validated.data.position !== undefined
+          ? ACTIVITY_TYPES.LIST_REORDERED
+          : ACTIVITY_TYPES.LIST_UPDATED,
       entityType: ENTITY_TYPES.LIST,
       entityId: validated.data.id,
       boardId: listRecord.boardId,
