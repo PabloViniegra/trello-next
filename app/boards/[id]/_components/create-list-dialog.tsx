@@ -32,7 +32,7 @@ export function CreateListDialog({ boardId }: TCreateListDialogProps) {
     e.preventDefault()
 
     if (!title.trim()) {
-      toast.error('List title is required')
+      toast.error('El título de la lista es obligatorio')
       return
     }
 
@@ -42,14 +42,14 @@ export function CreateListDialog({ boardId }: TCreateListDialogProps) {
       const result = await createList({ title, boardId })
 
       if (result.success) {
-        toast.success('List created successfully')
+        toast.success('Lista creada correctamente')
         setTitle('')
         setIsOpen(false)
       } else {
-        toast.error(result.error ?? 'Failed to create list')
+        toast.error(result.error ?? 'Error al crear la lista')
       }
     } catch (_error) {
-      toast.error('An unexpected error occurred')
+      toast.error('Ha ocurrido un error inesperado')
     } finally {
       setIsLoading(false)
     }
@@ -64,24 +64,24 @@ export function CreateListDialog({ boardId }: TCreateListDialogProps) {
           className='shrink-0 w-80 h-auto min-h-[100px] border-dashed font-mono'
         >
           <Plus className='w-4 h-4 mr-2' />
-          Add a list
+          Añadir lista
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Create New List</DialogTitle>
+          <DialogTitle>Crear Nueva Lista</DialogTitle>
           <DialogDescription>
-            Add a new list to organize your cards
+            Añade una nueva lista para organizar tus tarjetas
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit}>
           <div className='space-y-4 py-4'>
             <div className='space-y-2'>
-              <Label htmlFor={titleId}>List Title</Label>
+              <Label htmlFor={titleId}>Título de la lista</Label>
               <Input
                 id={titleId}
-                placeholder='Enter list title...'
+                placeholder='Ingresa el título de la lista...'
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 disabled={isLoading}
@@ -97,16 +97,16 @@ export function CreateListDialog({ boardId }: TCreateListDialogProps) {
               onClick={() => setIsOpen(false)}
               disabled={isLoading}
             >
-              Cancel
+              Cancelar
             </Button>
             <Button type='submit' disabled={isLoading}>
               {isLoading ? (
                 <>
                   <Spinner className='w-4 h-4 mr-2' />
-                  Creating...
+                  Creando...
                 </>
               ) : (
-                'Create List'
+                'Crear Lista'
               )}
             </Button>
           </DialogFooter>

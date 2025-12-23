@@ -31,7 +31,7 @@ export async function createList(data: TCreateListInput): Promise<TListResult> {
   if (!user) {
     return {
       success: false,
-      error: 'You must be logged in to create a list',
+      error: 'Debes iniciar sesión para crear una lista',
     }
   }
 
@@ -42,7 +42,7 @@ export async function createList(data: TCreateListInput): Promise<TListResult> {
     const firstError = validated.error.issues[0]
     return {
       success: false,
-      error: firstError?.message ?? 'Invalid data',
+      error: firstError?.message ?? 'Datos inválidos',
     }
   }
 
@@ -55,14 +55,14 @@ export async function createList(data: TCreateListInput): Promise<TListResult> {
     if (!boardRecord) {
       return {
         success: false,
-        error: 'Board not found',
+        error: 'Tablero no encontrado',
       }
     }
 
     if (boardRecord.ownerId !== user.id) {
       return {
         success: false,
-        error: 'You do not have permission to add lists to this board',
+        error: 'No tienes permiso para añadir listas a este tablero',
       }
     }
 
@@ -105,7 +105,7 @@ export async function createList(data: TCreateListInput): Promise<TListResult> {
       },
     )
 
-    // 6. Revalidate board detail page - DESPUÉS de transacción exitosa
+    // 6. Revalidate board detail page - after successful transaction
     revalidateTag(`board:${validated.data.boardId}:lists`, { expire: 0 })
     revalidatePath(`/boards/${validated.data.boardId}`)
 
@@ -114,10 +114,10 @@ export async function createList(data: TCreateListInput): Promise<TListResult> {
       data: newList,
     }
   } catch (error) {
-    logError(error, 'Error creating list')
+    logError(error, 'createList')
     return {
       success: false,
-      error: 'Failed to create list',
+      error: 'Error al crear la lista. Por favor, intenta de nuevo.',
     }
   }
 }
@@ -129,7 +129,7 @@ export async function updateList(data: TUpdateListInput): Promise<TListResult> {
   if (!user) {
     return {
       success: false,
-      error: 'You must be logged in to update a list',
+      error: 'Debes iniciar sesión para actualizar una lista',
     }
   }
 
@@ -140,7 +140,7 @@ export async function updateList(data: TUpdateListInput): Promise<TListResult> {
     const firstError = validated.error.issues[0]
     return {
       success: false,
-      error: firstError?.message ?? 'Invalid data',
+      error: firstError?.message ?? 'Datos inválidos',
     }
   }
 
@@ -156,14 +156,14 @@ export async function updateList(data: TUpdateListInput): Promise<TListResult> {
     if (!listRecord) {
       return {
         success: false,
-        error: 'List not found',
+        error: 'Lista no encontrada',
       }
     }
 
     if (listRecord.board.ownerId !== user.id) {
       return {
         success: false,
-        error: 'You do not have permission to update this list',
+        error: 'No tienes permiso para actualizar esta lista',
       }
     }
 
@@ -179,7 +179,7 @@ export async function updateList(data: TUpdateListInput): Promise<TListResult> {
       .where(eq(list.id, validated.data.id))
       .returning({ id: list.id, title: list.title })
 
-    // 5. Revalidate board detail page - DESPUÉS de mutación exitosa
+    // 5. Revalidate board detail page - after successful mutation
     revalidateTag(`board:${listRecord.boardId}:lists`, { expire: 0 })
     revalidatePath(`/boards/${listRecord.boardId}`)
 
@@ -188,10 +188,10 @@ export async function updateList(data: TUpdateListInput): Promise<TListResult> {
       data: updatedList,
     }
   } catch (error) {
-    logError(error, 'Error updating list')
+    logError(error, 'updateList')
     return {
       success: false,
-      error: 'Failed to update list',
+      error: 'Error al actualizar la lista. Por favor, intenta de nuevo.',
     }
   }
 }
@@ -205,7 +205,7 @@ export async function deleteList(
   if (!user) {
     return {
       success: false,
-      error: 'You must be logged in to delete a list',
+      error: 'Debes iniciar sesión para eliminar una lista',
     }
   }
 
@@ -216,7 +216,7 @@ export async function deleteList(
     const firstError = validated.error.issues[0]
     return {
       success: false,
-      error: firstError?.message ?? 'Invalid data',
+      error: firstError?.message ?? 'Datos inválidos',
     }
   }
 
@@ -232,21 +232,21 @@ export async function deleteList(
     if (!listRecord) {
       return {
         success: false,
-        error: 'List not found',
+        error: 'Lista no encontrada',
       }
     }
 
     if (listRecord.board.ownerId !== user.id) {
       return {
         success: false,
-        error: 'You do not have permission to delete this list',
+        error: 'No tienes permiso para eliminar esta lista',
       }
     }
 
     // 4. Delete the list (cards will be cascade deleted)
     await db.delete(list).where(eq(list.id, validated.data.id))
 
-    // 5. Revalidate board detail page - DESPUÉS de mutación exitosa
+    // 5. Revalidate board detail page - after successful mutation
     revalidateTag(`board:${listRecord.boardId}:lists`, { expire: 0 })
     revalidatePath(`/boards/${listRecord.boardId}`)
 
@@ -254,10 +254,10 @@ export async function deleteList(
       success: true,
     }
   } catch (error) {
-    logError(error, 'Error deleting list')
+    logError(error, 'deleteList')
     return {
       success: false,
-      error: 'Failed to delete list',
+      error: 'Error al eliminar la lista. Por favor, intenta de nuevo.',
     }
   }
 }

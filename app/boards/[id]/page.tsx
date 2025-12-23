@@ -44,8 +44,8 @@ async function BoardDetailData({ boardId }: { boardId: string }) {
   if (!success || !board) {
     return (
       <CenteredMessage
-        title='Error loading board'
-        description={error ?? 'Unknown error'}
+        title='Error al cargar el tablero'
+        description={error ?? 'Error desconocido'}
       />
     )
   }
