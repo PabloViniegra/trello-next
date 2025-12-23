@@ -36,6 +36,13 @@
       "when": 1766332747161,
       "tag": "0004_aromatic_leo",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1766504594927,
+      "tag": "0005_known_the_anarchist",
+      "breakpoints": true
     }
   ]
 }

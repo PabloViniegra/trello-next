@@ -171,6 +171,100 @@ export const boardMember = pgTable(
 // RELATIONS
 // =============================================================================
 
+// =============================================================================
+// ACTIVITY LOG (Audit trail)
+// =============================================================================
+
+export const activityLog = pgTable(
+  'activity_log',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    actionType: varchar('action_type', { length: 50 }).notNull(),
+    entityType: varchar('entity_type', { length: 50 }).notNull(),
+    entityId: text('entity_id').notNull(),
+    boardId: text('board_id')
+      .notNull()
+      .references(() => board.id, { onDelete: 'cascade' }),
+    metadata: text('metadata').notNull().default('{}'),
+    previousValues: text('previous_values').notNull().default('{}'),
+    newValues: text('new_values').notNull().default('{}'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => [
+    index('activity_board_created_idx').on(table.boardId, table.createdAt),
+    index('activity_user_created_idx').on(table.userId, table.createdAt),
+    index('activity_entity_idx').on(table.entityType, table.entityId),
+    index('activity_created_idx').on(table.createdAt),
+  ],
+)
+
+// =============================================================================
+// NOTIFICATIONS
+// =============================================================================
+
+export const notification = pgTable(
+  'notification',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    activityId: text('activity_id').references(() => activityLog.id, {
+      onDelete: 'cascade',
+    }),
+    title: varchar('title', { length: 255 }).notNull(),
+    message: text('message').notNull(),
+    notificationType: varchar('notification_type', { length: 50 }).notNull(),
+    isRead: integer('is_read').notNull().default(0), // 0 = false, 1 = true
+    readAt: timestamp('read_at'),
+    metadata: text('metadata').notNull().default('{}'),
+    priority: varchar('priority', { length: 20 }).notNull().default('normal'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => [
+    index('notification_user_unread_idx').on(
+      table.userId,
+      table.isRead,
+      table.createdAt,
+    ),
+    index('notification_created_idx').on(table.createdAt),
+  ],
+)
+
+// =============================================================================
+// USER NOTIFICATION PREFERENCES
+// =============================================================================
+
+export const userNotificationPreferences = pgTable(
+  'user_notification_preferences',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .unique()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    emailNotifications: integer('email_notifications').notNull().default(1), // 0 = false, 1 = true
+    pushNotifications: integer('push_notifications').notNull().default(1),
+    notifyCardAssigned: integer('notify_card_assigned').notNull().default(1),
+    notifyCardDue: integer('notify_card_due').notNull().default(1),
+    notifyCardComments: integer('notify_card_comments').notNull().default(1),
+    notifyBoardUpdates: integer('notify_board_updates').notNull().default(0),
+    notifyMentions: integer('notify_mentions').notNull().default(1),
+    digestFrequency: varchar('digest_frequency', { length: 20 })
+      .notNull()
+      .default('instant'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at')
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [index('user_notification_preferences_user_idx').on(table.userId)],
+)
+
 export const boardRelations = relations(board, ({ one, many }) => ({
   owner: one(user, {
     fields: [board.ownerId],
@@ -226,3 +320,35 @@ export const boardMemberRelations = relations(boardMember, ({ one }) => ({
     references: [user.id],
   }),
 }))
+
+export const activityLogRelations = relations(activityLog, ({ one }) => ({
+  user: one(user, {
+    fields: [activityLog.userId],
+    references: [user.id],
+  }),
+  board: one(board, {
+    fields: [activityLog.boardId],
+    references: [board.id],
+  }),
+}))
+
+export const notificationRelations = relations(notification, ({ one }) => ({
+  user: one(user, {
+    fields: [notification.userId],
+    references: [user.id],
+  }),
+  activity: one(activityLog, {
+    fields: [notification.activityId],
+    references: [activityLog.id],
+  }),
+}))
+
+export const userNotificationPreferencesRelations = relations(
+  userNotificationPreferences,
+  ({ one }) => ({
+    user: one(user, {
+      fields: [userNotificationPreferences.userId],
+      references: [user.id],
+    }),
+  }),
+)
