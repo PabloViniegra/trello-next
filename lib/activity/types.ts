@@ -132,3 +132,14 @@ export type TMemberMetadata = {
   memberEmail?: string
   role?: string
 }
+
+/**
+ * Union type of all possible metadata types
+ */
+export type TActivityMetadata =
+  | TBoardMetadata
+  | TListMetadata
+  | TCardMetadata
+  | TLabelMetadata
+  | TMemberMetadata
+  | Record<string, unknown>

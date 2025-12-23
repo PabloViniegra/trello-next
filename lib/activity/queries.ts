@@ -100,7 +100,22 @@ export const getActivityByUser = unstable_cache(
       .limit(limit)
       .offset(offset)
 
-    return activities as TActivityLogWithUser[]
+    // Parse JSON fields
+    return activities.map((activity) => ({
+      ...activity,
+      metadata: JSON.parse(activity.metadata || '{}') as Record<
+        string,
+        unknown
+      >,
+      previousValues: JSON.parse(activity.previousValues || '{}') as Record<
+        string,
+        unknown
+      >,
+      newValues: JSON.parse(activity.newValues || '{}') as Record<
+        string,
+        unknown
+      >,
+    }))
   },
   ['activity-by-user'],
   {
@@ -150,7 +165,22 @@ export const getActivityByEntity = unstable_cache(
       .limit(limit)
       .offset(offset)
 
-    return activities as TActivityLogWithUser[]
+    // Parse JSON fields
+    return activities.map((activity) => ({
+      ...activity,
+      metadata: JSON.parse(activity.metadata || '{}') as Record<
+        string,
+        unknown
+      >,
+      previousValues: JSON.parse(activity.previousValues || '{}') as Record<
+        string,
+        unknown
+      >,
+      newValues: JSON.parse(activity.newValues || '{}') as Record<
+        string,
+        unknown
+      >,
+    }))
   },
   ['activity-by-entity'],
   {
@@ -191,5 +221,17 @@ export async function getRecentActivity(
     .orderBy(desc(activityLog.createdAt))
     .limit(limit)
 
-  return activities as TActivityLogWithUser[]
+  // Parse JSON fields
+  return activities.map((activity) => ({
+    ...activity,
+    metadata: JSON.parse(activity.metadata || '{}') as Record<string, unknown>,
+    previousValues: JSON.parse(activity.previousValues || '{}') as Record<
+      string,
+      unknown
+    >,
+    newValues: JSON.parse(activity.newValues || '{}') as Record<
+      string,
+      unknown
+    >,
+  }))
 }
