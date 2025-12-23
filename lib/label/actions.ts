@@ -91,7 +91,23 @@ export async function createLabel(
         color: label.color,
       })
 
-    // 5. Revalidate board page
+    // 5. Log activity
+    await logActivity({
+      userId: user.id,
+      actionType: ACTIVITY_TYPES.LABEL_CREATED,
+      entityType: ENTITY_TYPES.LABEL,
+      entityId: newLabel.id,
+      boardId: validated.data.boardId,
+      metadata: {
+        labelName: newLabel.name || 'Sin nombre',
+      },
+      newValues: {
+        name: newLabel.name,
+        color: newLabel.color,
+      },
+    })
+
+    // 6. Revalidate board page
     revalidatePath(`/boards/${validated.data.boardId}`)
 
     return {
@@ -178,7 +194,29 @@ export async function updateLabel(
         color: label.color,
       })
 
-    // 6. Revalidate board page
+    // 6. Log activity
+    await logActivity({
+      userId: user.id,
+      actionType: ACTIVITY_TYPES.LABEL_UPDATED,
+      entityType: ENTITY_TYPES.LABEL,
+      entityId: validated.data.id,
+      boardId: labelRecord.boardId,
+      metadata: {
+        labelName: updatedLabel.name || 'Sin nombre',
+        nameChanged: validated.data.name !== undefined,
+        colorChanged: validated.data.color !== undefined,
+      },
+      previousValues: {
+        name: labelRecord.name,
+        color: labelRecord.color,
+      },
+      newValues: {
+        name: updatedLabel.name,
+        color: updatedLabel.color,
+      },
+    })
+
+    // 7. Revalidate board page
     revalidatePath(`/boards/${labelRecord.boardId}`)
 
     return {
@@ -247,7 +285,23 @@ export async function deleteLabel(
     // 4. Delete label (cascade will delete card_label entries)
     await db.delete(label).where(eq(label.id, validated.data.id))
 
-    // 5. Revalidate board page
+    // 5. Log activity
+    await logActivity({
+      userId: user.id,
+      actionType: ACTIVITY_TYPES.LABEL_DELETED,
+      entityType: ENTITY_TYPES.LABEL,
+      entityId: validated.data.id,
+      boardId: labelRecord.boardId,
+      metadata: {
+        labelName: labelRecord.name || 'Sin nombre',
+      },
+      previousValues: {
+        name: labelRecord.name,
+        color: labelRecord.color,
+      },
+    })
+
+    // 6. Revalidate board page
     revalidatePath(`/boards/${labelRecord.boardId}`)
 
     return {
@@ -347,7 +401,24 @@ export async function assignLabelToCard(
         labelId: validated.data.labelId,
       })
 
-      // 6. Revalidate board page
+      // 6. Log activity
+      await logActivity({
+        userId: user.id,
+        actionType: ACTIVITY_TYPES.LABEL_ASSIGNED,
+        entityType: ENTITY_TYPES.LABEL,
+        entityId: validated.data.labelId,
+        boardId: cardRecord.list.boardId,
+        metadata: {
+          labelName: labelRecord.name || 'Sin nombre',
+          cardTitle: cardRecord.title,
+        },
+        newValues: {
+          cardId: validated.data.cardId,
+          labelId: validated.data.labelId,
+        },
+      })
+
+      // 7. Revalidate board page
       revalidatePath(`/boards/${cardRecord.list.boardId}`)
 
       return {
@@ -431,7 +502,12 @@ export async function removeLabelFromCard(
       }
     }
 
-    // 4. Delete assignment
+    // 4. Get label info for logging
+    const labelRecord = await db.query.label.findFirst({
+      where: eq(label.id, validated.data.labelId),
+    })
+
+    // 5. Delete assignment
     await db
       .delete(cardLabel)
       .where(
@@ -441,7 +517,26 @@ export async function removeLabelFromCard(
         ),
       )
 
-    // 5. Revalidate board page
+    // 6. Log activity
+    if (labelRecord) {
+      await logActivity({
+        userId: user.id,
+        actionType: ACTIVITY_TYPES.LABEL_REMOVED,
+        entityType: ENTITY_TYPES.LABEL,
+        entityId: validated.data.labelId,
+        boardId: cardRecord.list.boardId,
+        metadata: {
+          labelName: labelRecord.name || 'Sin nombre',
+          cardTitle: cardRecord.title,
+        },
+        previousValues: {
+          cardId: validated.data.cardId,
+          labelId: validated.data.labelId,
+        },
+      })
+    }
+
+    // 7. Revalidate board page
     revalidatePath(`/boards/${cardRecord.list.boardId}`)
 
     return {
