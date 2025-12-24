@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { ActivityItem } from './activity-item'
 import type { TActivityLogWithUser } from '@/lib/activity/types'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -25,6 +25,26 @@ export function ActivityFeed({
   const [isExpanded, setIsExpanded] = useState(false)
   const [hasMore, setHasMore] = useState(true)
   const [offset, setOffset] = useState(0)
+  const [lastUpdate, setLastUpdate] = useState(Date.now())
+
+  // Refresh recent activities (for polling)
+  const refreshActivities = useCallback(async () => {
+    try {
+      const response = await fetch(
+        `/api/boards/${boardId}/activity?offset=0&limit=20`,
+      )
+      if (!response.ok) throw new Error('Failed to refresh activities')
+
+      const data = await response.json()
+      const newActivities: TActivityLogWithUser[] = data.activities || []
+
+      // Always update with latest activities (polling approach)
+      setActivities(newActivities)
+      setLastUpdate(Date.now())
+    } catch (error) {
+      console.error('Error refreshing activities:', error)
+    }
+  }, [boardId])
 
   const loadMoreActivities = async () => {
     if (isLoading) return
@@ -49,15 +69,30 @@ export function ActivityFeed({
     }
   }
 
+  // Auto-refresh every 15 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refreshActivities()
+    }, 15000) // 15 seconds
+
+    return () => clearInterval(interval)
+  }, [refreshActivities])
+
   const displayedActivities = isExpanded ? activities : activities.slice(0, 5)
 
   return (
     <div className={cn('space-y-4', className)}>
       {/* Header */}
       <div className='flex items-center justify-between'>
-        <h3 className='text-sm font-semibold text-foreground'>
-          Actividad Reciente
-        </h3>
+        <div className='flex items-center gap-2'>
+          <h3 className='text-sm font-semibold text-foreground'>
+            Actividad Reciente
+          </h3>
+          <div className='flex items-center gap-1 text-xs text-muted-foreground'>
+            <div className='w-2 h-2 bg-green-500 rounded-full animate-pulse' />
+            Auto-refresco
+          </div>
+        </div>
         {activities.length > 5 && (
           <Button
             variant='ghost'

@@ -6,6 +6,7 @@ import { getBoardById } from '@/lib/board/queries'
 import { hasUserBoardAccess } from '@/lib/board-member/queries'
 import { getLabelsWithCardCount } from '@/lib/label/queries'
 import { getListsWithCardsAndLabelsByBoardId } from '@/lib/list/queries'
+import { getRecentActivity } from '@/lib/activity/queries'
 import { BoardDetailContent } from './_components/board-detail-content'
 import { BoardDetailSkeleton } from './_components/board-detail-skeleton'
 
@@ -64,6 +65,7 @@ async function BoardDetailData({ boardId }: { boardId: string }) {
 
   const lists = await getListsWithCardsAndLabelsByBoardId(boardId)
   const labels = await getLabelsWithCardCount(boardId)
+  const recentActivities = await getRecentActivity(boardId, 10)
 
   return (
     <BoardDetailContent
@@ -71,6 +73,7 @@ async function BoardDetailData({ boardId }: { boardId: string }) {
       lists={lists}
       labels={labels}
       currentUserId={user.id}
+      initialActivities={recentActivities}
     />
   )
 }

@@ -26,12 +26,15 @@ import { CreateListDialog } from './create-list-dialog'
 import { DroppableList } from './droppable-list'
 import { EditBoardDialog } from './edit-board-dialog'
 import { LabelManagerDialog } from './label-manager-dialog'
+import { ActivityFeed } from './activity-feed'
+import { getRecentActivity } from '@/lib/activity/queries'
 
 type TBoardDetailContentProps = {
   board: TBoard
   lists: TListWithCardsAndLabels[]
   labels: TLabelWithCardCount[]
   currentUserId: string
+  initialActivities?: any[] // TODO: proper type
 }
 
 /**
@@ -50,6 +53,7 @@ export function BoardDetailContent({
   lists,
   labels,
   currentUserId,
+  initialActivities = [],
 }: TBoardDetailContentProps) {
   const [activeCard, setActiveCard] = useState<TCardWithLabels | null>(null)
   const { activeCard: activeCardId } = useBoardStore()
@@ -97,59 +101,44 @@ export function BoardDetailContent({
     <DndContext
       sensors={sensors}
       collisionDetection={closestCorners}
-      onDragStart={onDragStart}
-      onDragEnd={onDragEnd}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
     >
-      <div className='h-full flex flex-col bg-background'>
-        {/* Board Header with Color Bar */}
-        <div
-          className='border-b-4 px-6 py-4'
-          style={{
-            borderColor: board.backgroundColor ?? '#0079bf',
-          }}
-        >
-          <div className='flex items-center justify-between'>
-            <div className='flex items-center gap-3'>
-              <div
-                className='w-1 h-8 rounded-full'
-                style={{
-                  backgroundColor: board.backgroundColor ?? '#0079bf',
-                }}
-              />
-              <div>
-                <h1 className='text-3xl font-display font-bold text-foreground tracking-tight flex items-center gap-2'>
-                  {board.title}
-                  {board.isPrivate === 'private' && (
-                    <Lock className='h-6 w-6 text-muted-foreground' />
-                  )}
-                </h1>
-                {board.description && (
-                  <p className='text-muted-foreground text-sm mt-1.5 font-sans'>
-                    {board.description}
-                  </p>
-                )}
-              </div>
+      <div className='h-full flex'>
+        {/* Main Content */}
+        <div className='flex-1 flex flex-col'>
+          {/* Board Header */}
+          <div className='flex items-center justify-between p-6 border-b'>
+            <div className='flex items-center gap-4'>
+              <h1 className='text-2xl font-bold'>{board.title}</h1>
+
+              {board.isPrivate && (
+                <div className='flex items-center gap-1 text-sm text-muted-foreground'>
+                  <Lock className='w-4 h-4' />
+                  Privado
+                </div>
+              )}
             </div>
 
-            <div className='flex gap-2'>
-              {/* Botón de editar tablero (solo visible para el propietario) */}
+            <div className='flex items-center gap-2'>
+              {/* Label Manager Dialog */}
+              <LabelManagerDialog
+                boardId={board.id}
+                labels={labels}
+                isOwner={currentUserId === board.ownerId}
+              />
+
+              {/* Edit Board Dialog */}
               <EditBoardDialog
                 board={board}
                 isOwner={currentUserId === board.ownerId}
               />
 
-              {/* Botón de colaboradores (solo visible para el propietario) */}
+              {/* Add Member Dialog */}
               <AddBoardMemberDialog
                 boardId={board.id}
                 ownerId={board.ownerId}
                 currentUserId={currentUserId}
-              />
-
-              {/* Botón de gestionar etiquetas (solo visible para el propietario) */}
-              <LabelManagerDialog
-                boardId={board.id}
-                labels={labels}
-                isOwner={currentUserId === board.ownerId}
               />
 
               {/* Botón de privacidad (solo visible para el propietario) */}
@@ -160,17 +149,27 @@ export function BoardDetailContent({
               />
             </div>
           </div>
+
+          {/* Lists Container with Horizontal Scroll */}
+          <div className='flex-1 flex gap-4 overflow-x-auto p-6'>
+            {optimisticLists.map((list) => (
+              <DroppableList key={list.id} list={list} board={board} />
+            ))}
+
+            {/* Add List Button */}
+            <CreateListDialog boardId={board.id} />
+          </div>
         </div>
 
-        {/* Lists Container with Horizontal Scroll */}
-        <div className='flex-1 flex gap-4 overflow-x-auto p-6'>
-          {optimisticLists.map((list) => (
-            <DroppableList key={list.id} list={list} board={board} />
-          ))}
-
-          {/* Add List Button */}
-          <CreateListDialog boardId={board.id} />
-        </div>
+        {/* Activity Sidebar */}
+        <aside className='w-80 shrink-0 border-l bg-background'>
+          <div className='h-full overflow-y-auto p-6'>
+            <ActivityFeed
+              boardId={board.id}
+              initialActivities={initialActivities}
+            />
+          </div>
+        </aside>
       </div>
 
       <DragOverlay>
