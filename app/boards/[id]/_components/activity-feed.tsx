@@ -5,7 +5,7 @@ import { ActivityItem } from './activity-item'
 import type { TActivityLogWithUser } from '@/lib/activity/types'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
-import { ChevronDown, ChevronUp } from 'lucide-react'
+import { ChevronDown, ChevronUp, RefreshCw } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 type TActivityFeedProps = {
@@ -19,6 +19,13 @@ export function ActivityFeed({
   initialActivities = [],
   className,
 }: TActivityFeedProps) {
+  console.log(
+    '🎯 ActivityFeed rendered for board:',
+    boardId,
+    'initial activities:',
+    initialActivities.length,
+  )
+
   const [activities, setActivities] =
     useState<TActivityLogWithUser[]>(initialActivities)
   const [isLoading, setIsLoading] = useState(false)
@@ -26,9 +33,17 @@ export function ActivityFeed({
   const [hasMore, setHasMore] = useState(true)
   const [offset, setOffset] = useState(0)
   const [lastUpdate, setLastUpdate] = useState(Date.now())
+  const [isClientReady, setIsClientReady] = useState(false)
+
+  // Mark component as ready on client
+  useEffect(() => {
+    console.log('🏁 ActivityFeed mounted on client for board:', boardId)
+    setIsClientReady(true)
+  }, [boardId])
 
   // Refresh recent activities (for polling)
   const refreshActivities = useCallback(async () => {
+    console.log('🔄 Refreshing activities for board:', boardId)
     try {
       const response = await fetch(
         `/api/boards/${boardId}/activity?offset=0&limit=20`,
@@ -38,11 +53,12 @@ export function ActivityFeed({
       const data = await response.json()
       const newActivities: TActivityLogWithUser[] = data.activities || []
 
+      console.log('📊 Activities received:', newActivities.length)
       // Always update with latest activities (polling approach)
       setActivities(newActivities)
       setLastUpdate(Date.now())
     } catch (error) {
-      console.error('Error refreshing activities:', error)
+      console.error('❌ Error refreshing activities:', error)
     }
   }, [boardId])
 
@@ -69,14 +85,24 @@ export function ActivityFeed({
     }
   }
 
-  // Auto-refresh every 15 seconds
+  // Auto-refresh every 15 seconds (only when client is ready)
   useEffect(() => {
-    const interval = setInterval(() => {
-      refreshActivities()
-    }, 15000) // 15 seconds
+    if (!isClientReady) return
 
-    return () => clearInterval(interval)
-  }, [refreshActivities])
+    console.log('⏰ Setting up auto-refresh interval for board:', boardId)
+    const interval = setInterval(() => {
+      console.log(
+        '⏳ Auto-refresh triggered at',
+        new Date().toLocaleTimeString(),
+      )
+      refreshActivities()
+    }, 10000) // 10 seconds for testing
+
+    return () => {
+      console.log('🛑 Clearing auto-refresh interval')
+      clearInterval(interval)
+    }
+  }, [refreshActivities, boardId, isClientReady])
 
   const displayedActivities = isExpanded ? activities : activities.slice(0, 5)
 
@@ -91,28 +117,47 @@ export function ActivityFeed({
           <div className='flex items-center gap-1 text-xs text-muted-foreground'>
             <div className='w-2 h-2 bg-green-500 rounded-full animate-pulse' />
             Auto-refresco
+            {lastUpdate > 0 && (
+              <span className='ml-2'>
+                • Actualizado {new Date(lastUpdate).toLocaleTimeString()}
+              </span>
+            )}
           </div>
         </div>
-        {activities.length > 5 && (
+        <div className='flex items-center gap-1'>
           <Button
             variant='ghost'
             size='sm'
-            onClick={() => setIsExpanded(!isExpanded)}
+            onClick={() => {
+              console.log('🔄 Manual refresh triggered')
+              refreshActivities()
+            }}
             className='h-6 px-2 text-xs'
+            title='Refrescar actividades'
           >
-            {isExpanded ? (
-              <>
-                <ChevronUp className='mr-1 h-3 w-3' />
-                Ver menos
-              </>
-            ) : (
-              <>
-                <ChevronDown className='mr-1 h-3 w-3' />
-                Ver más ({activities.length - 5})
-              </>
-            )}
+            <RefreshCw className='h-3 w-3' />
           </Button>
-        )}
+          {activities.length > 5 && (
+            <Button
+              variant='ghost'
+              size='sm'
+              onClick={() => setIsExpanded(!isExpanded)}
+              className='h-6 px-2 text-xs'
+            >
+              {isExpanded ? (
+                <>
+                  <ChevronUp className='mr-1 h-3 w-3' />
+                  Ver menos
+                </>
+              ) : (
+                <>
+                  <ChevronDown className='mr-1 h-3 w-3' />
+                  Ver más ({activities.length - 5})
+                </>
+              )}
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Activities List */}
