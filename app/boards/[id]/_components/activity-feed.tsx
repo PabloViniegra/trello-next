@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
 import { ChevronDown, ChevronUp, RefreshCw } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { getBoardActivitiesAction } from '@/lib/activity/actions'
 
 type TActivityFeedProps = {
   boardId: string
@@ -45,13 +46,13 @@ export function ActivityFeed({
   const refreshActivities = useCallback(async () => {
     console.log('🔄 Refreshing activities for board:', boardId)
     try {
-      const response = await fetch(
-        `/api/boards/${boardId}/activity?offset=0&limit=20`,
-      )
-      if (!response.ok) throw new Error('Failed to refresh activities')
+      const result = await getBoardActivitiesAction(boardId, 20)
 
-      const data = await response.json()
-      const newActivities: TActivityLogWithUser[] = data.activities || []
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to refresh activities')
+      }
+
+      const newActivities: TActivityLogWithUser[] = result.activities || []
 
       console.log('📊 Activities received:', newActivities.length)
       // Always update with latest activities (polling approach)
@@ -67,19 +68,19 @@ export function ActivityFeed({
 
     setIsLoading(true)
     try {
-      const response = await fetch(
-        `/api/boards/${boardId}/activity?offset=${offset}&limit=20`,
-      )
-      if (!response.ok) throw new Error('Failed to load activities')
+      const result = await getBoardActivitiesAction(boardId, 20, offset)
 
-      const data = await response.json()
-      const newActivities: TActivityLogWithUser[] = data.activities || []
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to load more activities')
+      }
+
+      const newActivities: TActivityLogWithUser[] = result.activities || []
 
       setActivities((prev) => [...prev, ...newActivities])
       setOffset((prev) => prev + 20)
       setHasMore(newActivities.length === 20)
     } catch (error) {
-      console.error('Error loading activities:', error)
+      console.error('Error loading more activities:', error)
     } finally {
       setIsLoading(false)
     }
