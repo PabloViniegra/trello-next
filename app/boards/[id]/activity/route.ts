@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getActivityByBoard } from '@/lib/activity/queries'
 import { auth } from '@/lib/auth'
+import { logger } from '@/lib/utils/logger'
 
 const querySchema = z.object({
   offset: z.coerce.number().min(0).default(0),
@@ -29,9 +30,10 @@ export async function GET(
       limit: searchParams.get('limit'),
     })
 
-    // Get activities for this board
+    // Get activities for this board (includes authorization check)
     const activities = await getActivityByBoard(
       boardId,
+      session.user.id,
       query.limit,
       query.offset,
     )
@@ -41,14 +43,20 @@ export async function GET(
       hasMore: activities.length === query.limit,
     })
   } catch (error) {
-    console.error('Error fetching board activity:', error)
-
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Parámetros inválidos', details: error.issues },
         { status: 400 },
       )
     }
+
+    // Handle authorization errors
+    if (error instanceof Error && error.message.includes('acceso')) {
+      return NextResponse.json({ error: error.message }, { status: 403 })
+    }
+
+    const { id: boardId } = await params
+    logger.error('Failed to fetch board activity', error, { boardId })
 
     return NextResponse.json(
       { error: 'Error interno del servidor' },

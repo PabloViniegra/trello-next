@@ -1,13 +1,14 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { ActivityItem } from './activity-item'
-import type { TActivityLogWithUser } from '@/lib/activity/types'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Button } from '@/components/ui/button'
 import { ChevronDown, ChevronUp, RefreshCw } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { useCallback, useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import { getBoardActivitiesAction } from '@/lib/activity/actions'
+import type { TActivityLogWithUser } from '@/lib/activity/types'
+import { cn } from '@/lib/utils'
+import { useActivityStream } from '../_hooks/use-activity-stream'
+import { ActivityItem } from './activity-item'
 
 type TActivityFeedProps = {
   boardId: string
@@ -20,31 +21,19 @@ export function ActivityFeed({
   initialActivities = [],
   className,
 }: TActivityFeedProps) {
-  console.log(
-    '🎯 ActivityFeed rendered for board:',
+  // Use SSE for real-time updates
+  const { activities, isConnected, lastUpdate } = useActivityStream(
     boardId,
-    'initial activities:',
-    initialActivities.length,
+    initialActivities,
   )
 
-  const [activities, setActivities] =
-    useState<TActivityLogWithUser[]>(initialActivities)
   const [isLoading, setIsLoading] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
   const [hasMore, setHasMore] = useState(true)
   const [offset, setOffset] = useState(0)
-  const [lastUpdate, setLastUpdate] = useState(Date.now())
-  const [isClientReady, setIsClientReady] = useState(false)
 
-  // Mark component as ready on client
-  useEffect(() => {
-    console.log('🏁 ActivityFeed mounted on client for board:', boardId)
-    setIsClientReady(true)
-  }, [boardId])
-
-  // Refresh recent activities (for polling)
+  // Manual refresh function (for button click)
   const refreshActivities = useCallback(async () => {
-    console.log('🔄 Refreshing activities for board:', boardId)
     try {
       const result = await getBoardActivitiesAction(boardId, 20)
 
@@ -52,14 +41,9 @@ export function ActivityFeed({
         throw new Error(result.error || 'Failed to refresh activities')
       }
 
-      const newActivities: TActivityLogWithUser[] = result.activities || []
-
-      console.log('📊 Activities received:', newActivities.length)
-      // Always update with latest activities (polling approach)
-      setActivities(newActivities)
-      setLastUpdate(Date.now())
+      // SSE will handle updates automatically, this is just for manual refresh
     } catch (error) {
-      console.error('❌ Error refreshing activities:', error)
+      console.error('Error refreshing activities:', error)
     }
   }, [boardId])
 
@@ -76,7 +60,7 @@ export function ActivityFeed({
 
       const newActivities: TActivityLogWithUser[] = result.activities || []
 
-      setActivities((prev) => [...prev, ...newActivities])
+      // Note: SSE provides real-time updates, load more is for pagination only
       setOffset((prev) => prev + 20)
       setHasMore(newActivities.length === 20)
     } catch (error) {
@@ -86,24 +70,7 @@ export function ActivityFeed({
     }
   }
 
-  // Auto-refresh every 15 seconds (only when client is ready)
-  useEffect(() => {
-    if (!isClientReady) return
-
-    console.log('⏰ Setting up auto-refresh interval for board:', boardId)
-    const interval = setInterval(() => {
-      console.log(
-        '⏳ Auto-refresh triggered at',
-        new Date().toLocaleTimeString(),
-      )
-      refreshActivities()
-    }, 10000) // 10 seconds for testing
-
-    return () => {
-      console.log('🛑 Clearing auto-refresh interval')
-      clearInterval(interval)
-    }
-  }, [refreshActivities, boardId, isClientReady])
+  // No need for polling - SSE handles real-time updates automatically
 
   const displayedActivities = isExpanded ? activities : activities.slice(0, 5)
 
@@ -116,8 +83,13 @@ export function ActivityFeed({
             Actividad Reciente
           </h3>
           <div className='flex items-center gap-1 text-xs text-muted-foreground'>
-            <div className='w-2 h-2 bg-green-500 rounded-full animate-pulse' />
-            Auto-refresco
+            <div
+              className={cn(
+                'w-2 h-2 rounded-full',
+                isConnected ? 'bg-green-500 animate-pulse' : 'bg-gray-400',
+              )}
+            />
+            {isConnected ? 'En vivo' : 'Desconectado'}
             {lastUpdate > 0 && (
               <span className='ml-2'>
                 • Actualizado {new Date(lastUpdate).toLocaleTimeString()}
@@ -129,10 +101,7 @@ export function ActivityFeed({
           <Button
             variant='ghost'
             size='sm'
-            onClick={() => {
-              console.log('🔄 Manual refresh triggered')
-              refreshActivities()
-            }}
+            onClick={refreshActivities}
             className='h-6 px-2 text-xs'
             title='Refrescar actividades'
           >

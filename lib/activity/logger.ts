@@ -9,6 +9,7 @@ import { lt } from 'drizzle-orm'
 import { revalidateTag } from 'next/cache'
 import { db } from '@/db'
 import { activityLog } from '@/db/schema'
+import { logger } from '@/lib/utils/logger'
 import type { TLogActivityInput } from './types'
 
 // =============================================================================
@@ -21,7 +22,7 @@ import type { TLogActivityInput } from './types'
  */
 export async function logActivity(input: TLogActivityInput): Promise<void> {
   try {
-    // Insert activity log - Drizzle handles JSON serialization
+    // Insert activity log - Drizzle handles JSONB serialization automatically
     await db.insert(activityLog).values({
       id: crypto.randomUUID(),
       userId: input.userId,
@@ -29,19 +30,24 @@ export async function logActivity(input: TLogActivityInput): Promise<void> {
       entityType: input.entityType,
       entityId: input.entityId,
       boardId: input.boardId,
-      metadata: JSON.stringify(input.metadata || {}),
-      previousValues: JSON.stringify(input.previousValues || {}),
-      newValues: JSON.stringify(input.newValues || {}),
+      metadata: input.metadata || {},
+      previousValues: input.previousValues || {},
+      newValues: input.newValues || {},
     })
 
     // Revalidate activity cache
-    revalidateTag('activity')
+    revalidateTag('activity', { expire: 0 })
 
     // TODO: Trigger notifications if needed (Phase 4)
     // await triggerNotifications(input)
   } catch (error) {
-    // Log error but don't fail the operation
-    console.error('Error logging activity:', error)
+    // Log error but don't fail the operation - logging should never break main operations
+    logger.error('Failed to log activity', error, {
+      userId: input.userId,
+      actionType: input.actionType,
+      entityType: input.entityType,
+      entityId: input.entityId,
+    })
   }
 }
 
@@ -60,17 +66,19 @@ export async function logActivities(
       entityType: input.entityType,
       entityId: input.entityId,
       boardId: input.boardId,
-      metadata: JSON.stringify(input.metadata || {}),
-      previousValues: JSON.stringify(input.previousValues || {}),
-      newValues: JSON.stringify(input.newValues || {}),
+      metadata: input.metadata || {},
+      previousValues: input.previousValues || {},
+      newValues: input.newValues || {},
     }))
 
     await db.insert(activityLog).values(values)
 
     // Revalidate activity cache
-    revalidateTag('activity')
+    revalidateTag('activity', { expire: 0 })
   } catch (error) {
-    console.error('Error batch logging activities:', error)
+    logger.error('Failed to batch log activities', error, {
+      count: inputs.length,
+    })
   }
 }
 
@@ -79,19 +87,22 @@ export async function logActivities(
  * Should be run via a cron job or scheduled task
  */
 export async function clearOldActivity(daysToKeep = 180): Promise<number> {
-  try {
-    const cutoffDate = new Date()
-    cutoffDate.setDate(cutoffDate.getDate() - daysToKeep)
+  const cutoffDate = new Date()
+  cutoffDate.setDate(cutoffDate.getDate() - daysToKeep)
 
+  try {
     const result = await db
       .delete(activityLog)
       .where(lt(activityLog.createdAt, cutoffDate))
 
-    revalidateTag('activity')
+    revalidateTag('activity', { expire: 0 })
 
     return result.rowCount || 0
   } catch (error) {
-    console.error('Error clearing old activity:', error)
+    logger.error('Failed to clear old activity', error, {
+      daysToKeep,
+      cutoffDate: cutoffDate.toISOString(),
+    })
     return 0
   }
 }

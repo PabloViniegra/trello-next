@@ -6,8 +6,9 @@
 'use server'
 
 import { getActivityByBoard } from '@/lib/activity/queries'
-import { getCurrentUser } from '@/lib/auth/get-user'
 import type { TActivityLogWithUser } from '@/lib/activity/types'
+import { getCurrentUser } from '@/lib/auth/get-user'
+import { logger } from '@/lib/utils/logger'
 
 /**
  * Get recent activities for a board (server action)
@@ -28,12 +29,16 @@ export async function getBoardActivitiesAction(
       return { success: false, error: 'Usuario no autenticado' }
     }
 
-    // Get activities
-    const activities = await getActivityByBoard(boardId, limit, offset)
+    // Get activities (includes authorization check)
+    const activities = await getActivityByBoard(boardId, user.id, limit, offset)
 
     return { success: true, activities }
   } catch (error) {
-    console.error('Error getting board activities:', error)
-    return { success: false, error: 'Error interno del servidor' }
+    // Handle authorization errors with user-friendly message
+    if (error instanceof Error && error.message.includes('acceso')) {
+      return { success: false, error: error.message }
+    }
+    logger.error('Failed to get board activities', error, { boardId })
+    return { success: false, error: 'Error al cargar las actividades' }
   }
 }

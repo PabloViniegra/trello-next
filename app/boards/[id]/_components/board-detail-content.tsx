@@ -12,12 +12,14 @@ import {
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable'
 import { Lock } from 'lucide-react'
 import { useCallback, useState } from 'react'
+import type { TActivityLogWithUser } from '@/lib/activity/types'
 import type { TBoard } from '@/lib/board/types'
 import type { TCardWithLabels } from '@/lib/card/types'
 import type { TLabelWithCardCount } from '@/lib/label/types'
 import type { TListWithCardsAndLabels } from '@/lib/list/types'
 import { useBoardStore } from '@/store/board-store'
 import { useDragAndDrop } from '../_hooks/use-drag-and-drop'
+import { ActivityFeed } from './activity-feed'
 import { AddBoardMemberDialog } from './add-board-member-dialog'
 import { BoardPrivacyToggle } from './board-privacy-toggle'
 import { CardDetailDialog } from './card-detail-dialog'
@@ -26,15 +28,13 @@ import { CreateListDialog } from './create-list-dialog'
 import { DroppableList } from './droppable-list'
 import { EditBoardDialog } from './edit-board-dialog'
 import { LabelManagerDialog } from './label-manager-dialog'
-import { ActivityFeed } from './activity-feed'
-import { getRecentActivity } from '@/lib/activity/queries'
 
 type TBoardDetailContentProps = {
   board: TBoard
   lists: TListWithCardsAndLabels[]
   labels: TLabelWithCardCount[]
   currentUserId: string
-  initialActivities?: any[] // TODO: proper type
+  initialActivities?: TActivityLogWithUser[]
 }
 
 /**
@@ -80,7 +80,7 @@ export function BoardDetailContent({
   )
 
   // Wrapper for drag start to set active card for overlay
-  const onDragStart = useCallback(
+  const _onDragStart = useCallback(
     (event: Parameters<typeof handleDragStart>[0]) => {
       const card = handleDragStart(event)
       setActiveCard(card)
@@ -89,7 +89,7 @@ export function BoardDetailContent({
   )
 
   // Wrapper for drag end to clear active card
-  const onDragEnd = useCallback(
+  const _onDragEnd = useCallback(
     async (event: Parameters<typeof handleDragEnd>[0]) => {
       await handleDragEnd(event)
       setActiveCard(null)

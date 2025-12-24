@@ -2,6 +2,7 @@ import { relations } from 'drizzle-orm'
 import {
   index,
   integer,
+  jsonb,
   pgEnum,
   pgTable,
   text,
@@ -188,9 +189,9 @@ export const activityLog = pgTable(
     boardId: text('board_id')
       .notNull()
       .references(() => board.id, { onDelete: 'cascade' }),
-    metadata: text('metadata').notNull().default('{}'),
-    previousValues: text('previous_values').notNull().default('{}'),
-    newValues: text('new_values').notNull().default('{}'),
+    metadata: jsonb('metadata').notNull().default({}),
+    previousValues: jsonb('previous_values').notNull().default({}),
+    newValues: jsonb('new_values').notNull().default({}),
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
   (table) => [

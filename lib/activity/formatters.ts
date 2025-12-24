@@ -1,5 +1,5 @@
-import { ACTIVITY_TYPES } from './types'
 import type { TActivityLog, TActivityType } from './types'
+import { ACTIVITY_TYPES } from './types'
 
 /**
  * Formats an activity log entry into a human-readable message in Spanish

@@ -91,7 +91,7 @@ export async function createBoard(
     revalidateTag('boards-list', { expire: 0 }) // Invalida cache tag de la lista de tableros
     revalidatePath('/boards')
     revalidatePath('/')
-    revalidateTag('activity')
+    revalidateTag('activity', { expire: 0 })
 
     return {
       success: true,
@@ -188,7 +188,7 @@ export async function deleteBoard(
     revalidateTag(`board:${validated.data.boardId}:lists`, { expire: 0 }) // Invalida cache tag de las listas del tablero
     revalidatePath('/boards')
     revalidatePath('/')
-    revalidateTag('activity')
+    revalidateTag('activity', { expire: 0 })
 
     return {
       success: true,

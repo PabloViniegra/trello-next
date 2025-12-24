@@ -5,6 +5,7 @@
  * Should be run periodically (e.g., via cron job).
  */
 
+import { logger } from '@/lib/utils/logger'
 import { clearOldActivity } from './logger'
 
 /**
@@ -13,17 +14,15 @@ import { clearOldActivity } from './logger'
  */
 export async function cleanupOldActivityLogs(): Promise<void> {
   try {
-    console.log('🧹 Starting cleanup of old activity logs...')
+    logger.info('Starting cleanup of old activity logs')
 
     const deletedCount = await clearOldActivity(180) // 180 days
 
-    console.log(
-      `✅ Cleanup completed. Deleted ${deletedCount} old activity logs.`,
-    )
+    logger.info('Cleanup completed successfully', { deletedCount })
 
     return Promise.resolve()
   } catch (error) {
-    console.error('❌ Error during activity cleanup:', error)
+    logger.error('Error during activity cleanup', error)
     throw error
   }
 }
@@ -34,14 +33,14 @@ export async function cleanupOldActivityLogs(): Promise<void> {
  */
 export async function cleanupOldNotifications(): Promise<void> {
   try {
-    console.log('🧹 Starting cleanup of old notifications...')
+    logger.info('Starting cleanup of old notifications')
 
     // TODO: Implement notification cleanup when notifications table is ready
-    console.log('ℹ️ Notification cleanup not yet implemented')
+    logger.info('Notification cleanup not yet implemented')
 
     return Promise.resolve()
   } catch (error) {
-    console.error('❌ Error during notification cleanup:', error)
+    logger.error('Error during notification cleanup', error)
     throw error
   }
 }
@@ -51,13 +50,13 @@ export async function cleanupOldNotifications(): Promise<void> {
  */
 export async function runFullCleanup(): Promise<void> {
   try {
-    console.log('🧹 Starting full activity system cleanup...')
+    logger.info('Starting full activity system cleanup')
 
     await Promise.all([cleanupOldActivityLogs(), cleanupOldNotifications()])
 
-    console.log('✅ Full cleanup completed successfully')
+    logger.info('Full cleanup completed successfully')
   } catch (error) {
-    console.error('❌ Error during full cleanup:', error)
+    logger.error('Error during full cleanup', error)
     throw error
   }
 }

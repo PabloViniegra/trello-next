@@ -42,9 +42,9 @@ export const logActivitySchema = z.object({
   ]),
   entityId: z.string().min(1, 'El ID de entidad es requerido'),
   boardId: z.string().min(1, 'El ID de tablero es requerido'),
-  metadata: z.record(z.unknown()).optional(),
-  previousValues: z.record(z.unknown()).optional(),
-  newValues: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
+  previousValues: z.record(z.string(), z.unknown()).optional(),
+  newValues: z.record(z.string(), z.unknown()).optional(),
 })
 
 export type TLogActivitySchema = z.infer<typeof logActivitySchema>

@@ -10,6 +10,7 @@ import { unstable_cache } from 'next/cache'
 import { user } from '@/auth-schema'
 import { db } from '@/db'
 import { activityLog } from '@/db/schema'
+import { hasUserBoardAccess } from '@/lib/board-member/queries'
 import type { TActivityLogWithUser, TEntityType } from './types'
 
 // =============================================================================
@@ -18,52 +19,49 @@ import type { TActivityLogWithUser, TEntityType } from './types'
 
 /**
  * Get activity logs for a specific board
+ * Requires user to have access to the board
  */
-export const getActivityByBoard = unstable_cache(
-  async (
-    boardId: string,
-    limit = 50,
-    offset = 0,
-  ): Promise<TActivityLogWithUser[]> => {
-    const results = await db
-      .select({
-        id: activityLog.id,
-        userId: activityLog.userId,
-        actionType: activityLog.actionType,
-        entityType: activityLog.entityType,
-        entityId: activityLog.entityId,
-        boardId: activityLog.boardId,
-        metadata: activityLog.metadata,
-        previousValues: activityLog.previousValues,
-        newValues: activityLog.newValues,
-        createdAt: activityLog.createdAt,
-        user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          image: user.image,
-        },
-      })
-      .from(activityLog)
-      .leftJoin(user, eq(activityLog.userId, user.id))
-      .where(eq(activityLog.boardId, boardId))
-      .orderBy(desc(activityLog.createdAt))
-      .limit(limit)
-      .offset(offset)
+export async function getActivityByBoard(
+  boardId: string,
+  userId: string,
+  limit = 50,
+  offset = 0,
+): Promise<TActivityLogWithUser[]> {
+  // Authorization check - verify user has access to board
+  const hasAccess = await hasUserBoardAccess(boardId, userId)
+  if (!hasAccess) {
+    throw new Error('No tienes acceso a este tablero')
+  }
 
-    return results.map((activity) => ({
-      ...activity,
-      metadata: JSON.parse(activity.metadata),
-      previousValues: JSON.parse(activity.previousValues),
-      newValues: JSON.parse(activity.newValues),
-    })) as TActivityLogWithUser[]
-  },
-  ['activity-by-board'],
-  {
-    tags: ['activity'],
-    revalidate: 30, // 30 seconds
-  },
-)
+  const results = await db
+    .select({
+      id: activityLog.id,
+      userId: activityLog.userId,
+      actionType: activityLog.actionType,
+      entityType: activityLog.entityType,
+      entityId: activityLog.entityId,
+      boardId: activityLog.boardId,
+      metadata: activityLog.metadata,
+      previousValues: activityLog.previousValues,
+      newValues: activityLog.newValues,
+      createdAt: activityLog.createdAt,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        image: user.image,
+      },
+    })
+    .from(activityLog)
+    .leftJoin(user, eq(activityLog.userId, user.id))
+    .where(eq(activityLog.boardId, boardId))
+    .orderBy(desc(activityLog.createdAt))
+    .limit(limit)
+    .offset(offset)
+
+  // JSONB columns are automatically parsed by Drizzle
+  return results as TActivityLogWithUser[]
+}
 
 /**
  * Get activity logs for a specific user
@@ -100,22 +98,8 @@ export const getActivityByUser = unstable_cache(
       .limit(limit)
       .offset(offset)
 
-    // Parse JSON fields
-    return activities.map((activity) => ({
-      ...activity,
-      metadata: JSON.parse(activity.metadata || '{}') as Record<
-        string,
-        unknown
-      >,
-      previousValues: JSON.parse(activity.previousValues || '{}') as Record<
-        string,
-        unknown
-      >,
-      newValues: JSON.parse(activity.newValues || '{}') as Record<
-        string,
-        unknown
-      >,
-    }))
+    // JSONB columns are automatically parsed by Drizzle
+    return activities as TActivityLogWithUser[]
   },
   ['activity-by-user'],
   {
@@ -165,22 +149,8 @@ export const getActivityByEntity = unstable_cache(
       .limit(limit)
       .offset(offset)
 
-    // Parse JSON fields
-    return activities.map((activity) => ({
-      ...activity,
-      metadata: JSON.parse(activity.metadata || '{}') as Record<
-        string,
-        unknown
-      >,
-      previousValues: JSON.parse(activity.previousValues || '{}') as Record<
-        string,
-        unknown
-      >,
-      newValues: JSON.parse(activity.newValues || '{}') as Record<
-        string,
-        unknown
-      >,
-    }))
+    // JSONB columns are automatically parsed by Drizzle
+    return activities as TActivityLogWithUser[]
   },
   ['activity-by-entity'],
   {
@@ -191,11 +161,19 @@ export const getActivityByEntity = unstable_cache(
 
 /**
  * Get recent activity (no cache, for real-time updates)
+ * Requires user to have access to the board
  */
 export async function getRecentActivity(
   boardId: string,
+  userId: string,
   limit = 10,
 ): Promise<TActivityLogWithUser[]> {
+  // Authorization check - verify user has access to board
+  const hasAccess = await hasUserBoardAccess(boardId, userId)
+  if (!hasAccess) {
+    throw new Error('No tienes acceso a este tablero')
+  }
+
   const activities = await db
     .select({
       id: activityLog.id,
@@ -221,17 +199,6 @@ export async function getRecentActivity(
     .orderBy(desc(activityLog.createdAt))
     .limit(limit)
 
-  // Parse JSON fields
-  return activities.map((activity) => ({
-    ...activity,
-    metadata: JSON.parse(activity.metadata || '{}') as Record<string, unknown>,
-    previousValues: JSON.parse(activity.previousValues || '{}') as Record<
-      string,
-      unknown
-    >,
-    newValues: JSON.parse(activity.newValues || '{}') as Record<
-      string,
-      unknown
-    >,
-  }))
+  // JSONB columns are automatically parsed by Drizzle
+  return activities as TActivityLogWithUser[]
 }

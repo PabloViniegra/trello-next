@@ -43,6 +43,13 @@
       "when": 1766504594927,
       "tag": "0005_known_the_anarchist",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1766591028418,
+      "tag": "0006_tranquil_forgotten_one",
+      "breakpoints": true
     }
   ]
 }
