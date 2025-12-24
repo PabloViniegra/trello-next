@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { getActivityByBoard } from '@/lib/activity/queries'
 import { auth } from '@/lib/auth'
-import { z } from 'zod'
 
 const querySchema = z.object({
   offset: z.coerce.number().min(0).default(0),
@@ -10,7 +10,7 @@ const querySchema = z.object({
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     // Get authenticated user
@@ -22,7 +22,7 @@ export async function GET(
       )
     }
 
-    const boardId = params.id
+    const { id: boardId } = await params
     const { searchParams } = new URL(request.url)
     const query = querySchema.parse({
       offset: searchParams.get('offset'),
