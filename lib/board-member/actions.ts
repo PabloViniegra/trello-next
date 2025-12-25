@@ -149,7 +149,14 @@ export async function addBoardMember(
       }
     }
 
-    // 10. Log activity
+    // 10. Get board title for notification
+    const [boardData] = await db
+      .select({ title: board.title })
+      .from(board)
+      .where(eq(board.id, validated.data.boardId))
+      .limit(1)
+
+    // 11. Log activity
     await logActivity({
       userId: currentUser.id,
       actionType: ACTIVITY_TYPES.MEMBER_ADDED,
@@ -157,8 +164,10 @@ export async function addBoardMember(
       entityId: newMember.id,
       boardId: validated.data.boardId,
       metadata: {
+        memberId: validated.data.userId, // For notification
         memberName: memberUser.name || memberUser.email,
         memberEmail: memberUser.email,
+        boardTitle: boardData?.title || 'Sin título', // For notification
         role: validated.data.role,
       },
       newValues: {
@@ -167,7 +176,7 @@ export async function addBoardMember(
       },
     })
 
-    // 11. Revalidar cache
+    // 12. Revalidar cache
     revalidatePath(`/boards/${validated.data.boardId}`)
 
     return {

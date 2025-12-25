@@ -10,6 +10,7 @@ import { revalidateTag } from 'next/cache'
 import { db } from '@/db'
 import { activityLog } from '@/db/schema'
 import { logger } from '@/lib/utils/logger'
+import { createNotificationFromActivity } from '@/lib/notification/service'
 import type { TLogActivityInput } from './types'
 
 // =============================================================================
@@ -23,23 +24,32 @@ import type { TLogActivityInput } from './types'
 export async function logActivity(input: TLogActivityInput): Promise<void> {
   try {
     // Insert activity log - Drizzle handles JSONB serialization automatically
-    await db.insert(activityLog).values({
-      id: crypto.randomUUID(),
-      userId: input.userId,
-      actionType: input.actionType,
-      entityType: input.entityType,
-      entityId: input.entityId,
-      boardId: input.boardId,
-      metadata: input.metadata || {},
-      previousValues: input.previousValues || {},
-      newValues: input.newValues || {},
-    })
+    const [activity] = await db
+      .insert(activityLog)
+      .values({
+        id: crypto.randomUUID(),
+        userId: input.userId,
+        actionType: input.actionType,
+        entityType: input.entityType,
+        entityId: input.entityId,
+        boardId: input.boardId,
+        metadata: input.metadata || {},
+        previousValues: input.previousValues || {},
+        newValues: input.newValues || {},
+      })
+      .returning()
 
     // Revalidate activity cache
     revalidateTag('activity', { expire: 0 })
 
-    // TODO: Trigger notifications if needed (Phase 4)
-    // await triggerNotifications(input)
+    // Trigger notifications based on activity
+    await createNotificationFromActivity(
+      activity.id,
+      input.actionType,
+      input.entityType,
+      input.metadata || {},
+      input.boardId,
+    )
   } catch (error) {
     // Log error but don't fail the operation - logging should never break main operations
     logger.error('Failed to log activity', error, {
@@ -71,10 +81,23 @@ export async function logActivities(
       newValues: input.newValues || {},
     }))
 
-    await db.insert(activityLog).values(values)
+    const activities = await db.insert(activityLog).values(values).returning()
 
     // Revalidate activity cache
     revalidateTag('activity', { expire: 0 })
+
+    // Trigger notifications for each activity
+    await Promise.all(
+      activities.map((activity, index) =>
+        createNotificationFromActivity(
+          activity.id,
+          inputs[index].actionType,
+          inputs[index].entityType,
+          inputs[index].metadata || {},
+          inputs[index].boardId,
+        ),
+      ),
+    )
   } catch (error) {
     logger.error('Failed to batch log activities', error, {
       count: inputs.length,
