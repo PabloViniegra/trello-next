@@ -16,6 +16,7 @@ import {
 import { getNotificationsAction } from '@/lib/notification/actions'
 import type { TNotificationWithActivity } from '@/lib/notification/types'
 import { cn } from '@/lib/utils'
+import { NotificationDropdown } from './notification-dropdown'
 
 export function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false)
@@ -78,35 +79,12 @@ export function NotificationBell() {
         </Button>
       </PopoverTrigger>
       <PopoverContent className='w-96 p-0' align='end'>
-        <div className='p-4'>
-          <h3 className='font-semibold text-sm mb-2'>Notificaciones</h3>
-          {isLoading ? (
-            <p className='text-sm text-muted-foreground'>Cargando...</p>
-          ) : notifications.length === 0 ? (
-            <p className='text-sm text-muted-foreground'>
-              No tienes notificaciones
-            </p>
-          ) : (
-            <div className='space-y-2'>
-              {notifications.map((notification) => (
-                <div
-                  key={notification.id}
-                  className={cn(
-                    'p-2 rounded text-sm',
-                    notification.isRead === 0
-                      ? 'bg-blue-50 dark:bg-blue-950'
-                      : 'opacity-75',
-                  )}
-                >
-                  <p className='font-medium'>{notification.title}</p>
-                  <p className='text-muted-foreground text-xs'>
-                    {notification.message}
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        <NotificationDropdown
+          notifications={notifications}
+          isLoading={isLoading}
+          onClose={() => setIsOpen(false)}
+          onRefresh={fetchNotifications}
+        />
       </PopoverContent>
     </Popover>
   )
