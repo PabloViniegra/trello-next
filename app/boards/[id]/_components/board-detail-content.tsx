@@ -19,7 +19,7 @@ import type { TLabelWithCardCount } from '@/lib/label/types'
 import type { TListWithCardsAndLabels } from '@/lib/list/types'
 import { useBoardStore } from '@/store/board-store'
 import { useDragAndDrop } from '../_hooks/use-drag-and-drop'
-import { ActivityFeed } from './activity-feed'
+import { ActivitySheet } from './activity-sheet'
 import { AddBoardMemberDialog } from './add-board-member-dialog'
 import { BoardPrivacyToggle } from './board-privacy-toggle'
 import { CardDetailDialog } from './card-detail-dialog'
@@ -104,73 +104,64 @@ export function BoardDetailContent({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className='h-full flex'>
-        {/* Main Content */}
-        <div className='flex-1 flex flex-col'>
-          {/* Board Header */}
-          <div className='flex items-center justify-between p-6 border-b'>
-            <div className='flex items-center gap-4'>
-              <h1 className='text-2xl font-bold'>{board.title}</h1>
+      {/* Main Content - Full Width */}
+      <div className='h-full flex flex-col'>
+        {/* Board Header */}
+        <div className='flex items-center justify-between p-6 border-b'>
+          <div className='flex items-center gap-4'>
+            <h1 className='text-2xl font-bold'>{board.title}</h1>
 
-              {board.isPrivate && (
-                <div className='flex items-center gap-1 text-sm text-muted-foreground'>
-                  <Lock className='w-4 h-4' />
-                  Privado
-                </div>
-              )}
-            </div>
-
-            <div className='flex items-center gap-2'>
-              {/* Label Manager Dialog */}
-              <LabelManagerDialog
-                boardId={board.id}
-                labels={labels}
-                isOwner={currentUserId === board.ownerId}
-              />
-
-              {/* Edit Board Dialog */}
-              <EditBoardDialog
-                board={board}
-                isOwner={currentUserId === board.ownerId}
-              />
-
-              {/* Add Member Dialog */}
-              <AddBoardMemberDialog
-                boardId={board.id}
-                ownerId={board.ownerId}
-                currentUserId={currentUserId}
-              />
-
-              {/* Botón de privacidad (solo visible para el propietario) */}
-              <BoardPrivacyToggle
-                boardId={board.id}
-                currentPrivacy={board.isPrivate}
-                isOwner={currentUserId === board.ownerId}
-              />
-            </div>
+            {board.isPrivate && (
+              <div className='flex items-center gap-1 text-sm text-muted-foreground'>
+                <Lock className='w-4 h-4' />
+                Privado
+              </div>
+            )}
           </div>
 
-          {/* Lists Container with Horizontal Scroll */}
-          <div className='flex-1 flex gap-4 overflow-x-auto p-6'>
-            {optimisticLists.map((list) => (
-              <DroppableList key={list.id} list={list} board={board} />
-            ))}
+          <div className='flex items-center gap-2'>
+            {/* Label Manager Dialog */}
+            <LabelManagerDialog
+              boardId={board.id}
+              labels={labels}
+              isOwner={currentUserId === board.ownerId}
+            />
 
-            {/* Add List Button */}
-            <CreateListDialog boardId={board.id} />
+            {/* Edit Board Dialog */}
+            <EditBoardDialog
+              board={board}
+              isOwner={currentUserId === board.ownerId}
+            />
+
+            {/* Add Member Dialog */}
+            <AddBoardMemberDialog
+              boardId={board.id}
+              ownerId={board.ownerId}
+              currentUserId={currentUserId}
+            />
+
+            {/* Botón de privacidad (solo visible para el propietario) */}
+            <BoardPrivacyToggle
+              boardId={board.id}
+              currentPrivacy={board.isPrivate}
+              isOwner={currentUserId === board.ownerId}
+            />
           </div>
         </div>
 
-        {/* Activity Sidebar */}
-        <aside className='w-80 shrink-0 border-l bg-background'>
-          <div className='h-full overflow-y-auto p-6'>
-            <ActivityFeed
-              boardId={board.id}
-              initialActivities={initialActivities}
-            />
-          </div>
-        </aside>
+        {/* Lists Container with Horizontal Scroll */}
+        <div className='flex-1 flex gap-4 overflow-x-auto p-6'>
+          {optimisticLists.map((list) => (
+            <DroppableList key={list.id} list={list} board={board} />
+          ))}
+
+          {/* Add List Button */}
+          <CreateListDialog boardId={board.id} />
+        </div>
       </div>
+
+      {/* Floating Activity Sheet Button */}
+      <ActivitySheet boardId={board.id} initialActivities={initialActivities} />
 
       <DragOverlay>
         {activeCard ? <CardItem card={activeCard} /> : null}
