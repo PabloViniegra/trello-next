@@ -221,7 +221,7 @@ export const notification = pgTable(
     notificationType: varchar('notification_type', { length: 50 }).notNull(),
     isRead: integer('is_read').notNull().default(0), // 0 = false, 1 = true
     readAt: timestamp('read_at'),
-    metadata: text('metadata').notNull().default('{}'),
+    metadata: jsonb('metadata').notNull().default({}),
     priority: varchar('priority', { length: 20 }).notNull().default('normal'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
