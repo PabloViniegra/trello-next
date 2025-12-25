@@ -168,7 +168,7 @@ export async function getUserPreferences(
           notifyCardAssigned: 1,
           notifyCardDue: 1,
           notifyCardComments: 1,
-          notifyBoardUpdates: 0,
+          notifyBoardUpdates: 1, // ✅ Changed from 0 to 1
           notifyMentions: 1,
           digestFrequency: 'instant',
         })

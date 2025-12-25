@@ -43,6 +43,11 @@ export async function logActivity(input: TLogActivityInput): Promise<void> {
     revalidateTag('activity', { expire: 0 })
 
     // Trigger notifications based on activity
+    logger.info('Triggering notifications for activity', {
+      activityId: activity.id,
+      actionType: input.actionType,
+      metadata: input.metadata,
+    })
     await createNotificationFromActivity(
       activity.id,
       input.actionType,
