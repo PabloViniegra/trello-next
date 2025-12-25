@@ -36,6 +36,27 @@
       "when": 1766332747161,
       "tag": "0004_aromatic_leo",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1766504594927,
+      "tag": "0005_known_the_anarchist",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1766591028418,
+      "tag": "0006_tranquil_forgotten_one",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1766667778574,
+      "tag": "0007_workable_unicorn",
+      "breakpoints": true
     }
   ]
 }

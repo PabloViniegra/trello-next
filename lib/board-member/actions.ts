@@ -5,6 +5,8 @@ import { revalidatePath } from 'next/cache'
 import { user } from '@/auth-schema'
 import { db } from '@/db'
 import { board, boardMember } from '@/db/schema'
+import { logActivity } from '@/lib/activity/logger'
+import { ACTIVITY_TYPES, ENTITY_TYPES } from '@/lib/activity/types'
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { logError } from '@/lib/errors'
 import { addBoardMemberSchema, removeBoardMemberSchema } from './schemas'
@@ -147,7 +149,34 @@ export async function addBoardMember(
       }
     }
 
-    // 10. Revalidar cache
+    // 10. Get board title for notification
+    const [boardData] = await db
+      .select({ title: board.title })
+      .from(board)
+      .where(eq(board.id, validated.data.boardId))
+      .limit(1)
+
+    // 11. Log activity
+    await logActivity({
+      userId: currentUser.id,
+      actionType: ACTIVITY_TYPES.MEMBER_ADDED,
+      entityType: ENTITY_TYPES.MEMBER,
+      entityId: newMember.id,
+      boardId: validated.data.boardId,
+      metadata: {
+        memberId: validated.data.userId, // For notification
+        memberName: memberUser.name || memberUser.email,
+        memberEmail: memberUser.email,
+        boardTitle: boardData?.title || 'Sin título', // For notification
+        role: validated.data.role,
+      },
+      newValues: {
+        userId: validated.data.userId,
+        role: validated.data.role,
+      },
+    })
+
+    // 12. Revalidar cache
     revalidatePath(`/boards/${validated.data.boardId}`)
 
     return {
@@ -221,9 +250,13 @@ export async function removeBoardMember(
       }
     }
 
-    // 4. Verificar que el miembro existe
-    const [existingMember] = await db
-      .select({ id: boardMember.id })
+    // 4. Verificar que el miembro existe y obtener sus datos
+    const [existingMemberData] = await db
+      .select({
+        id: boardMember.id,
+        userId: boardMember.userId,
+        role: boardMember.role,
+      })
       .from(boardMember)
       .where(
         and(
@@ -233,14 +266,25 @@ export async function removeBoardMember(
       )
       .limit(1)
 
-    if (!existingMember) {
+    if (!existingMemberData) {
       return {
         success: false,
         error: 'Este usuario no es colaborador del tablero',
       }
     }
 
-    // 5. Eliminar el miembro
+    // 5. Obtener datos del usuario para logging
+    const [memberUser] = await db
+      .select({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+      })
+      .from(user)
+      .where(eq(user.id, validated.data.userId))
+      .limit(1)
+
+    // 6. Eliminar el miembro
     await db
       .delete(boardMember)
       .where(
@@ -250,7 +294,27 @@ export async function removeBoardMember(
         ),
       )
 
-    // 6. Revalidar cache
+    // 7. Log activity
+    if (memberUser) {
+      await logActivity({
+        userId: currentUser.id,
+        actionType: ACTIVITY_TYPES.MEMBER_REMOVED,
+        entityType: ENTITY_TYPES.MEMBER,
+        entityId: existingMemberData.id,
+        boardId: validated.data.boardId,
+        metadata: {
+          memberName: memberUser.name || memberUser.email,
+          memberEmail: memberUser.email,
+          role: existingMemberData.role,
+        },
+        previousValues: {
+          userId: validated.data.userId,
+          role: existingMemberData.role,
+        },
+      })
+    }
+
+    // 8. Revalidar cache
     revalidatePath(`/boards/${validated.data.boardId}`)
 
     return {

@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { Suspense } from 'react'
 import { Navbar } from '@/components/navbar'
+import { getRecentActivity } from '@/lib/activity/queries'
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { getBoardById } from '@/lib/board/queries'
 import { hasUserBoardAccess } from '@/lib/board-member/queries'
@@ -64,6 +65,7 @@ async function BoardDetailData({ boardId }: { boardId: string }) {
 
   const lists = await getListsWithCardsAndLabelsByBoardId(boardId)
   const labels = await getLabelsWithCardCount(boardId)
+  const recentActivities = await getRecentActivity(boardId, user.id, 10)
 
   return (
     <BoardDetailContent
@@ -71,6 +73,7 @@ async function BoardDetailData({ boardId }: { boardId: string }) {
       lists={lists}
       labels={labels}
       currentUserId={user.id}
+      initialActivities={recentActivities}
     />
   )
 }

@@ -5,6 +5,8 @@ import type { NodePgDatabase } from 'drizzle-orm/node-postgres'
 import { revalidatePath, revalidateTag } from 'next/cache'
 import { db } from '@/db'
 import { card, list } from '@/db/schema'
+import { logActivity } from '@/lib/activity/logger'
+import { ACTIVITY_TYPES, ENTITY_TYPES } from '@/lib/activity/types'
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { logError } from '@/lib/errors'
 import type {
@@ -122,7 +124,25 @@ export async function createCard(data: TCreateCardInput): Promise<TCardResult> {
       },
     )
 
-    // 6. Revalidate board detail page - DESPUÉS de transacción exitosa
+    // 6. Log activity
+    await logActivity({
+      userId: user.id,
+      actionType: ACTIVITY_TYPES.CARD_CREATED,
+      entityType: ENTITY_TYPES.CARD,
+      entityId: newCard.id,
+      boardId: listRecord.boardId,
+      metadata: {
+        cardTitle: newCard.title,
+      },
+      newValues: {
+        title: newCard.title,
+        description: validated.data.description,
+        listId: validated.data.listId,
+        dueDate: validated.data.dueDate,
+      },
+    })
+
+    // 7. Revalidate board detail page - DESPUÉS de transacción exitosa
     revalidateTag(`board:${listRecord.boardId}:lists`, { expire: 0 })
     revalidatePath(`/boards/${listRecord.boardId}`)
 
@@ -214,7 +234,29 @@ export async function updateCard(data: TUpdateCardInput): Promise<TCardResult> {
       .where(eq(card.id, validated.data.id))
       .returning({ id: card.id, title: card.title })
 
-    // 6. Revalidate board detail page - DESPUÉS de mutación exitosa
+    // 6. Log activity
+    await logActivity({
+      userId: user.id,
+      actionType: ACTIVITY_TYPES.CARD_UPDATED,
+      entityType: ENTITY_TYPES.CARD,
+      entityId: validated.data.id,
+      boardId: cardRecord.list.boardId,
+      metadata: {
+        cardTitle: updatedCard.title,
+        titleChanged: validated.data.title !== undefined,
+        descriptionChanged: validated.data.description !== undefined,
+        dueDateChanged: validated.data.dueDate !== undefined,
+      },
+      previousValues: {
+        title: cardRecord.title,
+        description: cardRecord.description,
+        dueDate: cardRecord.dueDate,
+        position: cardRecord.position,
+      },
+      newValues: updateData,
+    })
+
+    // 7. Revalidate board detail page - DESPUÉS de mutación exitosa
     revalidateTag(`board:${cardRecord.list.boardId}:lists`, { expire: 0 })
     revalidatePath(`/boards/${cardRecord.list.boardId}`)
 
@@ -285,7 +327,26 @@ export async function deleteCard(
     // 4. Delete the card
     await db.delete(card).where(eq(card.id, validated.data.id))
 
-    // 5. Revalidate board detail page - DESPUÉS de mutación exitosa
+    // 5. Log activity
+    await logActivity({
+      userId: user.id,
+      actionType: ACTIVITY_TYPES.CARD_DELETED,
+      entityType: ENTITY_TYPES.CARD,
+      entityId: validated.data.id,
+      boardId: cardRecord.list.boardId,
+      metadata: {
+        cardTitle: cardRecord.title,
+      },
+      previousValues: {
+        title: cardRecord.title,
+        description: cardRecord.description,
+        listId: cardRecord.listId,
+        position: cardRecord.position,
+        dueDate: cardRecord.dueDate,
+      },
+    })
+
+    // 6. Revalidate board detail page - DESPUÉS de mutación exitosa
     revalidateTag(`board:${cardRecord.list.boardId}:lists`, { expire: 0 })
     revalidatePath(`/boards/${cardRecord.list.boardId}`)
 
@@ -451,6 +512,7 @@ export async function moveCardAction(
     // 5. Update the card in a transaction to prevent race conditions
     const sourceListId = cardRecord.listId
     const targetListId = validated.data.targetListId
+    const previousPosition = cardRecord.position
 
     await db.transaction(
       async (tx) => {
@@ -495,7 +557,35 @@ export async function moveCardAction(
       },
     )
 
-    // 6. Revalidate board detail page - DESPUÉS de transacción exitosa
+    // 6. Log activity
+    const fromList = await db.query.list.findFirst({
+      where: eq(list.id, sourceListId),
+    })
+
+    await logActivity({
+      userId: user.id,
+      actionType: ACTIVITY_TYPES.CARD_MOVED,
+      entityType: ENTITY_TYPES.CARD,
+      entityId: validated.data.cardId,
+      boardId: cardRecord.list.boardId,
+      metadata: {
+        cardTitle: cardRecord.title,
+        fromList: fromList?.title || 'Unknown',
+        toList: targetListRecord.title,
+        fromPosition: previousPosition,
+        toPosition: validated.data.position,
+      },
+      previousValues: {
+        listId: sourceListId,
+        position: previousPosition,
+      },
+      newValues: {
+        listId: targetListId,
+        position: validated.data.position,
+      },
+    })
+
+    // 7. Revalidate board detail page - DESPUÉS de transacción exitosa
     revalidateTag(`board:${cardRecord.list.boardId}:lists`, { expire: 0 })
     revalidatePath(`/boards/${cardRecord.list.boardId}`)
 

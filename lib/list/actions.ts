@@ -4,6 +4,8 @@ import { eq, sql } from 'drizzle-orm'
 import { revalidatePath, revalidateTag } from 'next/cache'
 import { db } from '@/db'
 import { board, list } from '@/db/schema'
+import { logActivity } from '@/lib/activity/logger'
+import { ACTIVITY_TYPES, ENTITY_TYPES } from '@/lib/activity/types'
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { logError } from '@/lib/errors'
 import type {
@@ -105,7 +107,23 @@ export async function createList(data: TCreateListInput): Promise<TListResult> {
       },
     )
 
-    // 6. Revalidate board detail page - after successful transaction
+    // 6. Log activity
+    await logActivity({
+      userId: user.id,
+      actionType: ACTIVITY_TYPES.LIST_CREATED,
+      entityType: ENTITY_TYPES.LIST,
+      entityId: newList.id,
+      boardId: validated.data.boardId,
+      metadata: {
+        listTitle: newList.title,
+      },
+      newValues: {
+        title: newList.title,
+        boardId: validated.data.boardId,
+      },
+    })
+
+    // 7. Revalidate board detail page - after successful transaction
     revalidateTag(`board:${validated.data.boardId}:lists`, { expire: 0 })
     revalidatePath(`/boards/${validated.data.boardId}`)
 
@@ -179,7 +197,34 @@ export async function updateList(data: TUpdateListInput): Promise<TListResult> {
       .where(eq(list.id, validated.data.id))
       .returning({ id: list.id, title: list.title })
 
-    // 5. Revalidate board detail page - after successful mutation
+    // 5. Log activity
+    await logActivity({
+      userId: user.id,
+      actionType:
+        validated.data.position !== undefined
+          ? ACTIVITY_TYPES.LIST_REORDERED
+          : ACTIVITY_TYPES.LIST_UPDATED,
+      entityType: ENTITY_TYPES.LIST,
+      entityId: validated.data.id,
+      boardId: listRecord.boardId,
+      metadata: {
+        listTitle: updatedList.title,
+        titleChanged: validated.data.title !== undefined,
+        positionChanged: validated.data.position !== undefined,
+        fromPosition: listRecord.position,
+        toPosition: validated.data.position,
+      },
+      previousValues: {
+        title: listRecord.title,
+        position: listRecord.position,
+      },
+      newValues: {
+        title: updatedList.title,
+        position: validated.data.position ?? listRecord.position,
+      },
+    })
+
+    // 6. Revalidate board detail page - after successful mutation
     revalidateTag(`board:${listRecord.boardId}:lists`, { expire: 0 })
     revalidatePath(`/boards/${listRecord.boardId}`)
 
@@ -246,7 +291,23 @@ export async function deleteList(
     // 4. Delete the list (cards will be cascade deleted)
     await db.delete(list).where(eq(list.id, validated.data.id))
 
-    // 5. Revalidate board detail page - after successful mutation
+    // 5. Log activity
+    await logActivity({
+      userId: user.id,
+      actionType: ACTIVITY_TYPES.LIST_DELETED,
+      entityType: ENTITY_TYPES.LIST,
+      entityId: validated.data.id,
+      boardId: listRecord.boardId,
+      metadata: {
+        listTitle: listRecord.title,
+      },
+      previousValues: {
+        title: listRecord.title,
+        position: listRecord.position,
+      },
+    })
+
+    // 6. Revalidate board detail page - after successful mutation
     revalidateTag(`board:${listRecord.boardId}:lists`, { expire: 0 })
     revalidatePath(`/boards/${listRecord.boardId}`)
 

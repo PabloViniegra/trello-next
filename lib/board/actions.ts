@@ -4,6 +4,8 @@ import { and, eq } from 'drizzle-orm'
 import { revalidatePath, revalidateTag } from 'next/cache'
 import { db } from '@/db'
 import { board } from '@/db/schema'
+import { logActivity } from '@/lib/activity/logger'
+import { ACTIVITY_TYPES, ENTITY_TYPES } from '@/lib/activity/types'
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { logError } from '@/lib/errors'
 import {
@@ -68,10 +70,28 @@ export async function createBoard(
       }
     }
 
-    // 5. Revalidar cache de la página de tableros
+    // 5. Log activity
+    await logActivity({
+      userId: user.id,
+      actionType: ACTIVITY_TYPES.BOARD_CREATED,
+      entityType: ENTITY_TYPES.BOARD,
+      entityId: newBoard.id,
+      boardId: newBoard.id,
+      metadata: {
+        boardTitle: newBoard.title,
+      },
+      newValues: {
+        title: newBoard.title,
+        description: newBoard.description,
+        backgroundColor: newBoard.backgroundColor,
+      },
+    })
+
+    // 6. Revalidar cache de la página de tableros
     revalidateTag('boards-list', { expire: 0 }) // Invalida cache tag de la lista de tableros
     revalidatePath('/boards')
     revalidatePath('/')
+    revalidateTag('activity', { expire: 0 })
 
     return {
       success: true,
@@ -133,15 +153,42 @@ export async function deleteBoard(
       }
     }
 
-    // 4. Eliminar el tablero (cascade eliminará las relaciones)
+    // 4. Obtener datos del tablero antes de eliminar
+    const [boardToDelete] = await db
+      .select()
+      .from(board)
+      .where(eq(board.id, validated.data.boardId))
+      .limit(1)
+
+    // 5. Eliminar el tablero (cascade eliminará las relaciones)
     await db.delete(board).where(eq(board.id, validated.data.boardId))
 
-    // 5. Revalidar cache de la página de tableros
+    // 6. Log activity
+    if (boardToDelete) {
+      await logActivity({
+        userId: user.id,
+        actionType: ACTIVITY_TYPES.BOARD_DELETED,
+        entityType: ENTITY_TYPES.BOARD,
+        entityId: validated.data.boardId,
+        boardId: validated.data.boardId,
+        metadata: {
+          boardTitle: boardToDelete.title,
+        },
+        previousValues: {
+          title: boardToDelete.title,
+          description: boardToDelete.description,
+          backgroundColor: boardToDelete.backgroundColor,
+        },
+      })
+    }
+
+    // 7. Revalidar cache de la página de tableros
     revalidateTag('boards-list', { expire: 0 }) // Invalida cache tag de la lista de tableros
     revalidateTag(`board:${validated.data.boardId}`, { expire: 0 }) // Invalida cache tag del tablero específico
     revalidateTag(`board:${validated.data.boardId}:lists`, { expire: 0 }) // Invalida cache tag de las listas del tablero
     revalidatePath('/boards')
     revalidatePath('/')
+    revalidateTag('activity', { expire: 0 })
 
     return {
       success: true,
@@ -183,7 +230,7 @@ export async function updateBoard(
   try {
     // 3. Verificar que el tablero existe y pertenece al usuario
     const [existingBoard] = await db
-      .select({ id: board.id, ownerId: board.ownerId })
+      .select()
       .from(board)
       .where(eq(board.id, validated.data.boardId))
       .limit(1)
@@ -243,7 +290,32 @@ export async function updateBoard(
       }
     }
 
-    // 6. Revalidar cache
+    // 6. Log activity
+    await logActivity({
+      userId: user.id,
+      actionType: ACTIVITY_TYPES.BOARD_UPDATED,
+      entityType: ENTITY_TYPES.BOARD,
+      entityId: validated.data.boardId,
+      boardId: validated.data.boardId,
+      metadata: {
+        boardTitle: updatedBoard.title,
+        titleChanged: validated.data.title !== undefined,
+        descriptionChanged: validated.data.description !== undefined,
+        backgroundChanged: validated.data.backgroundColor !== undefined,
+      },
+      previousValues: {
+        title: existingBoard.title,
+        description: existingBoard.description,
+        backgroundColor: existingBoard.backgroundColor,
+      },
+      newValues: {
+        title: updatedBoard.title,
+        description: updatedBoard.description,
+        backgroundColor: updatedBoard.backgroundColor,
+      },
+    })
+
+    // 7. Revalidar cache
     revalidateTag('boards-list', { expire: 0 })
     revalidateTag(`board:${validated.data.boardId}`, { expire: 0 })
     revalidatePath('/boards')
@@ -301,7 +373,14 @@ export async function updateBoardPrivacy(
   }
 
   try {
-    // 3. Actualizar solo si el usuario es el propietario (verificación atómica)
+    // 3. Obtener estado anterior
+    const [previousBoard] = await db
+      .select()
+      .from(board)
+      .where(eq(board.id, validated.data.boardId))
+      .limit(1)
+
+    // 4. Actualizar solo si el usuario es el propietario (verificación atómica)
     const [updatedBoard] = await db
       .update(board)
       .set({ isPrivate: validated.data.isPrivate })
@@ -329,7 +408,28 @@ export async function updateBoardPrivacy(
       }
     }
 
-    // 4. Revalidar cache
+    // 5. Log activity
+    if (previousBoard) {
+      await logActivity({
+        userId: user.id,
+        actionType: ACTIVITY_TYPES.BOARD_UPDATED,
+        entityType: ENTITY_TYPES.BOARD,
+        entityId: validated.data.boardId,
+        boardId: validated.data.boardId,
+        metadata: {
+          boardTitle: updatedBoard.title,
+          privacyChanged: true,
+        },
+        previousValues: {
+          isPrivate: previousBoard.isPrivate,
+        },
+        newValues: {
+          isPrivate: updatedBoard.isPrivate,
+        },
+      })
+    }
+
+    // 6. Revalidar cache
     revalidateTag('boards-list', { expire: 0 })
     revalidateTag(`board:${validated.data.boardId}`, { expire: 0 })
     revalidatePath('/boards')
