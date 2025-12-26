@@ -28,6 +28,8 @@ export const ACTIVITY_TYPES = {
   CARD_DELETED: 'card.deleted',
   CARD_MOVED: 'card.moved',
   CARD_REORDERED: 'card.reordered',
+  CARD_MEMBER_ADDED: 'card.member.added',
+  CARD_MEMBER_REMOVED: 'card.member.removed',
 
   // Label actions
   LABEL_CREATED: 'label.created',

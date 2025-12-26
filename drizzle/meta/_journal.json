@@ -57,6 +57,13 @@
       "when": 1766667778574,
       "tag": "0007_workable_unicorn",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1766711460545,
+      "tag": "0008_deep_iceman",
+      "breakpoints": true
     }
   ]
 }

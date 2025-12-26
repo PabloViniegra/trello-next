@@ -4,12 +4,12 @@ import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core'
 import { useCallback, useOptimistic, useTransition } from 'react'
 import { toast } from 'sonner'
 import { moveCardAction } from '@/lib/card/actions'
-import type { TCardWithLabels } from '@/lib/card/types'
+import type { TCardWithDetails } from '@/lib/card/types'
 import type { TListWithCardsAndLabels } from '@/lib/list/types'
 
 type TCardLocation = {
   listId: string
-  card: TCardWithLabels
+  card: TCardWithDetails
 }
 
 /**
@@ -65,7 +65,7 @@ export function useDragAndDrop(initialLists: TListWithCardsAndLabels[]) {
   /**
    * Handles the start of a drag operation.
    */
-  const handleDragStart = (event: DragStartEvent): TCardWithLabels | null => {
+  const handleDragStart = (event: DragStartEvent): TCardWithDetails | null => {
     const cardId = event.active.id
 
     // Type guard: ensure id is a string
@@ -186,6 +186,7 @@ export function useDragAndDrop(initialLists: TListWithCardsAndLabels[]) {
           newCards.splice(newPosition, 0, {
             ...draggedCard,
             listId: targetListId,
+            members: draggedCard.members || [],
           })
 
           return { ...list, cards: newCards }

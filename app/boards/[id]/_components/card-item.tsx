@@ -4,14 +4,15 @@ import { AlignLeft, Clock } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import type { TCard, TCardWithLabels } from '@/lib/card/types'
+import type { TCard, TCardWithDetails, TCardWithLabels } from '@/lib/card/types'
 import { cn } from '@/lib/utils'
 import { useBoardStore } from '@/store/board-store'
+import { CardMembersAvatars } from './card-members-avatars'
 import { DeleteCardDialog } from './delete-card-dialog'
 import { LabelBadge } from './label-badge'
 
 type TCardItemProps = {
-  card: TCard | TCardWithLabels
+  card: TCard | TCardWithLabels | TCardWithDetails
 }
 
 type TDueDateStatus = {
@@ -68,9 +69,12 @@ export function CardItem({ card }: TCardItemProps) {
     : null
   const hasDescription = Boolean(card.description)
   const cardWithLabels = card as TCardWithLabels
+  const cardWithDetails = card as TCardWithDetails
   const hasLabels = cardWithLabels.labels && cardWithLabels.labels.length > 0
   const visibleLabels = hasLabels ? cardWithLabels.labels.slice(0, 3) : []
   const remainingLabels = hasLabels ? cardWithLabels.labels.length - 3 : 0
+  const hasMembers =
+    cardWithDetails.members && cardWithDetails.members.length > 0
 
   return (
     <div className='relative group'>
@@ -105,7 +109,7 @@ export function CardItem({ card }: TCardItemProps) {
             </h3>
 
             {/* Card Metadata Section - Always visible with conditional content */}
-            {(isClient && card.dueDate) || hasDescription ? (
+            {(isClient && card.dueDate) || hasDescription || hasMembers ? (
               <div className='flex flex-wrap gap-2 items-center'>
                 {/* Due Date Badge - Only render on client to avoid hydration mismatch */}
                 {isClient && dueDateStatus && card.dueDate && (
@@ -140,6 +144,15 @@ export function CardItem({ card }: TCardItemProps) {
                     <AlignLeft className='w-3.5 h-3.5' />
                     <span className='text-muted-foreground'>Descripción</span>
                   </Badge>
+                )}
+
+                {/* Members Avatars */}
+                {hasMembers && (
+                  <CardMembersAvatars
+                    members={cardWithDetails.members}
+                    size='sm'
+                    maxVisible={3}
+                  />
                 )}
               </div>
             ) : null}

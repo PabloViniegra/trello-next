@@ -14,7 +14,7 @@ import { Lock } from 'lucide-react'
 import { useCallback, useState } from 'react'
 import type { TActivityLogWithUser } from '@/lib/activity/types'
 import type { TBoard } from '@/lib/board/types'
-import type { TCardWithLabels } from '@/lib/card/types'
+import type { TCardWithDetails } from '@/lib/card/types'
 import type { TLabelWithCardCount } from '@/lib/label/types'
 import type { TListWithCardsAndLabels } from '@/lib/list/types'
 import { useBoardStore } from '@/store/board-store'
@@ -55,7 +55,7 @@ export function BoardDetailContent({
   currentUserId,
   initialActivities = [],
 }: TBoardDetailContentProps) {
-  const [activeCard, setActiveCard] = useState<TCardWithLabels | null>(null)
+  const [activeCard, setActiveCard] = useState<TCardWithDetails | null>(null)
   const { activeCard: activeCardId } = useBoardStore()
 
   // Use custom hook for drag and drop logic
@@ -169,7 +169,11 @@ export function BoardDetailContent({
 
       {/* Card Detail Modal - Rendered at board level */}
       {activeCardForModal && (
-        <CardDetailDialog card={activeCardForModal} boardLabels={labels} />
+        <CardDetailDialog
+          card={activeCardForModal}
+          boardLabels={labels}
+          boardId={board.id}
+        />
       )}
     </DndContext>
   )
