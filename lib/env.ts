@@ -14,6 +14,11 @@ const envSchema = z
     NODE_ENV: z
       .enum(['development', 'production', 'test'])
       .default('development'),
+    RESEND_API_KEY: z.string().min(1, 'RESEND_API_KEY is required').optional(),
+    RESEND_FROM: z
+      .string()
+      .min(1, 'RESEND_FROM must be a valid email or email with name')
+      .optional(),
   })
   .refine((data) => data.BETTER_AUTH_URL || data.NEXT_PUBLIC_BETTER_AUTH_URL, {
     message:
