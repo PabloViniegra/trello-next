@@ -8,6 +8,7 @@ import { card, list } from '@/db/schema'
 import { logActivity } from '@/lib/activity/logger'
 import { ACTIVITY_TYPES, ENTITY_TYPES } from '@/lib/activity/types'
 import { getCurrentUser } from '@/lib/auth/get-user'
+import { hasUserBoardAccess } from '@/lib/board-member/queries'
 import { logError } from '@/lib/errors'
 import type {
   TCreateCardInput,
@@ -76,7 +77,9 @@ export async function createCard(data: TCreateCardInput): Promise<TCardResult> {
       }
     }
 
-    if (listRecord.board.ownerId !== user.id) {
+    const hasAccess = await hasUserBoardAccess(listRecord.boardId, user.id)
+
+    if (!hasAccess) {
       return {
         success: false,
         error: 'No tienes permiso para añadir tarjetas a esta lista',
@@ -182,7 +185,7 @@ export async function updateCard(data: TUpdateCardInput): Promise<TCardResult> {
   }
 
   try {
-    // 3. Get the card and verify board ownership
+    // 3. Get the card and verify board access
     const cardRecord = await db.query.card.findFirst({
       where: eq(card.id, validated.data.id),
       with: {
@@ -201,7 +204,9 @@ export async function updateCard(data: TUpdateCardInput): Promise<TCardResult> {
       }
     }
 
-    if (cardRecord.list.board.ownerId !== user.id) {
+    const hasAccess = await hasUserBoardAccess(cardRecord.list.boardId, user.id)
+
+    if (!hasAccess) {
       return {
         success: false,
         error: 'No tienes permiso para actualizar esta tarjeta',
@@ -298,7 +303,7 @@ export async function deleteCard(
   }
 
   try {
-    // 3. Get the card and verify board ownership
+    // 3. Get the card and verify board access
     const cardRecord = await db.query.card.findFirst({
       where: eq(card.id, validated.data.id),
       with: {
@@ -317,7 +322,9 @@ export async function deleteCard(
       }
     }
 
-    if (cardRecord.list.board.ownerId !== user.id) {
+    const hasAccess = await hasUserBoardAccess(cardRecord.list.boardId, user.id)
+
+    if (!hasAccess) {
       return {
         success: false,
         error: 'No tienes permiso para eliminar esta tarjeta',
@@ -461,7 +468,7 @@ export async function moveCardAction(
   }
 
   try {
-    // 3. Get the card and verify board ownership
+    // 3. Get the card and verify board access
     const cardRecord = await db.query.card.findFirst({
       where: eq(card.id, validated.data.cardId),
       with: {
@@ -480,7 +487,9 @@ export async function moveCardAction(
       }
     }
 
-    if (cardRecord.list.board.ownerId !== user.id) {
+    const hasAccess = await hasUserBoardAccess(cardRecord.list.boardId, user.id)
+
+    if (!hasAccess) {
       return {
         success: false,
         error: 'No tienes permiso para mover esta tarjeta',

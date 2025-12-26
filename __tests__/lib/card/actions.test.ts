@@ -9,6 +9,7 @@ const {
   mockSelect,
   mockTransaction,
   mockGetCurrentUser,
+  mockHasUserBoardAccess,
 } = vi.hoisted(() => ({
   mockQuery: {
     card: {
@@ -24,6 +25,7 @@ const {
   mockSelect: vi.fn(),
   mockTransaction: vi.fn(),
   mockGetCurrentUser: vi.fn(),
+  mockHasUserBoardAccess: vi.fn(),
 }))
 
 // Mock the database
@@ -41,6 +43,11 @@ vi.mock('@/db', () => ({
 // Mock auth
 vi.mock('@/lib/auth/get-user', () => ({
   getCurrentUser: mockGetCurrentUser,
+}))
+
+// Mock board member queries
+vi.mock('@/lib/board-member/queries', () => ({
+  hasUserBoardAccess: mockHasUserBoardAccess,
 }))
 
 // Mock errors
@@ -111,12 +118,14 @@ describe('Card Actions', () => {
       expect(result.error).toBe('Lista no encontrada')
     })
 
-    it('returns error when user is not board owner', async () => {
+    it('returns error when user does not have board access', async () => {
       mockGetCurrentUser.mockResolvedValue({ id: 'user-123' })
       mockQuery.list.findFirst.mockResolvedValue({
         id: 'list-123',
+        boardId: 'board-123',
         board: { ownerId: 'other-user' },
       })
+      mockHasUserBoardAccess.mockResolvedValue(false)
 
       const result = await createCard({
         title: 'My Card',
@@ -136,6 +145,7 @@ describe('Card Actions', () => {
         boardId: 'board-123',
         board: { ownerId: 'user-123' },
       })
+      mockHasUserBoardAccess.mockResolvedValue(true)
 
       const mockCard = { id: 'card-123', title: 'My Card' }
 
@@ -217,12 +227,13 @@ describe('Card Actions', () => {
       expect(result.error).toBe('Tarjeta no encontrada')
     })
 
-    it('returns error when user is not board owner', async () => {
+    it('returns error when user does not have board access', async () => {
       mockGetCurrentUser.mockResolvedValue({ id: 'user-123' })
       mockQuery.card.findFirst.mockResolvedValue({
         id: 'card-123',
-        list: { board: { ownerId: 'other-user' } },
+        list: { boardId: 'board-123', board: { ownerId: 'other-user' } },
       })
+      mockHasUserBoardAccess.mockResolvedValue(false)
 
       const result = await updateCard({
         id: 'card-123',
@@ -242,6 +253,7 @@ describe('Card Actions', () => {
         listId: 'list-123',
         list: { boardId: 'board-123', board: { ownerId: 'user-123' } },
       })
+      mockHasUserBoardAccess.mockResolvedValue(true)
 
       const mockCard = { id: 'card-123', title: 'Updated' }
       mockUpdate.mockReturnValue({
@@ -299,12 +311,13 @@ describe('Card Actions', () => {
       expect(result.error).toBe('Tarjeta no encontrada')
     })
 
-    it('returns error when user is not board owner', async () => {
+    it('returns error when user does not have board access', async () => {
       mockGetCurrentUser.mockResolvedValue({ id: 'user-123' })
       mockQuery.card.findFirst.mockResolvedValue({
         id: 'card-123',
-        list: { board: { ownerId: 'other-user' } },
+        list: { boardId: 'board-123', board: { ownerId: 'other-user' } },
       })
+      mockHasUserBoardAccess.mockResolvedValue(false)
 
       const result = await deleteCard({
         id: 'card-123',
@@ -320,6 +333,7 @@ describe('Card Actions', () => {
         id: 'card-123',
         list: { boardId: 'board-123', board: { ownerId: 'user-123' } },
       })
+      mockHasUserBoardAccess.mockResolvedValue(true)
 
       mockDelete.mockReturnValue({
         where: vi.fn().mockResolvedValue(undefined),

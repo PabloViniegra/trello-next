@@ -7,6 +7,7 @@ import { board, list } from '@/db/schema'
 import { logActivity } from '@/lib/activity/logger'
 import { ACTIVITY_TYPES, ENTITY_TYPES } from '@/lib/activity/types'
 import { getCurrentUser } from '@/lib/auth/get-user'
+import { hasUserBoardAccess } from '@/lib/board-member/queries'
 import { logError } from '@/lib/errors'
 import type {
   TCreateListInput,
@@ -49,7 +50,16 @@ export async function createList(data: TCreateListInput): Promise<TListResult> {
   }
 
   try {
-    // 3. Verify board ownership
+    // 3. Verify board access (owner or member)
+    const hasAccess = await hasUserBoardAccess(validated.data.boardId, user.id)
+
+    if (!hasAccess) {
+      return {
+        success: false,
+        error: 'No tienes permiso para añadir listas a este tablero',
+      }
+    }
+
     const boardRecord = await db.query.board.findFirst({
       where: eq(board.id, validated.data.boardId),
     })
@@ -58,13 +68,6 @@ export async function createList(data: TCreateListInput): Promise<TListResult> {
       return {
         success: false,
         error: 'Tablero no encontrado',
-      }
-    }
-
-    if (boardRecord.ownerId !== user.id) {
-      return {
-        success: false,
-        error: 'No tienes permiso para añadir listas a este tablero',
       }
     }
 
@@ -163,7 +166,7 @@ export async function updateList(data: TUpdateListInput): Promise<TListResult> {
   }
 
   try {
-    // 3. Get the list and verify board ownership
+    // 3. Get the list and verify board access
     const listRecord = await db.query.list.findFirst({
       where: eq(list.id, validated.data.id),
       with: {
@@ -178,7 +181,9 @@ export async function updateList(data: TUpdateListInput): Promise<TListResult> {
       }
     }
 
-    if (listRecord.board.ownerId !== user.id) {
+    const hasAccess = await hasUserBoardAccess(listRecord.boardId, user.id)
+
+    if (!hasAccess) {
       return {
         success: false,
         error: 'No tienes permiso para actualizar esta lista',
@@ -266,7 +271,7 @@ export async function deleteList(
   }
 
   try {
-    // 3. Get the list and verify board ownership
+    // 3. Get the list and verify board access
     const listRecord = await db.query.list.findFirst({
       where: eq(list.id, validated.data.id),
       with: {
@@ -281,7 +286,9 @@ export async function deleteList(
       }
     }
 
-    if (listRecord.board.ownerId !== user.id) {
+    const hasAccess = await hasUserBoardAccess(listRecord.boardId, user.id)
+
+    if (!hasAccess) {
       return {
         success: false,
         error: 'No tienes permiso para eliminar esta lista',

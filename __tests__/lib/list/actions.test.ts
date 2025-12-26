@@ -9,6 +9,7 @@ const {
   mockSelect,
   mockTransaction,
   mockGetCurrentUser,
+  mockHasUserBoardAccess,
 } = vi.hoisted(() => ({
   mockQuery: {
     list: {
@@ -24,6 +25,7 @@ const {
   mockSelect: vi.fn(),
   mockTransaction: vi.fn(),
   mockGetCurrentUser: vi.fn(),
+  mockHasUserBoardAccess: vi.fn(),
 }))
 
 // Mock the database
@@ -41,6 +43,11 @@ vi.mock('@/db', () => ({
 // Mock auth
 vi.mock('@/lib/auth/get-user', () => ({
   getCurrentUser: mockGetCurrentUser,
+}))
+
+// Mock board member queries
+vi.mock('@/lib/board-member/queries', () => ({
+  hasUserBoardAccess: mockHasUserBoardAccess,
 }))
 
 // Mock errors
@@ -95,7 +102,7 @@ describe('List Actions', () => {
 
     it('returns error when board not found', async () => {
       mockGetCurrentUser.mockResolvedValue({ id: 'user-123' })
-      mockQuery.board.findFirst.mockResolvedValue(null)
+      mockHasUserBoardAccess.mockResolvedValue(false)
 
       const result = await createList({
         title: 'My List',
@@ -103,15 +110,14 @@ describe('List Actions', () => {
       })
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe('Tablero no encontrado')
+      expect(result.error).toBe(
+        'No tienes permiso para añadir listas a este tablero',
+      )
     })
 
-    it('returns error when user is not board owner', async () => {
+    it('returns error when user does not have board access', async () => {
       mockGetCurrentUser.mockResolvedValue({ id: 'user-123' })
-      mockQuery.board.findFirst.mockResolvedValue({
-        id: 'board-123',
-        ownerId: 'other-user',
-      })
+      mockHasUserBoardAccess.mockResolvedValue(false)
 
       const result = await createList({
         title: 'My List',
@@ -126,6 +132,7 @@ describe('List Actions', () => {
 
     it('creates list successfully', async () => {
       mockGetCurrentUser.mockResolvedValue({ id: 'user-123' })
+      mockHasUserBoardAccess.mockResolvedValue(true)
       mockQuery.board.findFirst.mockResolvedValue({
         id: 'board-123',
         ownerId: 'user-123',
@@ -211,12 +218,14 @@ describe('List Actions', () => {
       expect(result.error).toBe('Lista no encontrada')
     })
 
-    it('returns error when user is not board owner', async () => {
+    it('returns error when user does not have board access', async () => {
       mockGetCurrentUser.mockResolvedValue({ id: 'user-123' })
       mockQuery.list.findFirst.mockResolvedValue({
         id: 'list-123',
+        boardId: 'board-123',
         board: { ownerId: 'other-user' },
       })
+      mockHasUserBoardAccess.mockResolvedValue(false)
 
       const result = await updateList({
         id: 'list-123',
@@ -234,6 +243,7 @@ describe('List Actions', () => {
         boardId: 'board-123',
         board: { ownerId: 'user-123' },
       })
+      mockHasUserBoardAccess.mockResolvedValue(true)
 
       const mockList = { id: 'list-123', title: 'Updated' }
       mockUpdate.mockReturnValue({
@@ -289,12 +299,14 @@ describe('List Actions', () => {
       expect(result.error).toBe('Lista no encontrada')
     })
 
-    it('returns error when user is not board owner', async () => {
+    it('returns error when user does not have board access', async () => {
       mockGetCurrentUser.mockResolvedValue({ id: 'user-123' })
       mockQuery.list.findFirst.mockResolvedValue({
         id: 'list-123',
+        boardId: 'board-123',
         board: { ownerId: 'other-user' },
       })
+      mockHasUserBoardAccess.mockResolvedValue(false)
 
       const result = await deleteList({
         id: 'list-123',
@@ -311,6 +323,7 @@ describe('List Actions', () => {
         boardId: 'board-123',
         board: { ownerId: 'user-123' },
       })
+      mockHasUserBoardAccess.mockResolvedValue(true)
 
       mockDelete.mockReturnValue({
         where: vi.fn().mockResolvedValue(undefined),
