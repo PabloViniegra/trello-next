@@ -8,7 +8,10 @@ import { card, cardMember } from '@/db/schema'
 import { logActivity } from '@/lib/activity/logger'
 import { ACTIVITY_TYPES, ENTITY_TYPES } from '@/lib/activity/types'
 import { getCurrentUser } from '@/lib/auth/get-user'
-import { hasUserBoardAccess } from '@/lib/board-member/queries'
+import {
+  hasUserBoardAccess,
+  hasUserBoardAccessWithPrivacy,
+} from '@/lib/board-member/queries'
 import { logError } from '@/lib/errors'
 import {
   canUserAssignCardMembers,
@@ -128,20 +131,40 @@ export async function assignCardMember(
     const memberId = crypto.randomUUID()
 
     // 9. Insertar en base de datos
-    const [newMember] = await db
-      .insert(cardMember)
-      .values({
-        id: memberId,
-        cardId: validated.data.cardId,
-        userId: validated.data.userId,
-      })
-      .returning()
+    let newMember: typeof cardMember.$inferSelect | undefined
+    try {
+      const result = await db
+        .insert(cardMember)
+        .values({
+          id: memberId,
+          cardId: validated.data.cardId,
+          userId: validated.data.userId,
+        })
+        .returning()
 
-    if (!newMember) {
-      return {
-        success: false,
-        error: 'Error al asignar el miembro',
+      newMember = result[0]
+
+      if (!newMember) {
+        return {
+          success: false,
+          error: 'Error al asignar el miembro',
+        }
       }
+    } catch (dbError) {
+      // Handle unique constraint violation (PostgreSQL error code 23505)
+      if (
+        dbError &&
+        typeof dbError === 'object' &&
+        'code' in dbError &&
+        dbError.code === '23505'
+      ) {
+        return {
+          success: false,
+          error: 'Este usuario ya está asignado a la tarjeta',
+        }
+      }
+      // Re-throw other errors to be handled by outer catch
+      throw dbError
     }
 
     // 10. Obtener datos completos del usuario
@@ -371,7 +394,7 @@ export async function getCardMembersAction(
       }
     }
 
-    // 3. Verificar que el usuario tiene acceso al tablero
+    // 3. Verificar que el usuario tiene acceso al tablero (considerando privacidad)
     const boardId = await getBoardIdFromCard(cardId)
     if (!boardId) {
       return {
@@ -380,7 +403,10 @@ export async function getCardMembersAction(
       }
     }
 
-    const hasAccess = await hasUserBoardAccess(boardId, currentUser.id)
+    const hasAccess = await hasUserBoardAccessWithPrivacy(
+      boardId,
+      currentUser.id,
+    )
     if (!hasAccess) {
       return {
         success: false,
