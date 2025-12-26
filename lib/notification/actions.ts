@@ -4,18 +4,17 @@
 
 'use server'
 
-import { revalidatePath, revalidateTag } from 'next/cache'
 import { eq } from 'drizzle-orm'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { db } from '@/db'
 import { notification, userNotificationPreferences } from '@/db/schema'
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { logger } from '@/lib/utils/logger'
 import {
-  deleteNotificationSchema,
-  markAllAsReadSchema,
-  markAsReadSchema,
-  updatePreferencesSchema,
-} from './schemas'
+  getAllNotifications,
+  getNotificationCount,
+  getUserPreferences,
+} from './queries'
 import type {
   TDeleteNotificationInput,
   TMarkAllAsReadInput,
@@ -23,10 +22,11 @@ import type {
   TUpdatePreferencesInput,
 } from './schemas'
 import {
-  getAllNotifications,
-  getNotificationCount,
-  getUserPreferences,
-} from './queries'
+  deleteNotificationSchema,
+  markAllAsReadSchema,
+  markAsReadSchema,
+  updatePreferencesSchema,
+} from './schemas'
 
 /**
  * Get user's notifications

@@ -35,12 +35,17 @@ async function _getListsWithCardsAndLabelsByBoardId(
               label: true,
             },
           },
+          cardMembers: {
+            with: {
+              user: true,
+            },
+          },
         },
       },
     },
   })
 
-  // Transform to flatten labels
+  // Transform to flatten labels and members
   return lists.map((list) => ({
     ...list,
     cards: list.cards.map((card) => ({
@@ -53,6 +58,13 @@ async function _getListsWithCardsAndLabelsByBoardId(
       createdAt: card.createdAt,
       updatedAt: card.updatedAt,
       labels: card.cardLabels.map((cl) => cl.label),
+      members: card.cardMembers.map((cm) => ({
+        id: cm.id,
+        cardId: cm.cardId,
+        userId: cm.userId,
+        createdAt: cm.createdAt,
+        user: cm.user,
+      })),
     })),
   }))
 }

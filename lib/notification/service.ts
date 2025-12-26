@@ -6,9 +6,9 @@
 import { db } from '@/db'
 import { notification } from '@/db/schema'
 import { logger } from '@/lib/utils/logger'
+import { shouldNotifyUser } from './queries'
 import type { TCreateNotificationInput } from './schemas'
 import { createNotificationSchema } from './schemas'
-import { shouldNotifyUser } from './queries'
 
 /**
  * Create a new notification

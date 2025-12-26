@@ -26,11 +26,13 @@ import {
 } from '@/components/ui/popover'
 import { Textarea } from '@/components/ui/textarea'
 import { updateCard } from '@/lib/card/actions'
-import type { TCardWithLabels } from '@/lib/card/types'
+import type { TCardWithDetails } from '@/lib/card/types'
 import type { TLabel } from '@/lib/label/types'
 import { cn } from '@/lib/utils'
 import { useBoardStore } from '@/store/board-store'
 import { CardLabelsSelector } from './card-labels-selector'
+import { CardMembersAvatars } from './card-members-avatars'
+import { CardMembersSelector } from './card-members-selector'
 import { LabelBadge } from './label-badge'
 
 // Schema for the edit card form
@@ -49,13 +51,15 @@ const editCardSchema = z.object({
 type TEditCardFormData = z.infer<typeof editCardSchema>
 
 type TCardDetailDialogProps = {
-  card: TCardWithLabels
+  card: TCardWithDetails
   boardLabels: TLabel[]
+  boardId: string
 }
 
 export function CardDetailDialog({
   card,
   boardLabels,
+  boardId,
 }: TCardDetailDialogProps) {
   const router = useRouter()
   const { isCardModalOpen, closeCardModal, activeCard } = useBoardStore()
@@ -203,6 +207,21 @@ export function CardDetailDialog({
                   assignedLabels={[]}
                 />
               )}
+            </div>
+          </div>
+
+          {/* Members Section */}
+          <div className='space-y-2'>
+            <Label>Miembros</Label>
+            <div className='flex flex-wrap gap-2 items-center'>
+              {card.members && card.members.length > 0 && (
+                <CardMembersAvatars
+                  members={card.members}
+                  size='md'
+                  maxVisible={5}
+                />
+              )}
+              <CardMembersSelector cardId={card.id} boardId={boardId} />
             </div>
           </div>
 

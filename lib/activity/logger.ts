@@ -9,8 +9,8 @@ import { lt } from 'drizzle-orm'
 import { revalidateTag } from 'next/cache'
 import { db } from '@/db'
 import { activityLog } from '@/db/schema'
-import { logger } from '@/lib/utils/logger'
 import { createNotificationFromActivity } from '@/lib/notification/service'
+import { logger } from '@/lib/utils/logger'
 import type { TLogActivityInput } from './types'
 
 // =============================================================================

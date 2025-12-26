@@ -145,6 +145,29 @@ export const cardLabel = pgTable(
 )
 
 // =============================================================================
+// CARD MEMBERS (Many-to-Many for card assignments)
+// =============================================================================
+
+export const cardMember = pgTable(
+  'card_member',
+  {
+    id: text('id').primaryKey(),
+    cardId: text('card_id')
+      .notNull()
+      .references(() => card.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => [
+    index('card_member_card_id_idx').on(table.cardId),
+    index('card_member_user_id_idx').on(table.userId),
+    unique('card_member_unique').on(table.cardId, table.userId),
+  ],
+)
+
+// =============================================================================
 // BOARD MEMBERS (Many-to-Many for collaboration)
 // =============================================================================
 
@@ -290,6 +313,7 @@ export const cardRelations = relations(card, ({ one, many }) => ({
     references: [list.id],
   }),
   cardLabels: many(cardLabel),
+  cardMembers: many(cardMember),
 }))
 
 export const labelRelations = relations(label, ({ one, many }) => ({
@@ -353,3 +377,14 @@ export const userNotificationPreferencesRelations = relations(
     }),
   }),
 )
+
+export const cardMemberRelations = relations(cardMember, ({ one }) => ({
+  card: one(card, {
+    fields: [cardMember.cardId],
+    references: [card.id],
+  }),
+  user: one(user, {
+    fields: [cardMember.userId],
+    references: [user.id],
+  }),
+}))
