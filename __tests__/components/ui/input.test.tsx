@@ -81,8 +81,9 @@ describe('Input Component', () => {
   })
 
   it('renders with id prop', () => {
-    render(<Input id='my-input' />)
+    const testId = 'my-input'
+    render(<Input id={testId} />)
     const input = screen.getByRole('textbox')
-    expect(input.getAttribute('id')).toBe('my-input')
+    expect(input.getAttribute('id')).toBe(testId)
   })
 })

@@ -89,7 +89,7 @@ export async function createNotification(
 async function checkDuplicateNotification(
   userId: string,
   notificationType: string,
-  metadata: Record<string, unknown>,
+  _metadata: Record<string, unknown>,
   windowMinutes = 5,
 ): Promise<boolean> {
   try {

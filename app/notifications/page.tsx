@@ -34,12 +34,10 @@ export default async function NotificationsPage({ searchParams }: PageProps) {
   const offset = (page - 1) * limit
 
   // Fetch notifications based on filter
-  let notifications
-  if (filter === 'unread') {
-    notifications = await getUnreadNotifications(user.id, limit, offset)
-  } else {
-    notifications = await getAllNotifications(user.id, limit, offset)
-  }
+  const notifications =
+    filter === 'unread'
+      ? await getUnreadNotifications(user.id, limit, offset)
+      : await getAllNotifications(user.id, limit, offset)
 
   // Filter read notifications if needed
   const filteredNotifications =

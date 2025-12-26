@@ -1,6 +1,5 @@
 'use client'
 
-import * as LucideIcons from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -9,6 +8,7 @@ import {
   getActivityColor,
   getActivityIcon,
 } from '@/lib/activity/formatters'
+import { getActivityIconComponent } from '@/lib/activity/icon-map'
 import type { TActivityLogWithUser, TActivityType } from '@/lib/activity/types'
 import { cn } from '@/lib/utils'
 
@@ -22,9 +22,8 @@ export function ActivityItem({ activity }: TActivityItemProps) {
   const iconName = getActivityIcon(activity.actionType as TActivityType)
   const colorClass = getActivityColor(activity.actionType as TActivityType)
 
-  // Get the icon component dynamically
-  const IconComponent = (LucideIcons[iconName as keyof typeof LucideIcons] ||
-    LucideIcons.Activity) as React.ComponentType<LucideIcons.LucideProps>
+  // Get the icon component using the static map
+  const IconComponent = getActivityIconComponent(iconName)
 
   // Get user initials for avatar fallback
   const userInitials = activity.user?.name
