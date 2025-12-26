@@ -9,12 +9,12 @@ import {
   notification,
   userNotificationPreferences,
 } from '@/db/schema'
+import { logger } from '@/lib/utils/logger'
 import type {
   TNotification,
   TNotificationWithActivity,
   TUserNotificationPreferences,
 } from './types'
-import { logger } from '@/lib/utils/logger'
 
 /**
  * Get unread notifications for a user
