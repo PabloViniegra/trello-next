@@ -101,20 +101,20 @@ export function BoardDetailContent({
     <DndContext
       sensors={sensors}
       collisionDetection={closestCorners}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
+      onDragStart={_onDragStart}
+      onDragEnd={_onDragEnd}
     >
       {/* Main Content - Full Width */}
       <div className='h-full flex flex-col'>
         {/* Board Header */}
-        <div className='flex items-center justify-between p-6 border-b'>
+        <div className='flex items-center justify-between p-6 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'>
           <div className='flex items-center gap-4'>
             <h1 className='text-2xl font-bold'>{board.title}</h1>
 
             {board.isPrivate && (
-              <div className='flex items-center gap-1 text-sm text-muted-foreground'>
-                <Lock className='w-4 h-4' />
-                Privado
+              <div className='flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted/50 text-sm text-muted-foreground'>
+                <Lock className='w-3.5 h-3.5' />
+                <span className='font-medium'>Privado</span>
               </div>
             )}
           </div>
@@ -163,8 +163,17 @@ export function BoardDetailContent({
       {/* Floating Activity Sheet Button */}
       <ActivitySheet boardId={board.id} initialActivities={initialActivities} />
 
-      <DragOverlay>
-        {activeCard ? <CardItem card={activeCard} /> : null}
+      <DragOverlay
+        dropAnimation={{
+          duration: 200,
+          easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)',
+        }}
+      >
+        {activeCard ? (
+          <div className='rotate-3 scale-105 cursor-grabbing shadow-2xl'>
+            <CardItem card={activeCard} />
+          </div>
+        ) : null}
       </DragOverlay>
 
       {/* Card Detail Modal - Rendered at board level */}

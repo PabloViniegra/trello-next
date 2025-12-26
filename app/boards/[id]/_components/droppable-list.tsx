@@ -90,7 +90,8 @@ export function DroppableList({ list, board }: TDroppableListProps) {
       <Card
         className={cn(
           'h-full flex flex-col bg-muted/50 transition-all duration-200',
-          isOver && 'ring-2 ring-primary ring-offset-2 bg-muted/70',
+          isOver &&
+            'ring-2 ring-primary ring-offset-2 bg-primary/5 shadow-lg scale-[1.02]',
         )}
       >
         <CardHeader

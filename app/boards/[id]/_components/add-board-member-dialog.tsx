@@ -170,17 +170,17 @@ export function AddBoardMemberDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button
-          variant='outline'
+          variant='ghost'
           size='sm'
-          className='gap-2 hover:bg-accent hover:text-accent-foreground transition-colors'
+          className='gap-2 hover:bg-accent/50 border border-transparent hover:border-border transition-all'
         >
           <div className='flex items-center gap-2'>
             <UserPlus className='h-4 w-4' />
-            <span>Colaboradores</span>
+            <span className='font-medium'>Colaboradores</span>
             {currentMembers.length > 0 && (
               <Badge
                 variant='secondary'
-                className='ml-1 h-5 min-w-[20px] rounded-full px-1.5 text-xs font-semibold'
+                className='ml-0.5 h-5 min-w-[20px] rounded-full px-1.5 text-xs font-semibold bg-primary/10 text-primary hover:bg-primary/20'
               >
                 {currentMembers.length}
               </Badge>

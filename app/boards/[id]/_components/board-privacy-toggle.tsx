@@ -81,13 +81,17 @@ export function BoardPrivacyToggle({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button variant='outline' size='sm' className='gap-2'>
+        <Button
+          variant='ghost'
+          size='sm'
+          className='gap-2 hover:bg-accent/50 border border-transparent hover:border-border transition-all'
+        >
           {currentPrivacy === 'private' ? (
             <Lock className='h-4 w-4' />
           ) : (
             <Unlock className='h-4 w-4' />
           )}
-          Privacidad
+          <span className='font-medium'>Privacidad</span>
         </Button>
       </DialogTrigger>
       <DialogContent className='sm:max-w-md'>

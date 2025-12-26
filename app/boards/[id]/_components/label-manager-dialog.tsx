@@ -172,9 +172,13 @@ export function LabelManagerDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant='outline' size='sm' className='gap-2'>
+        <Button
+          variant='ghost'
+          size='sm'
+          className='gap-2 hover:bg-accent/50 border border-transparent hover:border-border transition-all'
+        >
           <Tag className='h-4 w-4' />
-          Gestionar etiquetas
+          <span className='font-medium'>Gestionar etiquetas</span>
         </Button>
       </DialogTrigger>
       <DialogContent className='sm:max-w-[600px] max-h-[80vh] overflow-y-auto'>

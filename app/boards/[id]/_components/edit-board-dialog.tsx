@@ -119,9 +119,13 @@ export function EditBoardDialog({ board, isOwner }: TEditBoardDialogProps) {
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button variant='outline' size='sm' className='gap-2'>
+        <Button
+          variant='ghost'
+          size='sm'
+          className='gap-2 hover:bg-accent/50 border border-transparent hover:border-border transition-all'
+        >
           <Pencil className='h-4 w-4' />
-          Editar tablero
+          <span className='font-medium'>Editar tablero</span>
         </Button>
       </DialogTrigger>
       <DialogContent className='sm:max-w-md'>
