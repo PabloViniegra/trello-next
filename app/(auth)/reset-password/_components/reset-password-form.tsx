@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useActionState, useEffect, useId } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -15,79 +15,124 @@ import {
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { signInAction } from '@/lib/auth/actions'
+import { resetPasswordAction } from '@/lib/auth/actions'
 
-export function LoginForm() {
+export function ResetPasswordForm() {
   const router = useRouter()
-  const emailId = useId()
-  const passwordId = useId()
-  const [state, formAction, isPending] = useActionState(signInAction, null)
+  const searchParams = useSearchParams()
+  const token = searchParams.get('token')
+  const error = searchParams.get('error')
 
+  const newPasswordId = useId()
+  const confirmPasswordId = useId()
+  const [state, formAction, isPending] = useActionState(
+    resetPasswordAction,
+    null,
+  )
+
+  // Handle error from URL (invalid/expired token)
+  useEffect(() => {
+    if (error === 'INVALID_TOKEN') {
+      toast.error(
+        'El enlace de restablecimiento ha expirado o es inválido. Solicita uno nuevo.',
+      )
+    }
+  }, [error])
+
+  // Handle form submission result
   useEffect(() => {
     if (state?.error) {
       toast.error(state.error)
     }
     if (state?.success) {
-      toast.success('Sesión iniciada correctamente')
+      toast.success(
+        '¡Contraseña restablecida correctamente! Ya puedes iniciar sesión.',
+      )
       setTimeout(() => {
-        router.push('/')
-        router.refresh()
-      }, 500)
+        router.push('/login')
+      }, 1500)
     }
   }, [state, router])
+
+  // Show error if no token is present
+  if (!token && !error) {
+    return (
+      <Card className='w-full border-border/50 shadow-lg backdrop-blur-sm'>
+        <CardHeader className='space-y-1 pb-4'>
+          <CardTitle className='text-2xl font-semibold tracking-tight'>
+            Enlace inválido
+          </CardTitle>
+          <CardDescription className='text-base'>
+            Este enlace de restablecimiento no es válido. Por favor, solicita
+            uno nuevo.
+          </CardDescription>
+        </CardHeader>
+        <CardFooter>
+          <Link href='/forgot-password' className='w-full'>
+            <Button className='w-full h-11 bg-primary hover:bg-primary/90 text-primary-foreground font-medium transition-all duration-200 shadow-sm hover:shadow'>
+              Solicitar nuevo enlace
+            </Button>
+          </Link>
+        </CardFooter>
+      </Card>
+    )
+  }
 
   return (
     <Card className='w-full border-border/50 shadow-lg backdrop-blur-sm'>
       <CardHeader className='space-y-1 pb-4'>
         <CardTitle className='text-2xl font-semibold tracking-tight'>
-          Bienvenido de nuevo
+          Nueva contraseña
         </CardTitle>
         <CardDescription className='text-base'>
-          Ingresa tus credenciales para continuar
+          Ingresa tu nueva contraseña
         </CardDescription>
       </CardHeader>
       <form action={formAction}>
+        {/* Hidden field for token */}
+        <input type='hidden' name='token' value={token || ''} />
+
         <CardContent className='space-y-5'>
           <div className='space-y-2'>
-            <Label htmlFor={emailId} className='text-foreground font-medium'>
-              Correo electrónico
+            <Label
+              htmlFor={newPasswordId}
+              className='text-foreground font-medium'
+            >
+              Nueva contraseña
             </Label>
             <Input
-              id={emailId}
-              name='email'
-              type='email'
-              placeholder='nombre@ejemplo.com'
+              id={newPasswordId}
+              name='newPassword'
+              type='password'
+              placeholder='Ingresa tu nueva contraseña'
               disabled={isPending}
               required
+              minLength={8}
               className='h-11 bg-card border-input focus:border-ring focus:ring-ring/20'
             />
+            <p className='text-xs text-muted-foreground'>Mínimo 8 caracteres</p>
           </div>
+
           <div className='space-y-2'>
-            <div className='flex items-center justify-between'>
-              <Label
-                htmlFor={passwordId}
-                className='text-foreground font-medium'
-              >
-                Contraseña
-              </Label>
-              <Link
-                href='/forgot-password'
-                className='text-sm text-primary hover:text-primary/80 font-medium transition-colors underline-offset-4 hover:underline'
-              >
-                ¿Olvidaste tu contraseña?
-              </Link>
-            </div>
+            <Label
+              htmlFor={confirmPasswordId}
+              className='text-foreground font-medium'
+            >
+              Confirmar contraseña
+            </Label>
             <Input
-              id={passwordId}
-              name='password'
+              id={confirmPasswordId}
+              name='confirmPassword'
               type='password'
-              placeholder='Ingresa tu contraseña'
+              placeholder='Confirma tu nueva contraseña'
               disabled={isPending}
               required
+              minLength={8}
               className='h-11 bg-card border-input focus:border-ring focus:ring-ring/20'
             />
           </div>
         </CardContent>
+
         <CardFooter className='flex flex-col space-y-4 pt-2'>
           <Button
             type='submit'
@@ -117,21 +162,22 @@ export function LoginForm() {
                     d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
                   />
                 </svg>
-                Iniciando sesión...
+                Restableciendo contraseña...
               </span>
             ) : (
-              'Iniciar sesión'
+              'Restablecer contraseña'
             )}
           </Button>
+
           <div className='text-center text-sm'>
             <span className='text-muted-foreground'>
-              ¿No tienes una cuenta?{' '}
+              ¿Recordaste tu contraseña?{' '}
             </span>
             <Link
-              href='/signup'
+              href='/login'
               className='text-primary hover:text-primary/80 font-medium transition-colors underline-offset-4 hover:underline'
             >
-              Crear cuenta
+              Iniciar sesión
             </Link>
           </div>
         </CardFooter>

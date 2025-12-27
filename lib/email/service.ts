@@ -1,6 +1,7 @@
 import { render } from '@react-email/components'
 import { Resend } from 'resend'
 import { z } from 'zod'
+import ResetPasswordEmail from '@/emails/templates/reset-password-email'
 import VerificationEmail from '@/emails/templates/verification-email'
 import { env } from '@/lib/env'
 import { logError } from '@/lib/errors'
@@ -88,6 +89,72 @@ export async function sendVerificationEmail({
     return {
       success: false,
       error: 'Error al enviar el email de verificación',
+    }
+  }
+}
+
+type TSendResetPasswordEmailParams = {
+  to: string
+  name: string
+  resetPasswordUrl: string
+}
+
+/**
+ * Sends a reset password email to the user using Resend and React Email templates
+ * @param params - Email parameters including recipient, name, and reset password URL
+ * @returns Result object with success status and optional error message
+ */
+export async function sendResetPasswordEmail({
+  to,
+  name,
+  resetPasswordUrl,
+}: TSendResetPasswordEmailParams): Promise<TEmailResult> {
+  try {
+    // Validate email format
+    const validEmail = emailSchema.safeParse(to)
+    if (!validEmail.success) {
+      return {
+        success: false,
+        error: 'Dirección de email inválida',
+      }
+    }
+
+    // Validate RESEND_FROM environment variable
+    if (!env.RESEND_FROM) {
+      throw new Error('RESEND_FROM is not configured')
+    }
+
+    // Render the email template to HTML
+    const emailHtml = await render(
+      ResetPasswordEmail({
+        name,
+        resetPasswordUrl,
+      }),
+    )
+
+    // Send the email using Resend
+    const client = getResendClient()
+    const { error } = await client.emails.send({
+      from: env.RESEND_FROM,
+      to,
+      subject: 'Restablece tu contraseña de Trello Clone',
+      html: emailHtml,
+    })
+
+    if (error) {
+      logError(error, 'sendResetPasswordEmail')
+      return {
+        success: false,
+        error: 'Error al enviar el email de restablecimiento de contraseña',
+      }
+    }
+
+    return { success: true }
+  } catch (error) {
+    logError(error, 'sendResetPasswordEmail')
+    return {
+      success: false,
+      error: 'Error al enviar el email de restablecimiento de contraseña',
     }
   }
 }

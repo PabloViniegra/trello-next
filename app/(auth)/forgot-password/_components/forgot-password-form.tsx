@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { useActionState, useEffect, useId } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -15,35 +14,35 @@ import {
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { signInAction } from '@/lib/auth/actions'
+import { requestPasswordResetAction } from '@/lib/auth/actions'
 
-export function LoginForm() {
-  const router = useRouter()
+export function ForgotPasswordForm() {
   const emailId = useId()
-  const passwordId = useId()
-  const [state, formAction, isPending] = useActionState(signInAction, null)
+  const [state, formAction, isPending] = useActionState(
+    requestPasswordResetAction,
+    null,
+  )
 
   useEffect(() => {
     if (state?.error) {
       toast.error(state.error)
     }
     if (state?.success) {
-      toast.success('Sesión iniciada correctamente')
-      setTimeout(() => {
-        router.push('/')
-        router.refresh()
-      }, 500)
+      toast.success(
+        'Te hemos enviado un enlace para restablecer tu contraseña. Revisa tu correo electrónico.',
+      )
     }
-  }, [state, router])
+  }, [state])
 
   return (
     <Card className='w-full border-border/50 shadow-lg backdrop-blur-sm'>
       <CardHeader className='space-y-1 pb-4'>
         <CardTitle className='text-2xl font-semibold tracking-tight'>
-          Bienvenido de nuevo
+          ¿Olvidaste tu contraseña?
         </CardTitle>
         <CardDescription className='text-base'>
-          Ingresa tus credenciales para continuar
+          Ingresa tu correo electrónico y te enviaremos un enlace para
+          restablecerla
         </CardDescription>
       </CardHeader>
       <form action={formAction}>
@@ -57,31 +56,6 @@ export function LoginForm() {
               name='email'
               type='email'
               placeholder='nombre@ejemplo.com'
-              disabled={isPending}
-              required
-              className='h-11 bg-card border-input focus:border-ring focus:ring-ring/20'
-            />
-          </div>
-          <div className='space-y-2'>
-            <div className='flex items-center justify-between'>
-              <Label
-                htmlFor={passwordId}
-                className='text-foreground font-medium'
-              >
-                Contraseña
-              </Label>
-              <Link
-                href='/forgot-password'
-                className='text-sm text-primary hover:text-primary/80 font-medium transition-colors underline-offset-4 hover:underline'
-              >
-                ¿Olvidaste tu contraseña?
-              </Link>
-            </div>
-            <Input
-              id={passwordId}
-              name='password'
-              type='password'
-              placeholder='Ingresa tu contraseña'
               disabled={isPending}
               required
               className='h-11 bg-card border-input focus:border-ring focus:ring-ring/20'
@@ -117,21 +91,21 @@ export function LoginForm() {
                     d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
                   />
                 </svg>
-                Iniciando sesión...
+                Enviando...
               </span>
             ) : (
-              'Iniciar sesión'
+              'Enviar enlace de recuperación'
             )}
           </Button>
           <div className='text-center text-sm'>
             <span className='text-muted-foreground'>
-              ¿No tienes una cuenta?{' '}
+              ¿Recordaste tu contraseña?{' '}
             </span>
             <Link
-              href='/signup'
+              href='/login'
               className='text-primary hover:text-primary/80 font-medium transition-colors underline-offset-4 hover:underline'
             >
-              Crear cuenta
+              Iniciar sesión
             </Link>
           </div>
         </CardFooter>

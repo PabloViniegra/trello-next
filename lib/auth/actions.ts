@@ -6,7 +6,12 @@ import { auth } from '@/lib/auth'
 import { AppError, logError } from '@/lib/errors'
 import { sanitizeFormData } from '@/lib/utils/form'
 import { authRateLimit } from '@/lib/utils/rate-limit'
-import { signInSchema, signUpSchema } from './schemas'
+import {
+  signInSchema,
+  signUpSchema,
+  requestPasswordResetSchema,
+  resetPasswordSchema,
+} from './schemas'
 import type { TAuthResult, TSignInInput, TSignUpInput } from './types'
 
 // =============================================================================
@@ -340,6 +345,142 @@ export async function signOut(): Promise<TAuthResult> {
     return {
       success: false,
       error: 'Error al cerrar sesión',
+    }
+  }
+}
+
+/**
+ * Server action to request a password reset email.
+ * Always returns success to prevent email enumeration attacks.
+ *
+ * @param _prevState - Previous form state (unused)
+ * @param formData - Form data containing the email address
+ * @returns Result object with success status
+ */
+export async function requestPasswordResetAction(
+  _prevState: TAuthResult | null,
+  formData: FormData,
+): Promise<TAuthResult> {
+  // Rate limiting
+  const clientIp = await getClientIp()
+  const rateLimitResult = authRateLimit.signIn(clientIp) // Using signIn rate limit for password reset
+
+  if (!rateLimitResult.success) {
+    return {
+      success: false,
+      error: `Demasiados intentos. Intenta de nuevo en ${Math.ceil(rateLimitResult.resetIn / 1000)} segundos.`,
+    }
+  }
+
+  const email = sanitizeFormData(formData.get('email'))
+
+  const validated = requestPasswordResetSchema.safeParse({ email })
+
+  if (!validated.success) {
+    return {
+      success: false,
+      error: 'Correo electrónico inválido',
+    }
+  }
+
+  try {
+    const headersList = await nextHeaders()
+
+    await auth.api.requestPasswordReset({
+      body: {
+        email: validated.data.email,
+        redirectTo: '/reset-password',
+      },
+      headers: headersList,
+    })
+
+    // Always return success even if the user doesn't exist (security best practice)
+    // This prevents email enumeration attacks
+    return {
+      success: true,
+    }
+  } catch (error) {
+    logError(error, 'requestPasswordResetAction')
+
+    // Still return success to prevent email enumeration
+    // The actual error is logged for debugging
+    return {
+      success: true,
+    }
+  }
+}
+
+/**
+ * Server action to reset password using a valid token.
+ *
+ * @param _prevState - Previous form state (unused)
+ * @param formData - Form data containing token, newPassword, and confirmPassword
+ * @returns Result object with success status and optional error message
+ */
+export async function resetPasswordAction(
+  _prevState: TAuthResult | null,
+  formData: FormData,
+): Promise<TAuthResult> {
+  const token = sanitizeFormData(formData.get('token'))
+  const newPassword = sanitizeFormData(formData.get('newPassword'))
+  const confirmPassword = sanitizeFormData(formData.get('confirmPassword'))
+
+  const validated = resetPasswordSchema.safeParse({
+    token,
+    newPassword,
+    confirmPassword,
+  })
+
+  if (!validated.success) {
+    const firstError = validated.error.issues[0]
+    return {
+      success: false,
+      error: firstError?.message || 'Datos inválidos',
+    }
+  }
+
+  try {
+    const headersList = await nextHeaders()
+
+    await auth.api.resetPassword({
+      body: {
+        newPassword: validated.data.newPassword,
+      },
+      query: {
+        token: validated.data.token,
+      },
+      headers: headersList,
+    })
+
+    return {
+      success: true,
+    }
+  } catch (error) {
+    logError(error, 'resetPasswordAction')
+
+    if (
+      error &&
+      typeof error === 'object' &&
+      'message' in error &&
+      typeof error.message === 'string'
+    ) {
+      const message = error.message.toLowerCase()
+      if (message.includes('invalid') || message.includes('expired')) {
+        return {
+          success: false,
+          error:
+            'El enlace de restablecimiento ha expirado o es inválido. Solicita uno nuevo.',
+        }
+      }
+    }
+
+    if (error instanceof AppError) {
+      return { success: false, error: error.message }
+    }
+
+    return {
+      success: false,
+      error: 'Error al restablecer la contraseña. Por favor, intenta de nuevo.',
     }
   }
 }
