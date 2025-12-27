@@ -121,6 +121,21 @@
   --font-family-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
   --font-family-display: var(--font-display), ui-serif, Georgia, serif;
   --font-family-mono: var(--font-mono), ui-monospace, monospace;
+
+  /* Animations */
+  @keyframes gradient {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  --animate-gradient: gradient 8s linear infinite;
 }
 
 @layer base {

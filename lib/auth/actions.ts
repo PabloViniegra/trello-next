@@ -7,10 +7,10 @@ import { AppError, logError } from '@/lib/errors'
 import { sanitizeFormData } from '@/lib/utils/form'
 import { authRateLimit } from '@/lib/utils/rate-limit'
 import {
-  signInSchema,
-  signUpSchema,
   requestPasswordResetSchema,
   resetPasswordSchema,
+  signInSchema,
+  signUpSchema,
 } from './schemas'
 import type { TAuthResult, TSignInInput, TSignUpInput } from './types'
 

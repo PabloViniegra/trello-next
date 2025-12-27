@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import { Suspense } from 'react'
 import { CreateBoardDialog } from '@/app/_components/create-board-dialog'
 import { NotificationBell } from '@/app/_components/notification-bell'
@@ -6,6 +5,7 @@ import { AnimatedNavbar } from '@/components/animations/animated-navbar'
 import { ThemeSwitcher } from '@/components/kibo-ui/theme-switcher'
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { NavLinks } from './nav-links'
+import { NavbarLogo } from './navbar-logo'
 import { Avatar, AvatarFallback } from './ui/avatar'
 import { UserNav } from './user-nav'
 
@@ -39,9 +39,7 @@ export function Navbar() {
       <div className='container mx-auto flex h-16 items-center px-4'>
         {/* Logo - izquierda */}
         <div className='flex items-center'>
-          <Link href='/' className='text-xl font-bold'>
-            Trello Clone
-          </Link>
+          <NavbarLogo />
         </div>
 
         {/* NavLinks - centro */}

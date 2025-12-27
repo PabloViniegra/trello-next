@@ -3,6 +3,8 @@
 import { motion } from 'framer-motion'
 import { ArrowRight, CheckCircle2, Layers, Users } from 'lucide-react'
 import Link from 'next/link'
+import { useState } from 'react'
+import { CreateBoardDialog } from '@/app/_components/create-board-dialog'
 import { FadeIn } from '@/components/animations/fade-in'
 import {
   StaggerChildren,
@@ -16,10 +18,13 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { GradientText } from '@/components/ui/gradient-text'
 
 const MotionButton = motion.create(Button)
 
 export function HeroSection() {
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+
   return (
     <div className='flex flex-col'>
       {/* Hero principal */}
@@ -29,7 +34,12 @@ export function HeroSection() {
             <FadeIn direction='down' duration={0.7}>
               <h1 className='text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl'>
                 Organiza tu trabajo y tu vida de manera{' '}
-                <span className='text-primary'>eficiente</span>
+                <GradientText
+                  colors={['#7f6a3f', '#deb6a0', '#9383b2', '#7f6a3f']}
+                  animationSpeed={6}
+                >
+                  eficiente
+                </GradientText>
               </h1>
             </FadeIn>
             <FadeIn delay={0.2} duration={0.6}>
@@ -54,23 +64,32 @@ export function HeroSection() {
                   <ArrowRight className='ml-2 h-4 w-4' />
                 </Link>
               </MotionButton>
-              <MotionButton
-                size='lg'
-                variant='outline'
-                asChild
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.98 }}
-                transition={{ type: 'spring', stiffness: 400, damping: 17 }}
-              >
-                <Link href='/boards'>Crear nuevo tablero</Link>
-              </MotionButton>
+              <CreateBoardDialog
+                open={isDialogOpen}
+                onOpenChange={setIsDialogOpen}
+                trigger={
+                  <MotionButton
+                    size='lg'
+                    variant='outline'
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.98 }}
+                    transition={{
+                      type: 'spring',
+                      stiffness: 400,
+                      damping: 17,
+                    }}
+                  >
+                    Crear nuevo tablero
+                  </MotionButton>
+                }
+              />
             </div>
           </FadeIn>
         </div>
       </section>
 
       {/* Características */}
-      <section className='container mx-auto px-4 py-16 bg-muted/50'>
+      <section className='container mx-auto px-4 py-16 bg-muted/20 backdrop-blur-xl border border-border/50 rounded-3xl'>
         <StaggerChildren
           className='grid grid-cols-1 md:grid-cols-3 gap-6'
           staggerDelay={0.15}

@@ -27,12 +27,29 @@ type TFormErrors = {
   backgroundColor?: string
 }
 
-export function CreateBoardDialog() {
+type TCreateBoardDialogProps = {
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+  trigger?: React.ReactNode
+}
+
+export function CreateBoardDialog({
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
+  trigger,
+}: TCreateBoardDialogProps = {}) {
   const router = useRouter()
   const titleId = useId()
   const descriptionId = useId()
-  const [open, setOpen] = useState(false)
+  const [internalOpen, setInternalOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
+
+  // Use controlled or uncontrolled state
+  const isControlled = controlledOpen !== undefined
+  const open = isControlled ? controlledOpen : internalOpen
+  const setOpen = isControlled
+    ? (controlledOnOpenChange ?? setInternalOpen)
+    : setInternalOpen
 
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -95,12 +112,15 @@ export function CreateBoardDialog() {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        <Button size='sm' className='gap-2'>
-          <Plus className='h-4 w-4' />
-          Crear tablero
-        </Button>
-      </DialogTrigger>
+      {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
+      {!trigger && (
+        <DialogTrigger asChild>
+          <Button size='sm' className='gap-2'>
+            <Plus className='h-4 w-4' />
+            Crear tablero
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className='sm:max-w-md'>
         <DialogHeader>
           <DialogTitle>Crear nuevo tablero</DialogTitle>
