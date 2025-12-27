@@ -433,9 +433,22 @@ export async function resetPasswordAction(
 
   if (!validated.success) {
     const firstError = validated.error.issues[0]
+    const errorMessage = firstError?.message || 'Datos inválidos'
+
+    // Replace Zod's default English error messages with Spanish
+    if (
+      errorMessage.includes('expected string') ||
+      errorMessage.includes('Invalid input')
+    ) {
+      return {
+        success: false,
+        error: 'Datos inválidos',
+      }
+    }
+
     return {
       success: false,
-      error: firstError?.message || 'Datos inválidos',
+      error: errorMessage,
     }
   }
 
