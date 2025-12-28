@@ -68,6 +68,57 @@ export async function signIn(data: TSignInInput): Promise<TAuthResult | never> {
   } catch (error) {
     logError(error, 'signIn')
 
+    // Verificar tipo de error y devolver mensaje específico
+    if (
+      error &&
+      typeof error === 'object' &&
+      'message' in error &&
+      typeof error.message === 'string'
+    ) {
+      const message = error.message.toLowerCase()
+
+      // Email no verificado
+      if (
+        message.includes('email') &&
+        (message.includes('verified') || message.includes('verification'))
+      ) {
+        return {
+          success: false,
+          error:
+            'Debes verificar tu email antes de iniciar sesión. Revisa tu bandeja de entrada.',
+        }
+      }
+
+      // Credenciales incorrectas (better-auth usa estos mensajes)
+      if (
+        message.includes('invalid') &&
+        (message.includes('email') ||
+          message.includes('password') ||
+          message.includes('credentials'))
+      ) {
+        return {
+          success: false,
+          error: 'Credenciales incorrectas. Verifica tu email y contraseña.',
+        }
+      }
+
+      // Usuario no encontrado
+      if (message.includes('user') && message.includes('not found')) {
+        return {
+          success: false,
+          error: 'Credenciales incorrectas. Verifica tu email y contraseña.',
+        }
+      }
+
+      // Contraseña incorrecta
+      if (message.includes('incorrect') && message.includes('password')) {
+        return {
+          success: false,
+          error: 'Credenciales incorrectas. Verifica tu email y contraseña.',
+        }
+      }
+    }
+
     if (error instanceof AppError) {
       return { success: false, error: error.message }
     }
@@ -202,7 +253,7 @@ export async function signInAction(
   } catch (error) {
     logError(error, 'signInAction')
 
-    // Verificar si es un error de email no verificado
+    // Verificar tipo de error y devolver mensaje específico
     if (
       error &&
       typeof error === 'object' &&
@@ -210,6 +261,8 @@ export async function signInAction(
       typeof error.message === 'string'
     ) {
       const message = error.message.toLowerCase()
+
+      // Email no verificado
       if (
         message.includes('email') &&
         (message.includes('verified') || message.includes('verification'))
@@ -219,6 +272,35 @@ export async function signInAction(
           error:
             'Debes verificar tu email antes de iniciar sesion. Revisa tu bandeja de entrada.',
           requiresEmailVerification: true,
+        }
+      }
+
+      // Credenciales incorrectas (mejor-auth usa estos mensajes)
+      if (
+        message.includes('invalid') &&
+        (message.includes('email') ||
+          message.includes('password') ||
+          message.includes('credentials'))
+      ) {
+        return {
+          success: false,
+          error: 'Credenciales incorrectas. Verifica tu email y contraseña.',
+        }
+      }
+
+      // Usuario no encontrado
+      if (message.includes('user') && message.includes('not found')) {
+        return {
+          success: false,
+          error: 'Credenciales incorrectas. Verifica tu email y contraseña.',
+        }
+      }
+
+      // Contraseña incorrecta
+      if (message.includes('incorrect') && message.includes('password')) {
+        return {
+          success: false,
+          error: 'Credenciales incorrectas. Verifica tu email y contraseña.',
         }
       }
     }
