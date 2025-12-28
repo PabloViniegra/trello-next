@@ -17,13 +17,13 @@ describe('Board Schemas', () => {
       expect(result.success).toBe(true)
     })
 
-    it('uses default background color', () => {
+    it('requires background color', () => {
       const result = createBoardSchema.safeParse({
         title: 'My Board',
       })
-      expect(result.success).toBe(true)
-      if (result.success) {
-        expect(result.data.backgroundColor).toBeDefined()
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error.issues[0].path).toContain('backgroundColor')
       }
     })
 
@@ -108,14 +108,19 @@ describe('Board Schemas', () => {
       const result = createBoardSchema.safeParse({
         title: 'My Board',
         description: null,
+        backgroundColor: '#FF5733',
       })
       expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data.description).toBe(null)
+      }
     })
 
     it('trims title and description', () => {
       const result = createBoardSchema.safeParse({
         title: '  My Board  ',
         description: '  A description  ',
+        backgroundColor: '#FF5733',
       })
       expect(result.success).toBe(true)
       if (result.success) {

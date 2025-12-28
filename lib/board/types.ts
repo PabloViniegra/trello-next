@@ -6,10 +6,11 @@ import type {
   updateBoardSchema,
 } from './schemas'
 
-export type TCreateBoardInput = z.infer<typeof createBoardSchema>
-export type TUpdateBoardInput = z.infer<typeof updateBoardSchema>
-export type TDeleteBoardInput = z.infer<typeof deleteBoardSchema>
-export type TUpdateBoardPrivacyInput = z.infer<typeof updateBoardPrivacySchema>
+// Use z.input for forms (accepts optional/undefined) and z.infer for server logic (after transform)
+export type TCreateBoardInput = z.input<typeof createBoardSchema>
+export type TUpdateBoardInput = z.input<typeof updateBoardSchema>
+export type TDeleteBoardInput = z.input<typeof deleteBoardSchema>
+export type TUpdateBoardPrivacyInput = z.input<typeof updateBoardPrivacySchema>
 
 export type TBoardPrivacy = 'public' | 'private'
 

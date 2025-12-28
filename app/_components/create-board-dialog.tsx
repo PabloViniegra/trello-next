@@ -24,7 +24,8 @@ import { createBoardSchema } from '@/lib/board/schemas'
 import { BOARD_COLORS, DEFAULT_BOARD_COLOR } from '@/lib/board/types'
 import { cn } from '@/lib/utils'
 
-type TFormInput = z.infer<typeof createBoardSchema>
+// Use z.input for RHF (before transform) instead of z.infer (after transform)
+type TFormInput = z.input<typeof createBoardSchema>
 
 type TCreateBoardDialogProps = {
   open?: boolean

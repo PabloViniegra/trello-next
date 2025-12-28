@@ -11,8 +11,8 @@ export const createBoardSchema = z.object({
     .string()
     .max(1000, 'La descripción no puede exceder 1000 caracteres')
     .trim()
-    .optional()
-    .nullable(),
+    .nullish()
+    .transform((val) => val ?? null),
   backgroundColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Color inválido'),
 })
 
