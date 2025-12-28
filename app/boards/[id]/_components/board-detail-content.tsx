@@ -25,6 +25,7 @@ import { BoardPrivacyToggle } from './board-privacy-toggle'
 import { CardDetailDialog } from './card-detail-dialog'
 import { CardItem } from './card-item'
 import { CreateListDialog } from './create-list-dialog'
+import { DeleteBoardButton } from './delete-board-button'
 import { DroppableList } from './droppable-list'
 import { EditBoardDialog } from './edit-board-dialog'
 import { LabelManagerDialog } from './label-manager-dialog'
@@ -140,10 +141,16 @@ export function BoardDetailContent({
               currentUserId={currentUserId}
             />
 
-            {/* Botón de privacidad (solo visible para el propietario) */}
+            {/* Privacy Toggle (only visible to owner) */}
             <BoardPrivacyToggle
               boardId={board.id}
               currentPrivacy={board.isPrivate}
+              isOwner={currentUserId === board.ownerId}
+            />
+
+            {/* Delete Board Button (only visible to owner) */}
+            <DeleteBoardButton
+              board={board}
               isOwner={currentUserId === board.ownerId}
             />
           </div>
