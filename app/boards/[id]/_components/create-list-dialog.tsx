@@ -1,7 +1,9 @@
 'use client'
 
+import { zodResolver } from '@hookform/resolvers/zod'
 import { Plus } from 'lucide-react'
 import { useId, useState } from 'react'
+import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
@@ -17,6 +19,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Spinner } from '@/components/ui/spinner'
 import { createList } from '@/lib/list/actions'
+import type { TCreateListInput } from '@/lib/list/schemas'
+import { createListSchema } from '@/lib/list/schemas'
+import { cn } from '@/lib/utils'
 
 type TCreateListDialogProps = {
   boardId: string
@@ -24,34 +29,30 @@ type TCreateListDialogProps = {
 
 export function CreateListDialog({ boardId }: TCreateListDialogProps) {
   const [isOpen, setIsOpen] = useState(false)
-  const [title, setTitle] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
   const titleId = useId()
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset,
+  } = useForm<TCreateListInput>({
+    resolver: zodResolver(createListSchema),
+    defaultValues: {
+      title: '',
+      boardId,
+    },
+  })
 
-    if (!title.trim()) {
-      toast.error('El título de la lista es obligatorio')
-      return
-    }
+  const onSubmit = async (data: TCreateListInput) => {
+    const result = await createList(data)
 
-    setIsLoading(true)
-
-    try {
-      const result = await createList({ title, boardId })
-
-      if (result.success) {
-        toast.success('Lista creada correctamente')
-        setTitle('')
-        setIsOpen(false)
-      } else {
-        toast.error(result.error ?? 'Error al crear la lista')
-      }
-    } catch (_error) {
-      toast.error('Ha ocurrido un error inesperado')
-    } finally {
-      setIsLoading(false)
+    if (result.success) {
+      toast.success('Lista creada correctamente')
+      reset()
+      setIsOpen(false)
+    } else {
+      toast.error(result.error ?? 'Error al crear la lista')
     }
   }
 
@@ -75,18 +76,23 @@ export function CreateListDialog({ boardId }: TCreateListDialogProps) {
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <div className='space-y-4 py-4'>
             <div className='space-y-2'>
               <Label htmlFor={titleId}>Título de la lista</Label>
               <Input
                 id={titleId}
                 placeholder='Ingresa el título de la lista...'
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                disabled={isLoading}
+                {...register('title')}
+                disabled={isSubmitting}
                 autoFocus
+                className={cn(errors.title && 'border-destructive')}
               />
+              {errors.title && (
+                <p className='text-sm text-destructive'>
+                  {errors.title.message}
+                </p>
+              )}
             </div>
           </div>
 
@@ -95,12 +101,12 @@ export function CreateListDialog({ boardId }: TCreateListDialogProps) {
               type='button'
               variant='outline'
               onClick={() => setIsOpen(false)}
-              disabled={isLoading}
+              disabled={isSubmitting}
             >
               Cancelar
             </Button>
-            <Button type='submit' disabled={isLoading}>
-              {isLoading ? (
+            <Button type='submit' disabled={isSubmitting}>
+              {isSubmitting ? (
                 <>
                   <Spinner className='w-4 h-4 mr-2' />
                   Creando...

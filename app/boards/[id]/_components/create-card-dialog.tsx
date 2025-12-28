@@ -1,7 +1,9 @@
 'use client'
 
+import { zodResolver } from '@hookform/resolvers/zod'
 import { CalendarIcon, Plus } from 'lucide-react'
 import { useId, useState } from 'react'
+import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
@@ -24,6 +26,8 @@ import {
 import { Spinner } from '@/components/ui/spinner'
 import { Textarea } from '@/components/ui/textarea'
 import { createCard } from '@/lib/card/actions'
+import type { TCreateCardInput } from '@/lib/card/schemas'
+import { createCardSchema } from '@/lib/card/schemas'
 import { cn } from '@/lib/utils'
 
 type TCreateCardDialogProps = {
@@ -40,54 +44,46 @@ export function CreateCardDialog({
   const [internalOpen, setInternalOpen] = useState(false)
   const isControlled = controlledOpen !== undefined
   const isOpen = isControlled ? controlledOpen : internalOpen
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-  const [dueDate, setDueDate] = useState<Date | undefined>(undefined)
-  const [isLoading, setIsLoading] = useState(false)
   const titleId = useId()
   const descriptionId = useId()
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset,
+    watch,
+    setValue,
+  } = useForm<TCreateCardInput>({
+    resolver: zodResolver(createCardSchema),
+    defaultValues: {
+      listId,
+      title: '',
+      description: '',
+      dueDate: undefined,
+    },
+  })
 
-    if (!title.trim()) {
-      toast.error('El título de la tarjeta es obligatorio')
-      return
+  const dueDate = watch('dueDate')
+
+  const onSubmit = async (data: TCreateCardInput) => {
+    const result = await createCard({
+      ...data,
+      description: data.description?.trim() || undefined,
+    })
+
+    if (result.success) {
+      toast.success('Tarjeta creada correctamente')
+      reset()
+      handleOpenChange(false)
+    } else {
+      toast.error(result.error ?? 'Error al crear la tarjeta')
     }
-
-    setIsLoading(true)
-
-    try {
-      const result = await createCard({
-        title: title.trim(),
-        description: description.trim() || undefined,
-        listId,
-        dueDate,
-      })
-
-      if (result.success) {
-        toast.success('Tarjeta creada correctamente')
-        setTitle('')
-        setDescription('')
-        setDueDate(undefined)
-        handleOpenChange(false)
-      } else {
-        toast.error(result.error ?? 'Error al crear la tarjeta')
-      }
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const resetForm = () => {
-    setTitle('')
-    setDescription('')
-    setDueDate(undefined)
   }
 
   const handleOpenChange = (open: boolean) => {
     // Prevent closing during pending operations
-    if (!open && isLoading) {
+    if (!open && isSubmitting) {
       return
     }
 
@@ -97,7 +93,7 @@ export function CreateCardDialog({
       setInternalOpen(open)
     }
     if (!open) {
-      resetForm()
+      reset()
     }
   }
 
@@ -124,7 +120,7 @@ export function CreateCardDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <div className='space-y-4 py-4'>
             {/* Título Field */}
             <div className='space-y-2'>
@@ -134,12 +130,16 @@ export function CreateCardDialog({
               <Input
                 id={titleId}
                 placeholder='Ingresa el título de la tarjeta...'
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                disabled={isLoading}
+                {...register('title')}
+                disabled={isSubmitting}
                 autoFocus
-                required
+                className={cn(errors.title && 'border-destructive')}
               />
+              {errors.title && (
+                <p className='text-sm text-destructive'>
+                  {errors.title.message}
+                </p>
+              )}
             </div>
 
             {/* Descripción Field */}
@@ -148,12 +148,16 @@ export function CreateCardDialog({
               <Textarea
                 id={descriptionId}
                 placeholder='Añade una descripción más detallada... (opcional)'
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                disabled={isLoading}
+                {...register('description')}
+                disabled={isSubmitting}
                 rows={4}
                 className='resize-none'
               />
+              {errors.description && (
+                <p className='text-sm text-destructive'>
+                  {errors.description.message}
+                </p>
+              )}
             </div>
 
             {/* Fecha de vencimiento Field */}
@@ -167,7 +171,8 @@ export function CreateCardDialog({
                       'w-full justify-start text-left font-normal',
                       !dueDate && 'text-muted-foreground',
                     )}
-                    disabled={isLoading}
+                    disabled={isSubmitting}
+                    type='button'
                   >
                     <CalendarIcon className='mr-2 h-4 w-4' />
                     {dueDate ? (
@@ -185,7 +190,7 @@ export function CreateCardDialog({
                   <Calendar
                     mode='single'
                     selected={dueDate}
-                    onSelect={setDueDate}
+                    onSelect={(date) => setValue('dueDate', date)}
                     initialFocus
                     disabled={(date) =>
                       date < new Date(new Date().setHours(0, 0, 0, 0))
@@ -197,7 +202,8 @@ export function CreateCardDialog({
                         variant='ghost'
                         size='sm'
                         className='w-full'
-                        onClick={() => setDueDate(undefined)}
+                        onClick={() => setValue('dueDate', undefined)}
+                        type='button'
                       >
                         Limpiar fecha
                       </Button>
@@ -213,12 +219,12 @@ export function CreateCardDialog({
               type='button'
               variant='outline'
               onClick={() => handleOpenChange(false)}
-              disabled={isLoading}
+              disabled={isSubmitting}
             >
               Cancelar
             </Button>
-            <Button type='submit' disabled={isLoading || !title.trim()}>
-              {isLoading ? (
+            <Button type='submit' disabled={isSubmitting}>
+              {isSubmitting ? (
                 <>
                   <Spinner className='w-4 h-4 mr-2' />
                   Creando...

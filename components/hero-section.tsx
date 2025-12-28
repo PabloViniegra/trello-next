@@ -66,7 +66,7 @@ export function HeroSection() {
               </MotionButton>
               <CreateBoardDialog
                 open={isDialogOpen}
-                onOpenChange={setIsDialogOpen}
+                onOpenChangeAction={setIsDialogOpen}
                 trigger={
                   <MotionButton
                     size='lg'

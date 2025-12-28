@@ -1,9 +1,12 @@
 'use client'
 
+import { zodResolver } from '@hookform/resolvers/zod'
 import { Lock, Unlock } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
+import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
+import type { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -17,8 +20,11 @@ import {
 import { Label } from '@/components/ui/label'
 import { Toggle } from '@/components/ui/toggle'
 import { updateBoardPrivacy } from '@/lib/board/actions'
+import { updateBoardPrivacySchema } from '@/lib/board/schemas'
 import type { TBoardPrivacy } from '@/lib/board/types'
 import { cn } from '@/lib/utils'
+
+type TFormInput = z.infer<typeof updateBoardPrivacySchema>
 
 type TBoardPrivacyToggleProps = {
   boardId: string
@@ -34,38 +40,40 @@ export function BoardPrivacyToggle({
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
-  const [privacy, setPrivacy] = useState<TBoardPrivacy>(currentPrivacy)
 
-  function handleOpenChange(isOpen: boolean) {
-    setOpen(isOpen)
-    if (isOpen) {
-      setPrivacy(currentPrivacy)
-    }
-  }
+  const { handleSubmit, watch, setValue, reset } = useForm<TFormInput>({
+    resolver: zodResolver(updateBoardPrivacySchema),
+    defaultValues: {
+      boardId,
+      isPrivate: currentPrivacy,
+    },
+  })
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
+  const privacy = watch('isPrivate')
 
-    // Guardar el estado anterior para revertir en caso de error
-    const previousPrivacy = currentPrivacy
-
-    startTransition(async () => {
-      const result = await updateBoardPrivacy({
+  // Reset form when dialog opens
+  useEffect(() => {
+    if (open) {
+      reset({
         boardId,
-        isPrivate: privacy,
+        isPrivate: currentPrivacy,
       })
+    }
+  }, [open, boardId, currentPrivacy, reset])
+
+  const onSubmit = (data: TFormInput) => {
+    startTransition(async () => {
+      const result = await updateBoardPrivacy(data)
 
       if (result.success) {
         toast.success(
-          privacy === 'private'
+          data.isPrivate === 'private'
             ? 'Tablero configurado como privado'
             : 'Tablero configurado como público',
         )
         setOpen(false)
         router.refresh()
       } else {
-        // Revertir el estado en caso de error
-        setPrivacy(previousPrivacy)
         toast.error(
           result.error ?? 'Error al cambiar la privacidad del tablero',
         )
@@ -79,7 +87,7 @@ export function BoardPrivacyToggle({
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button
           variant='ghost'
@@ -101,14 +109,14 @@ export function BoardPrivacyToggle({
             Configura quién puede ver este tablero.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <div className='space-y-4 py-4'>
             <div className='space-y-4'>
               <Label>Nivel de acceso</Label>
               <div className='flex flex-col gap-3'>
                 <Toggle
                   pressed={privacy === 'public'}
-                  onPressedChange={() => setPrivacy('public')}
+                  onPressedChange={() => setValue('isPrivate', 'public')}
                   disabled={isPending}
                   className={cn(
                     'justify-start gap-3 h-auto py-3 px-4 data-[state=on]:bg-primary/10 data-[state=on]:border-primary',
@@ -127,7 +135,7 @@ export function BoardPrivacyToggle({
 
                 <Toggle
                   pressed={privacy === 'private'}
-                  onPressedChange={() => setPrivacy('private')}
+                  onPressedChange={() => setValue('isPrivate', 'private')}
                   disabled={isPending}
                   className={cn(
                     'justify-start gap-3 h-auto py-3 px-4 data-[state=on]:bg-primary/10 data-[state=on]:border-primary',

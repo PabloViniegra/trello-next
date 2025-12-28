@@ -1,5 +1,4 @@
 import { z } from 'zod'
-import { DEFAULT_BOARD_COLOR } from './types'
 
 export const createBoardSchema = z.object({
   title: z
@@ -14,10 +13,7 @@ export const createBoardSchema = z.object({
     .trim()
     .optional()
     .nullable(),
-  backgroundColor: z
-    .string()
-    .regex(/^#[0-9A-Fa-f]{6}$/, 'Color inválido')
-    .default(DEFAULT_BOARD_COLOR),
+  backgroundColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Color inválido'),
 })
 
 export const updateBoardSchema = z.object({

@@ -1,9 +1,12 @@
 'use client'
 
+import { zodResolver } from '@hookform/resolvers/zod'
 import { Plus } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useId, useState, useTransition } from 'react'
+import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
+import type { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -21,21 +24,17 @@ import { createBoardSchema } from '@/lib/board/schemas'
 import { BOARD_COLORS, DEFAULT_BOARD_COLOR } from '@/lib/board/types'
 import { cn } from '@/lib/utils'
 
-type TFormErrors = {
-  title?: string
-  description?: string
-  backgroundColor?: string
-}
+type TFormInput = z.infer<typeof createBoardSchema>
 
 type TCreateBoardDialogProps = {
   open?: boolean
-  onOpenChange?: (open: boolean) => void
+  onOpenChangeAction?: (open: boolean) => void
   trigger?: React.ReactNode
 }
 
 export function CreateBoardDialog({
   open: controlledOpen,
-  onOpenChange: controlledOnOpenChange,
+  onOpenChangeAction: controlledOnOpenChange,
   trigger,
 }: TCreateBoardDialogProps = {}) {
   const router = useRouter()
@@ -51,63 +50,45 @@ export function CreateBoardDialog({
     ? (controlledOnOpenChange ?? setInternalOpen)
     : setInternalOpen
 
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-  const [backgroundColor, setBackgroundColor] = useState(DEFAULT_BOARD_COLOR)
-  const [errors, setErrors] = useState<TFormErrors>({})
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+    watch,
+    setValue,
+  } = useForm<TFormInput>({
+    resolver: zodResolver(createBoardSchema),
+    defaultValues: {
+      title: '',
+      description: null,
+      backgroundColor: DEFAULT_BOARD_COLOR,
+    },
+  })
 
-  function resetForm() {
-    setTitle('')
-    setDescription('')
-    setBackgroundColor(DEFAULT_BOARD_COLOR)
-    setErrors({})
-  }
+  const title = watch('title')
+  const backgroundColor = watch('backgroundColor')
 
-  function handleOpenChange(isOpen: boolean) {
-    setOpen(isOpen)
-    if (!isOpen) {
-      resetForm()
-    }
-  }
-
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-
-    // Validar en cliente primero
-    const validated = createBoardSchema.safeParse({
-      title,
-      description: description || null,
-      backgroundColor,
-    })
-
-    if (!validated.success) {
-      const fieldErrors: TFormErrors = {}
-      for (const issue of validated.error.issues) {
-        const field = issue.path[0] as keyof TFormErrors
-        fieldErrors[field] = issue.message
-      }
-      setErrors(fieldErrors)
-      return
-    }
-
-    setErrors({})
-
+  const onSubmit = async (data: TFormInput) => {
     startTransition(async () => {
-      const result = await createBoard({
-        title: validated.data.title,
-        description: validated.data.description,
-        backgroundColor: validated.data.backgroundColor,
-      })
+      const result = await createBoard(data)
 
       if (result.success && result.data) {
         toast.success('Tablero creado correctamente')
         setOpen(false)
-        resetForm()
+        reset()
         router.push(`/boards/${result.data.id}`)
       } else {
         toast.error(result.error ?? 'Error al crear el tablero')
       }
     })
+  }
+
+  function handleOpenChange(isOpen: boolean) {
+    setOpen(isOpen)
+    if (!isOpen) {
+      reset()
+    }
   }
 
   return (
@@ -128,12 +109,14 @@ export function CreateBoardDialog({
             Crea un tablero para organizar tus tareas y proyectos.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <div className='space-y-4 py-4'>
             {/* Vista previa del tablero */}
             <div
               className='h-24 rounded-lg flex items-center justify-center transition-colors'
-              style={{ backgroundColor }}
+              style={{
+                backgroundColor: backgroundColor || DEFAULT_BOARD_COLOR,
+              }}
             >
               <span className='text-white font-semibold text-lg drop-shadow-md'>
                 {title || 'Mi tablero'}
@@ -148,13 +131,14 @@ export function CreateBoardDialog({
               <Input
                 id={titleId}
                 placeholder='Nombre del tablero'
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                {...register('title')}
                 disabled={isPending}
                 className={cn(errors.title && 'border-destructive')}
               />
               {errors.title && (
-                <p className='text-sm text-destructive'>{errors.title}</p>
+                <p className='text-sm text-destructive'>
+                  {errors.title.message}
+                </p>
               )}
             </div>
 
@@ -164,13 +148,14 @@ export function CreateBoardDialog({
               <Input
                 id={descriptionId}
                 placeholder='Describe el propósito del tablero'
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                {...register('description')}
                 disabled={isPending}
                 className={cn(errors.description && 'border-destructive')}
               />
               {errors.description && (
-                <p className='text-sm text-destructive'>{errors.description}</p>
+                <p className='text-sm text-destructive'>
+                  {errors.description.message}
+                </p>
               )}
             </div>
 
@@ -189,7 +174,7 @@ export function CreateBoardDialog({
                         'ring-2 ring-offset-2 ring-primary',
                     )}
                     style={{ backgroundColor: color.value }}
-                    onClick={() => setBackgroundColor(color.value)}
+                    onClick={() => setValue('backgroundColor', color.value)}
                     disabled={isPending}
                   />
                 ))}

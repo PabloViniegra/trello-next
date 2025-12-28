@@ -1,9 +1,12 @@
 'use client'
 
+import { zodResolver } from '@hookform/resolvers/zod'
 import { Pencil } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useId, useState, useTransition } from 'react'
+import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
+import type { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -22,11 +25,7 @@ import type { TBoard } from '@/lib/board/types'
 import { BOARD_COLORS, DEFAULT_BOARD_COLOR } from '@/lib/board/types'
 import { cn } from '@/lib/utils'
 
-type TFormErrors = {
-  title?: string
-  description?: string
-  backgroundColor?: string
-}
+type TFormInput = z.infer<typeof updateBoardSchema>
 
 type TEditBoardDialogProps = {
   board: TBoard
@@ -40,66 +39,41 @@ export function EditBoardDialog({ board, isOwner }: TEditBoardDialogProps) {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
 
-  const [title, setTitle] = useState(board.title)
-  const [description, setDescription] = useState(board.description || '')
-  const [backgroundColor, setBackgroundColor] = useState(
-    board.backgroundColor || DEFAULT_BOARD_COLOR,
-  )
-  const [errors, setErrors] = useState<TFormErrors>({})
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+    watch,
+    setValue,
+  } = useForm<TFormInput>({
+    resolver: zodResolver(updateBoardSchema),
+    defaultValues: {
+      boardId: board.id,
+      title: board.title,
+      description: board.description || '',
+      backgroundColor: board.backgroundColor || DEFAULT_BOARD_COLOR,
+    },
+  })
+
+  const title = watch('title')
+  const backgroundColor = watch('backgroundColor')
 
   // Reset form when dialog opens or board changes
   useEffect(() => {
     if (open) {
-      setTitle(board.title)
-      setDescription(board.description || '')
-      setBackgroundColor(board.backgroundColor || DEFAULT_BOARD_COLOR)
-      setErrors({})
-    }
-  }, [open, board])
-
-  function handleOpenChange(isOpen: boolean) {
-    setOpen(isOpen)
-    if (!isOpen) {
-      setErrors({})
-    }
-  }
-
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-
-    // Client-side validation
-    const validated = updateBoardSchema.safeParse({
-      boardId: board.id,
-      title,
-      description: description || null,
-      backgroundColor,
-    })
-
-    if (!validated.success) {
-      const fieldErrors: TFormErrors = {}
-      for (const issue of validated.error.issues) {
-        const field = issue.path[0]
-        if (
-          field === 'title' ||
-          field === 'description' ||
-          field === 'backgroundColor'
-        ) {
-          fieldErrors[field] = issue.message
-        }
-      }
-      setErrors(fieldErrors)
-      return
-    }
-
-    setErrors({})
-
-    startTransition(async () => {
-      const result = await updateBoard({
+      reset({
         boardId: board.id,
-        title: validated.data.title,
-        description: validated.data.description,
-        backgroundColor: validated.data.backgroundColor,
+        title: board.title,
+        description: board.description || '',
+        backgroundColor: board.backgroundColor || DEFAULT_BOARD_COLOR,
       })
+    }
+  }, [open, board, reset])
+
+  const onSubmit = (data: TFormInput) => {
+    startTransition(async () => {
+      const result = await updateBoard(data)
 
       if (result.success) {
         toast.success('Tablero actualizado correctamente')
@@ -117,7 +91,7 @@ export function EditBoardDialog({ board, isOwner }: TEditBoardDialogProps) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button
           variant='ghost'
@@ -135,12 +109,14 @@ export function EditBoardDialog({ board, isOwner }: TEditBoardDialogProps) {
             Modifica el título, descripción o color de tu tablero.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <div className='space-y-4 py-4'>
             {/* Vista previa del tablero */}
             <div
               className='h-24 rounded-lg flex items-center justify-center transition-colors'
-              style={{ backgroundColor }}
+              style={{
+                backgroundColor: backgroundColor || DEFAULT_BOARD_COLOR,
+              }}
             >
               <span className='text-white font-semibold text-lg drop-shadow-md'>
                 {title || 'Mi tablero'}
@@ -155,13 +131,14 @@ export function EditBoardDialog({ board, isOwner }: TEditBoardDialogProps) {
               <Input
                 id={titleId}
                 placeholder='Nombre del tablero'
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                {...register('title')}
                 disabled={isPending}
                 className={cn(errors.title && 'border-destructive')}
               />
               {errors.title && (
-                <p className='text-sm text-destructive'>{errors.title}</p>
+                <p className='text-sm text-destructive'>
+                  {errors.title.message}
+                </p>
               )}
             </div>
 
@@ -171,13 +148,14 @@ export function EditBoardDialog({ board, isOwner }: TEditBoardDialogProps) {
               <Input
                 id={descriptionId}
                 placeholder='Describe el propósito del tablero'
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                {...register('description')}
                 disabled={isPending}
                 className={cn(errors.description && 'border-destructive')}
               />
               {errors.description && (
-                <p className='text-sm text-destructive'>{errors.description}</p>
+                <p className='text-sm text-destructive'>
+                  {errors.description.message}
+                </p>
               )}
             </div>
 
@@ -196,7 +174,7 @@ export function EditBoardDialog({ board, isOwner }: TEditBoardDialogProps) {
                         'ring-2 ring-offset-2 ring-primary',
                     )}
                     style={{ backgroundColor: color.value }}
-                    onClick={() => setBackgroundColor(color.value)}
+                    onClick={() => setValue('backgroundColor', color.value)}
                     disabled={isPending}
                   />
                 ))}
