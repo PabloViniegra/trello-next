@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import type { TCard, TCardWithDetails, TCardWithLabels } from '@/lib/card/types'
 import { cn } from '@/lib/utils'
+import { editorStateToPlainText, isValidEditorState } from '@/lib/utils/editor'
 import { useBoardStore } from '@/store/board-store'
 import { CardMembersAvatars } from './card-members-avatars'
 import { DeleteCardDialog } from './delete-card-dialog'
@@ -68,6 +69,22 @@ export function CardItem({ card }: TCardItemProps) {
     ? getDueDateStatus(card.dueDate, currentDate)
     : null
   const hasDescription = Boolean(card.description)
+
+  // Convert editor state to plain text for preview
+  const descriptionPreview = card.description
+    ? (() => {
+        try {
+          const parsed = JSON.parse(card.description)
+          if (isValidEditorState(parsed)) {
+            return editorStateToPlainText(parsed)
+          }
+          return card.description
+        } catch {
+          return card.description
+        }
+      })()
+    : ''
+
   const cardWithLabels = card as TCardWithLabels
   const cardWithDetails = card as TCardWithDetails
   const hasLabels = cardWithLabels.labels && cardWithLabels.labels.length > 0
@@ -158,9 +175,9 @@ export function CardItem({ card }: TCardItemProps) {
             ) : null}
 
             {/* Card Description Preview (optional) */}
-            {hasDescription && (
+            {hasDescription && descriptionPreview && (
               <p className='text-xs text-muted-foreground line-clamp-2 leading-relaxed pt-1 border-t border-border/50'>
-                {card.description}
+                {descriptionPreview}
               </p>
             )}
           </CardContent>

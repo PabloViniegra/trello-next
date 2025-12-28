@@ -1,12 +1,14 @@
 'use client'
 
 import { zodResolver } from '@hookform/resolvers/zod'
+import type { SerializedEditorState } from 'lexical'
 import { CalendarIcon, Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useId, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { z } from 'zod'
+import { CardDescriptionEditor } from '@/components/editor/card-description-editor'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import {
@@ -24,11 +26,15 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
-import { Textarea } from '@/components/ui/textarea'
 import { updateCard } from '@/lib/card/actions'
 import type { TCardWithDetails } from '@/lib/card/types'
 import type { TLabel } from '@/lib/label/types'
 import { cn } from '@/lib/utils'
+import {
+  createEmptyEditorState,
+  isValidEditorState,
+  plainTextToEditorState,
+} from '@/lib/utils/editor'
 import { useBoardStore } from '@/store/board-store'
 import { CardLabelsSelector } from './card-labels-selector'
 import { CardMembersAvatars } from './card-members-avatars'
@@ -64,11 +70,37 @@ export function CardDetailDialog({
   const router = useRouter()
   const { isCardModalOpen, closeCardModal, activeCard } = useBoardStore()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [editorState, setEditorState] = useState<SerializedEditorState | null>(
+    null,
+  )
   const titleId = useId()
   const descriptionId = useId()
 
   // Only show modal if this is the active card
   const isThisCardActive = activeCard === card.id
+
+  // Initialize editor state from card description
+  useEffect(() => {
+    if (isThisCardActive && isCardModalOpen) {
+      if (card.description) {
+        try {
+          const parsed = JSON.parse(card.description)
+          if (isValidEditorState(parsed)) {
+            setEditorState(parsed)
+          } else {
+            // Convert plain text to editor state
+            setEditorState(plainTextToEditorState(card.description))
+          }
+        } catch {
+          // If not valid JSON, treat as plain text
+          setEditorState(plainTextToEditorState(card.description))
+        }
+      } else {
+        // Set empty editor state instead of null
+        setEditorState(createEmptyEditorState())
+      }
+    }
+  }, [card.description, isThisCardActive, isCardModalOpen])
 
   const {
     register,
@@ -87,6 +119,19 @@ export function CardDetailDialog({
   })
 
   const dueDate = watch('dueDate')
+
+  // Handle editor changes and sync with form
+  const handleEditorChange = useCallback(
+    (newState: SerializedEditorState) => {
+      setEditorState(newState)
+      // Update form value to trigger isDirty
+      setValue('description', JSON.stringify(newState), {
+        shouldDirty: true,
+        shouldValidate: false,
+      })
+    },
+    [setValue],
+  )
 
   // Reset form when card changes
   useEffect(() => {
@@ -110,10 +155,15 @@ export function CardDetailDialog({
       setIsSubmitting(true)
 
       try {
+        // Convert editor state to JSON string for storage
+        const descriptionToSave = editorState
+          ? JSON.stringify(editorState)
+          : undefined
+
         const result = await updateCard({
           id: card.id,
           title: data.title,
-          description: data.description || undefined,
+          description: descriptionToSave,
           dueDate: data.dueDate ?? null,
         })
 
@@ -133,7 +183,7 @@ export function CardDetailDialog({
         setIsSubmitting(false)
       }
     },
-    [card.id, closeCardModal, router],
+    [card.id, closeCardModal, router, editorState],
   )
 
   const handleClose = useCallback(() => {
@@ -227,20 +277,12 @@ export function CardDetailDialog({
 
           {/* Description Field */}
           <div className='space-y-2'>
-            <div className='flex justify-between items-center'>
-              <Label htmlFor={descriptionId}>Descripción</Label>
-              <span className='text-xs text-muted-foreground'>
-                {watch('description')?.length || 0} / 5000
-              </span>
-            </div>
-            <Textarea
-              id={descriptionId}
+            <Label htmlFor={descriptionId}>Descripción</Label>
+            <CardDescriptionEditor
+              initialValue={editorState}
+              onChange={handleEditorChange}
               placeholder='Añade una descripción más detallada...'
-              rows={5}
-              {...register('description')}
               disabled={isSubmitting}
-              className='resize-none'
-              maxLength={5000}
             />
             {errors.description && (
               <p className='text-sm text-destructive'>
