@@ -3,6 +3,7 @@
  * Full list of user notifications with filtering and pagination
  */
 
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -12,6 +13,15 @@ import {
   getUnreadNotifications,
 } from '@/lib/notification/queries'
 import { NotificationList } from './_components/notification-list'
+
+export const metadata: Metadata = {
+  title: 'Notificaciones',
+  description: 'Gestiona todas tus notificaciones de actividad en tableros, tareas y colaboración.',
+  robots: {
+    index: false, // Contenido privado del usuario
+    follow: false,
+  },
+}
 
 interface PageProps {
   searchParams: Promise<{

@@ -4,8 +4,12 @@ import { playfairDisplay } from '@/lib/fonts'
 import { ResetPasswordForm } from './_components/reset-password-form'
 
 export const metadata: Metadata = {
-  title: 'Restablecer contraseña - Trello Clone',
-  description: 'Establece una nueva contraseña para tu cuenta',
+  title: 'Restablecer contraseña',
+  description: 'Establece una nueva contraseña segura para tu cuenta de Trello Clone.',
+  robots: {
+    index: false,
+    follow: false,
+  },
 }
 
 export default function ResetPasswordPage() {

@@ -1,0 +1,30 @@
+# Robots.txt para Trello Clone
+# Permite el acceso a todos los bots de búsqueda
+
+User-agent: *
+Allow: /
+
+# Bloquear rutas privadas y de autenticación
+Disallow: /api/
+Disallow: /settings/
+Disallow: /notifications/
+
+# Bloquear páginas de autenticación (no queremos indexar login/signup)
+Disallow: /login
+Disallow: /signup
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /verify-email
+
+# Permitir acceso a assets
+Allow: /*.css
+Allow: /*.js
+Allow: /*.png
+Allow: /*.jpg
+Allow: /*.jpeg
+Allow: /*.gif
+Allow: /*.svg
+Allow: /*.webp
+
+# Sitemap
+Sitemap: https://trello-clone.example.com/sitemap.xml

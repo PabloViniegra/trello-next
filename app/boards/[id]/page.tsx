@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { Suspense } from 'react'
 import { Navbar } from '@/components/navbar'
@@ -12,6 +13,42 @@ import { BoardDetailSkeleton } from './_components/board-detail-skeleton'
 
 type TBoardDetailPageProps = {
   params: Promise<{ id: string }>
+}
+
+/**
+ * Generate dynamic metadata for board detail page
+ * SEO: Each board gets unique title and description
+ */
+export async function generateMetadata({
+  params,
+}: TBoardDetailPageProps): Promise<Metadata> {
+  const { id } = await params
+  const { success, data: board } = await getBoardById(id)
+
+  if (!success || !board) {
+    return {
+      title: 'Tablero no encontrado',
+      description: 'El tablero solicitado no existe o no tienes permiso para acceder a él.',
+      robots: {
+        index: false,
+        follow: false,
+      },
+    }
+  }
+
+  return {
+    title: board.title,
+    description: board.description || `Tablero de trabajo: ${board.title}. Gestiona tus listas y tarjetas de manera eficiente.`,
+    openGraph: {
+      title: `${board.title} | Trello Clone`,
+      description: board.description || `Tablero de trabajo: ${board.title}`,
+      type: 'website',
+    },
+    robots: {
+      index: false, // Private content - no indexar tableros privados
+      follow: false,
+    },
+  }
 }
 
 function CenteredMessage({

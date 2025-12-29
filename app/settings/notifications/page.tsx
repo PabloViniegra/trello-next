@@ -3,7 +3,17 @@
  * User preferences for notification types
  */
 
+import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
+
+export const metadata: Metadata = {
+  title: 'Configuración de Notificaciones',
+  description: 'Personaliza tus preferencias de notificaciones y gestiona cómo recibes actualizaciones.',
+  robots: {
+    index: false,
+    follow: false,
+  },
+}
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { getUserPreferences } from '@/lib/notification/queries'
 import { NOTIFICATION_TYPES } from '@/lib/notification/types'

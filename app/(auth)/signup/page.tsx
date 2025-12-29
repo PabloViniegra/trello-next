@@ -4,8 +4,12 @@ import { playfairDisplay } from '@/lib/fonts'
 import { SignupForm } from './_components/signup-form'
 
 export const metadata: Metadata = {
-  title: 'Crear cuenta - Trello Clone',
-  description: 'Crea una nueva cuenta',
+  title: 'Crear cuenta',
+  description: 'Crea tu cuenta gratuita en Trello Clone y comienza a organizar tus proyectos con tableros Kanban. Gestión de tareas simple y eficiente.',
+  robots: {
+    index: false, // No indexar páginas de autenticación
+    follow: true,
+  },
 }
 
 export default function SignupPage() {

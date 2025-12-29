@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { Suspense } from 'react'
 import { Navbar } from '@/components/navbar'
@@ -13,6 +14,18 @@ import { getBoardsWithFilters } from '@/lib/board/queries'
 import { BoardsGrid } from './_components/boards-grid'
 import { BoardsPagination } from './_components/boards-pagination'
 import { FilterHeader } from './_components/filters/filter-header'
+
+export const metadata: Metadata = {
+  title: 'Mis Tableros',
+  description: 'Gestiona y organiza todos tus tableros de trabajo. Visualiza, filtra y accede a tus proyectos de manera eficiente.',
+  openGraph: {
+    title: 'Mis Tableros | Trello Clone',
+    description: 'Gestiona y organiza todos tus tableros de trabajo',
+  },
+  alternates: {
+    canonical: '/boards',
+  },
+}
 
 type TSearchParams = Promise<{
   page?: string

@@ -5,8 +5,12 @@ import { playfairDisplay } from '@/lib/fonts'
 import { VerifyEmailForm } from './_components/verify-email-form'
 
 export const metadata: Metadata = {
-  title: 'Verificar Email - Trello Clone',
-  description: 'Verifica tu direccion de email',
+  title: 'Verificar Email',
+  description: 'Verifica tu dirección de email para activar tu cuenta de Trello Clone y comenzar a usar la plataforma.',
+  robots: {
+    index: false,
+    follow: false,
+  },
 }
 
 function VerifyEmailFormWrapper() {
