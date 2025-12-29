@@ -391,7 +391,16 @@ pnpm drizzle-kit migrate
 
 ## License
 
-No license file is included in this repository.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+### MIT License Summary
+
+- ✅ Commercial use
+- ✅ Modification
+- ✅ Distribution
+- ✅ Private use
+- ❌ Liability
+- ❌ Warranty
 
 ---
 
