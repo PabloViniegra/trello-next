@@ -356,38 +356,57 @@ pnpm test lib/email/        # Run specific tests
 
 ## Deployment
 
-### Environment Variables
+### Producción en Vercel
 
-Set all required environment variables:
+**URL de Producción:** https://[tu-dominio].vercel.app
+
+La aplicación está desplegada en Vercel con:
+
+- PostgreSQL en Neon (producción)
+- Autenticación con Better Auth
+- Email transaccional con Resend
+- Despliegue automático desde GitHub
+
+### Variables de Entorno Requeridas
+
+Ver [.env.example](./.env.example) para la lista completa de variables necesarias.
+
+### Guía de Despliegue Completa
+
+Para instrucciones detalladas sobre cómo desplegar y mantener la aplicación en producción, consulta [DEPLOYMENT.md](./DEPLOYMENT.md).
+
+Este documento incluye:
+
+- Configuración paso a paso de Vercel
+- Proceso de migraciones de base de datos
+- Checklist de validación post-despliegue
+- Procedimientos de rollback
+- Monitoreo y troubleshooting
+
+### Scripts de Despliegue
 
 ```bash
-DATABASE_URL="postgresql://..."
-BETTER_AUTH_URL="https://yourdomain.com"
-RESEND_API_KEY="re_..."
-RESEND_FROM="Your App <noreply@yourdomain.com>"
-NODE_ENV="production"
+# Migrar base de datos de producción
+pnpm db:migrate:production
+
+# Ver base de datos en navegador
+pnpm db:studio
+
+# Descargar variables de entorno de Vercel
+pnpm vercel:env
 ```
 
-### Database Migrations
+### Hosting
 
-Apply migrations during deployment:
+- **Aplicación**: Vercel
+- **Base de Datos**: Neon PostgreSQL
+- **Email**: Resend
 
-```bash
-pnpm drizzle-kit migrate
-```
+### Monitoreo
 
-### Hosting Recommendations
-
-- **Vercel**: Seamless Next.js deployment
-- **Neon**: PostgreSQL serverless database
-- **Resend**: Email delivery service
-
-### Post-Deployment
-
-1. Verify domain for Resend emails
-2. Test email verification flow
-3. Monitor error logs and performance
-4. Set up database backups
+- **Application Logs:** Vercel Dashboard > Logs
+- **Database:** Neon Dashboard > Monitoring
+- **Email Delivery:** Resend Dashboard > Logs
 
 ## License
 

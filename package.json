@@ -11,7 +11,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "email:dev": "email dev"
+    "email:dev": "email dev",
+    "db:migrate:production": "tsx scripts/migrate-production.ts",
+    "db:studio": "drizzle-kit studio",
+    "vercel:env": "vercel env pull .env.local"
   },
   "dependencies": {
     "@base-ui-components/react": "1.0.0-rc.0",
