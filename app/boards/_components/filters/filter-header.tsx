@@ -138,8 +138,8 @@ export function FilterHeader() {
   }, [syncFiltersToUrl])
 
   return (
-    <div className='space-y-4'>
-      <div className='flex items-center justify-between'>
+    <div className='space-y-3 md:space-y-4'>
+      <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3'>
         <div className='flex items-center gap-2'>
           <Filter className='h-4 w-4 text-muted-foreground' />
           <span className='text-sm font-medium'>Filtros</span>
@@ -150,7 +150,7 @@ export function FilterHeader() {
           )}
         </div>
 
-        <div className='flex items-center gap-2'>
+        <div className='flex items-center gap-2 w-full sm:w-auto'>
           <FilterSelector
             activeFilters={filters}
             onAddFilter={handleAddFilter}
@@ -164,14 +164,15 @@ export function FilterHeader() {
               className='text-muted-foreground'
             >
               <X className='mr-1 h-4 w-4' />
-              Limpiar todo
+              <span className='hidden sm:inline'>Limpiar todo</span>
+              <span className='sm:hidden'>Limpiar</span>
             </Button>
           )}
         </div>
       </div>
 
       {filters.length > 0 && (
-        <div className='flex flex-wrap gap-2'>
+        <div className='flex flex-col gap-2'>
           {filters.map((filter) => (
             <FilterRow
               key={filter.id}

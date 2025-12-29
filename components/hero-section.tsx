@@ -28,11 +28,11 @@ export function HeroSection() {
   return (
     <div className='flex flex-col'>
       {/* Hero principal */}
-      <section className='container mx-auto px-4 py-16 md:py-24'>
-        <div className='flex flex-col items-center text-center space-y-8'>
-          <div className='space-y-4 max-w-3xl'>
+      <section className='container mx-auto px-4 py-12 md:py-16 lg:py-24'>
+        <div className='flex flex-col items-center text-center space-y-6 md:space-y-8'>
+          <div className='space-y-3 md:space-y-4 max-w-3xl'>
             <FadeIn direction='down' duration={0.7}>
-              <h1 className='text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl'>
+              <h1 className='text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl lg:text-6xl'>
                 Organiza tu trabajo y tu vida de manera{' '}
                 <GradientText
                   colors={['#7f6a3f', '#deb6a0', '#9383b2', '#7f6a3f']}
@@ -43,7 +43,7 @@ export function HeroSection() {
               </h1>
             </FadeIn>
             <FadeIn delay={0.2} duration={0.6}>
-              <p className='text-lg text-muted-foreground md:text-xl'>
+              <p className='text-base text-muted-foreground md:text-lg lg:text-xl px-4'>
                 Gestiona proyectos, asigna tareas y colabora con tu equipo en un
                 solo lugar. Simple, visual y poderoso.
               </p>
@@ -89,9 +89,9 @@ export function HeroSection() {
       </section>
 
       {/* Características */}
-      <section className='container mx-auto px-4 py-16 bg-muted/20 backdrop-blur-xl border border-border/50 rounded-3xl'>
+      <section className='container mx-auto px-4 py-12 md:py-16 bg-muted/20 backdrop-blur-xl border border-border/50 rounded-2xl md:rounded-3xl'>
         <StaggerChildren
-          className='grid grid-cols-1 md:grid-cols-3 gap-6'
+          className='grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6'
           staggerDelay={0.15}
           initialDelay={0.2}
         >

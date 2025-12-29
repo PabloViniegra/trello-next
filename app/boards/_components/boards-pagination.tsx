@@ -65,22 +65,27 @@ export function BoardsPagination({
   }
 
   return (
-    <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
-      <div className='flex items-center gap-2 text-sm text-muted-foreground'>
-        <span>
+    <div className='flex flex-col gap-3 sm:gap-4 sm:flex-row sm:items-center sm:justify-between'>
+      <div className='flex items-center gap-2 text-xs sm:text-sm text-muted-foreground'>
+        <span className='hidden sm:inline'>
           Mostrando {startItem}-{endItem} de {totalCount} tableros
+        </span>
+        <span className='sm:hidden'>
+          {startItem}-{endItem} de {totalCount}
         </span>
         {isPending && <span className='text-xs'>(cargando...)</span>}
       </div>
 
-      <div className='flex items-center gap-4'>
-        <div className='flex items-center gap-2'>
-          <span className='text-sm text-muted-foreground'>Por página:</span>
+      <div className='flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4'>
+        <div className='flex items-center gap-2 justify-between sm:justify-start'>
+          <span className='text-xs sm:text-sm text-muted-foreground'>
+            Por página:
+          </span>
           <Select
             value={pageSize.toString()}
             onValueChange={handlePageSizeChange}
           >
-            <SelectTrigger className='h-8 w-20'>
+            <SelectTrigger className='h-8 w-16 sm:w-20'>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -93,11 +98,12 @@ export function BoardsPagination({
           </Select>
         </div>
 
-        <div className='flex items-center gap-1'>
+        <div className='flex items-center gap-1 justify-center'>
+          {/* Primera página - oculto en móvil */}
           <Button
             variant='outline'
             size='icon'
-            className='h-8 w-8'
+            className='hidden sm:flex h-8 w-8'
             onClick={() => handlePageChange(1)}
             disabled={currentPage === 1 || isPending}
           >
@@ -116,7 +122,7 @@ export function BoardsPagination({
             <span className='sr-only'>Página anterior</span>
           </Button>
 
-          <div className='flex items-center gap-1 px-2'>
+          <div className='flex items-center gap-1 px-2 min-w-[80px] justify-center'>
             <span className='text-sm font-medium'>{currentPage}</span>
             <span className='text-sm text-muted-foreground'>de</span>
             <span className='text-sm font-medium'>{totalPages}</span>
@@ -133,10 +139,11 @@ export function BoardsPagination({
             <span className='sr-only'>Página siguiente</span>
           </Button>
 
+          {/* Última página - oculto en móvil */}
           <Button
             variant='outline'
             size='icon'
-            className='h-8 w-8'
+            className='hidden sm:flex h-8 w-8'
             onClick={() => handlePageChange(totalPages)}
             disabled={currentPage === totalPages || isPending}
           >

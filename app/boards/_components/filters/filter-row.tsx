@@ -69,40 +69,42 @@ export function FilterRow({
   }
 
   return (
-    <div className='flex items-center gap-2 rounded-lg border bg-muted/50 p-2'>
-      <Badge variant='secondary' className='shrink-0'>
+    <div className='flex flex-col sm:flex-row items-stretch sm:items-center gap-2 rounded-lg border bg-muted/50 p-2'>
+      <Badge variant='secondary' className='shrink-0 w-fit'>
         {filter.field.label}
       </Badge>
 
-      <Select
-        value={filter.operator}
-        onValueChange={(value) =>
-          onOperatorChange(filter.id, value as TFilterOperator)
-        }
-      >
-        <SelectTrigger className='h-8 w-32'>
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {filter.field.operators.map((op) => (
-            <SelectItem key={op} value={op}>
-              {OPERATOR_LABELS[op]}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <div className='flex items-center gap-2 flex-1'>
+        <Select
+          value={filter.operator}
+          onValueChange={(value) =>
+            onOperatorChange(filter.id, value as TFilterOperator)
+          }
+        >
+          <SelectTrigger className='h-8 w-full sm:w-32'>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {filter.field.operators.map((op) => (
+              <SelectItem key={op} value={op}>
+                {OPERATOR_LABELS[op]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-      {renderValueInput()}
+        <div className='flex-1'>{renderValueInput()}</div>
 
-      <Button
-        variant='ghost'
-        size='icon'
-        className='h-8 w-8 shrink-0'
-        onClick={() => onRemove(filter.id)}
-      >
-        <X className='h-4 w-4' />
-        <span className='sr-only'>Eliminar filtro</span>
-      </Button>
+        <Button
+          variant='ghost'
+          size='icon'
+          className='h-8 w-8 shrink-0'
+          onClick={() => onRemove(filter.id)}
+        >
+          <X className='h-4 w-4' />
+          <span className='sr-only'>Eliminar filtro</span>
+        </Button>
+      </div>
     </div>
   )
 }

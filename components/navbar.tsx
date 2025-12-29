@@ -6,6 +6,7 @@ import { ThemeSwitcher } from '@/components/kibo-ui/theme-switcher'
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { NavLinks } from './nav-links'
 import { NavbarLogo } from './navbar-logo'
+import { NavbarMobileMenu } from './navbar-mobile-menu'
 import { Avatar, AvatarFallback } from './ui/avatar'
 import { UserNav } from './user-nav'
 
@@ -18,7 +19,10 @@ async function UserSection() {
 
   return (
     <>
-      <CreateBoardDialog />
+      {/* CreateBoardDialog - oculto en móvil */}
+      <div className='hidden sm:block'>
+        <CreateBoardDialog />
+      </div>
       <NotificationBell />
       <UserNav user={user} />
     </>
@@ -36,19 +40,20 @@ function UserSkeleton() {
 export function Navbar() {
   return (
     <AnimatedNavbar className='border-b bg-background'>
-      <div className='container mx-auto flex h-16 items-center px-4'>
-        {/* Logo - izquierda */}
-        <div className='flex items-center'>
+      <div className='container mx-auto flex h-16 items-center justify-between px-4 gap-3'>
+        {/* Menú hamburguesa (móvil) + Logo */}
+        <div className='flex items-center gap-3'>
+          <NavbarMobileMenu />
           <NavbarLogo />
         </div>
 
-        {/* NavLinks - centro */}
-        <div className='flex-1 flex justify-center'>
+        {/* NavLinks - centro (desktop only) */}
+        <div className='hidden md:flex flex-1 justify-center'>
           <NavLinks />
         </div>
 
         {/* Acciones - derecha */}
-        <div className='flex items-center gap-4'>
+        <div className='flex items-center gap-2 md:gap-4'>
           <ThemeSwitcher />
           <Suspense fallback={<UserSkeleton />}>
             <UserSection />

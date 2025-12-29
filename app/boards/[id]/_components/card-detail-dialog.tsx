@@ -208,7 +208,7 @@ export function CardDetailDialog({
       open={isCardModalOpen && isThisCardActive}
       onOpenChange={handleClose}
     >
-      <DialogContent className='sm:max-w-[600px]'>
+      <DialogContent className='max-w-[95vw] sm:max-w-[600px] max-h-[90vh] overflow-y-auto'>
         <DialogHeader>
           <DialogTitle>Detalles de la tarjeta</DialogTitle>
           <DialogDescription>
@@ -217,7 +217,10 @@ export function CardDetailDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className='space-y-6'>
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className='space-y-4 md:space-y-6'
+        >
           {/* Title Field */}
           <div className='space-y-2'>
             <Label htmlFor={titleId}>
@@ -294,27 +297,29 @@ export function CardDetailDialog({
           {/* Due Date Field */}
           <div className='space-y-2'>
             <Label>Fecha de vencimiento</Label>
-            <div className='flex gap-2'>
+            <div className='flex flex-col sm:flex-row gap-2'>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
                     type='button'
                     variant='outline'
                     className={cn(
-                      'flex-1 justify-start text-left font-normal',
+                      'w-full sm:flex-1 justify-start text-left font-normal text-sm',
                       !dueDate && 'text-muted-foreground',
                     )}
                     disabled={isSubmitting}
                   >
-                    <CalendarIcon className='mr-2 h-4 w-4' />
-                    {dueDate
-                      ? new Date(dueDate).toLocaleDateString('es-ES', {
-                          weekday: 'long',
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                        })
-                      : 'Seleccionar fecha'}
+                    <CalendarIcon className='mr-2 h-4 w-4 shrink-0' />
+                    <span className='truncate'>
+                      {dueDate
+                        ? new Date(dueDate).toLocaleDateString('es-ES', {
+                            weekday: 'short',
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                          })
+                        : 'Seleccionar fecha'}
+                    </span>
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className='w-auto p-0' align='start'>
@@ -334,7 +339,7 @@ export function CardDetailDialog({
                   variant='outline'
                   onClick={handleClearDate}
                   disabled={isSubmitting}
-                  className='shrink-0'
+                  className='w-full sm:w-auto shrink-0'
                 >
                   Limpiar
                 </Button>
@@ -343,16 +348,21 @@ export function CardDetailDialog({
           </div>
 
           {/* Footer Actions */}
-          <DialogFooter className='gap-2'>
+          <DialogFooter className='gap-2 sm:gap-3 flex-col sm:flex-row'>
             <Button
               type='button'
               variant='outline'
               onClick={handleClose}
               disabled={isSubmitting}
+              className='w-full sm:w-auto'
             >
               Cancelar
             </Button>
-            <Button type='submit' disabled={isSubmitting || !isDirty}>
+            <Button
+              type='submit'
+              disabled={isSubmitting || !isDirty}
+              className='w-full sm:w-auto'
+            >
               {isSubmitting && (
                 <Loader2 className='mr-2 h-4 w-4 animate-spin' />
               )}
