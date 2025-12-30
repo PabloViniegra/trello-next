@@ -4,13 +4,18 @@
  *
  * Polling strategy:
  * - Checks for changes every 3 seconds
- * - Sends heartbeat every 30 seconds to keep connection alive
+ * - Sends heartbeat every 15 seconds to keep connection alive (reduced for production)
  * - Compares timestamps to detect changes
  *
  * Security:
  * - Validates user authentication
  * - Verifies board access permissions
  * - Only sends data for boards the user has access to
+ *
+ * Production compatibility:
+ * - Forces Node.js runtime (not Edge)
+ * - Includes all necessary headers for CDN/proxy compatibility
+ * - Shorter heartbeat to prevent connection timeout
  */
 
 import { type NextRequest, NextResponse } from 'next/server'
@@ -19,8 +24,14 @@ import { hasUserBoardAccess } from '@/lib/board-member/queries'
 import { getListsWithCardsAndLabelsByBoardId } from '@/lib/list/queries'
 import { logger } from '@/lib/utils/logger'
 
-// SSE Configuration
-const SSE_HEARTBEAT_INTERVAL = 30000 // 30 seconds - keeps connection alive
+// Force Node.js runtime for SSE support (Edge doesn't support streaming well)
+export const runtime = 'nodejs'
+
+// Disable static generation and caching for this route
+export const dynamic = 'force-dynamic'
+
+// SSE Configuration - optimized for production
+const SSE_HEARTBEAT_INTERVAL = 15000 // 15 seconds - more frequent for production
 const SSE_BOARD_CHECK_INTERVAL = 3000 // 3 seconds - check for board changes
 
 export async function GET(
@@ -168,13 +179,24 @@ export async function GET(
       },
     })
 
-    // 4. Return SSE response with proper headers
+    // 4. Return SSE response with comprehensive headers for production
     return new Response(stream, {
       headers: {
+        // Core SSE headers
         'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache, no-transform',
+        'Cache-Control': 'no-cache, no-store, no-transform, must-revalidate',
         Connection: 'keep-alive',
-        'X-Accel-Buffering': 'no', // Disable nginx buffering
+
+        // Prevent buffering (critical for SSE in production)
+        'X-Accel-Buffering': 'no', // Nginx
+        'X-Content-Type-Options': 'nosniff',
+
+        // Vercel/Cloudflare specific
+        'Transfer-Encoding': 'chunked',
+
+        // CORS headers if needed
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Cache-Control',
       },
     })
   } catch (error) {

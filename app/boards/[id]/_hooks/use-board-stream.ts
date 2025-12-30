@@ -1,47 +1,45 @@
 /**
  * useBoardStream Hook
- * Manages Server-Sent Events (SSE) connection for real-time board updates
+ * Manages real-time board updates with SSE primary + polling fallback
  *
  * Automatically syncs lists and cards across all connected clients.
  * When any user creates/updates/deletes a card or list, all other users
- * see the changes within 3 seconds without manual refresh.
+ * see the changes within 3-5 seconds without manual refresh.
  *
- * Features:
- * - Auto-reconnection on disconnect
- * - Connection status tracking
- * - Last update timestamp
- * - Graceful error handling
+ * Strategy:
+ * 1. Try SSE connection first (best for real-time)
+ * 2. If SSE fails or disconnects, fall back to polling
+ * 3. Auto-retry SSE periodically even when in polling mode
+ *
+ * Production compatibility:
+ * - Works with Vercel, Railway, Render, etc.
+ * - Handles proxy/CDN connection drops gracefully
+ * - Polling fallback ensures updates even if SSE is blocked
  *
  * @param boardId - The board ID to stream updates for
  * @param initialLists - Initial lists data from server
  * @returns Current lists, connection status, and last update timestamp
- *
- * @example
- * ```tsx
- * const { lists, isConnected, lastUpdate } = useBoardStream(boardId, initialLists)
- *
- * return (
- *   <div>
- *     <ConnectionIndicator isConnected={isConnected} />
- *     {lists.map(list => <List key={list.id} {...list} />)}
- *   </div>
- * )
- * ```
  */
 
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { TListWithCardsAndLabels } from '@/lib/list/types'
-import { logger } from '@/lib/utils/logger'
+
+// Configuration
+const SSE_RETRY_DELAY = 5000 // 5 seconds before retrying SSE
+const POLLING_INTERVAL = 5000 // 5 seconds polling interval as fallback
+const SSE_MAX_RETRIES = 3 // Max SSE retries before switching to polling only
 
 type TBoardStreamState = {
   /** Current board lists with cards and labels */
   lists: TListWithCardsAndLabels[]
-  /** Whether SSE connection is active */
+  /** Whether real-time connection is active (SSE or polling) */
   isConnected: boolean
   /** Timestamp of last update received (ms since epoch) */
   lastUpdate: number
+  /** Current connection mode */
+  mode: 'sse' | 'polling' | 'disconnected'
 }
 
 type TSSEMessage = {
@@ -60,118 +58,192 @@ export function useBoardStream(
     lists: initialLists,
     isConnected: false,
     lastUpdate: Date.now(),
+    mode: 'disconnected',
   })
 
   const eventSourceRef = useRef<EventSource | null>(null)
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const sseRetryCountRef = useRef(0)
+  const sseRetryTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  useEffect(() => {
-    // Create SSE connection
+  // Fetch board data via REST API (for polling fallback)
+  const fetchBoardData = useCallback(async () => {
+    try {
+      const response = await fetch(`/boards/${boardId}/lists`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache',
+        },
+        cache: 'no-store',
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`)
+      }
+
+      const data = await response.json()
+
+      if (data.lists) {
+        setState((prev) => ({
+          ...prev,
+          lists: data.lists,
+          lastUpdate: Date.now(),
+          isConnected: true,
+          mode: 'polling',
+        }))
+      }
+    } catch (error) {
+      console.warn('[BoardStream] Polling fetch failed:', error)
+    }
+  }, [boardId])
+
+  // Start polling fallback
+  const startPolling = useCallback(() => {
+    if (pollingIntervalRef.current) return // Already polling
+
+    console.log('[BoardStream] Starting polling fallback')
+
+    // Immediate first fetch
+    fetchBoardData()
+
+    // Then poll every POLLING_INTERVAL
+    pollingIntervalRef.current = setInterval(fetchBoardData, POLLING_INTERVAL)
+
+    setState((prev) => ({
+      ...prev,
+      isConnected: true,
+      mode: 'polling',
+    }))
+  }, [fetchBoardData])
+
+  // Stop polling
+  const stopPolling = useCallback(() => {
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current)
+      pollingIntervalRef.current = null
+    }
+  }, [])
+
+  // Setup SSE connection
+  const setupSSE = useCallback(() => {
+    // Close existing connection
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close()
+    }
+
+    console.log('[BoardStream] Attempting SSE connection...')
+
     const eventSource = new EventSource(`/boards/${boardId}/stream`)
     eventSourceRef.current = eventSource
 
-    logger.info('SSE connection initiated', { boardId })
-
-    // Handle connection established
+    // Handle successful connection
     eventSource.addEventListener('connection', (e: MessageEvent) => {
       try {
         const data: TSSEMessage = JSON.parse(e.data)
 
         if (data.type === 'connected') {
+          console.log('[BoardStream] SSE connected successfully')
+
+          // SSE working - stop polling and reset retry counter
+          stopPolling()
+          sseRetryCountRef.current = 0
+
           setState((prev) => ({
             ...prev,
             isConnected: true,
+            mode: 'sse',
           }))
-
-          logger.info('SSE connection established', { boardId })
         }
-      } catch (error) {
-        logger.error('Error parsing connection message', error, { boardId })
+      } catch {
+        // Ignore parse errors
       }
     })
 
-    // Handle board updates (lists/cards changed)
+    // Handle board updates
     eventSource.addEventListener('board_update', (e: MessageEvent) => {
       try {
         const data: TSSEMessage = JSON.parse(e.data)
 
         if (data.type === 'board_update' && data.lists) {
+          console.log(
+            '[BoardStream] Received update via SSE:',
+            data.lists.length,
+            'lists',
+          )
+
           setState((prev) => ({
             ...prev,
             lists: data.lists || prev.lists,
             lastUpdate: Date.now(),
+            isConnected: true,
+            mode: 'sse',
           }))
-
-          logger.info('Board update received', {
-            boardId,
-            listCount: data.lists.length,
-            timestamp: data.timestamp,
-          })
-        }
-      } catch (error) {
-        logger.error('Error parsing board update', error, { boardId })
-      }
-    })
-
-    // Handle heartbeat (keeps connection alive)
-    eventSource.addEventListener('heartbeat', (e: MessageEvent) => {
-      try {
-        const data: TSSEMessage = JSON.parse(e.data)
-
-        if (data.type === 'heartbeat') {
-          // Connection is still alive, no state update needed
-          logger.debug('SSE heartbeat received', { boardId })
-        }
-      } catch (error) {
-        logger.error('Error parsing heartbeat', error, { boardId })
-      }
-    })
-
-    // Handle errors from server
-    eventSource.addEventListener('error', (e: MessageEvent) => {
-      try {
-        const data: TSSEMessage = JSON.parse(e.data)
-
-        if (data.type === 'error') {
-          logger.warn('SSE server error', {
-            boardId,
-            message: data.message,
-          })
         }
       } catch {
-        // Ignore parsing errors on error events
+        // Ignore parse errors
       }
     })
 
-    // Handle connection errors (network issues, server down, etc.)
+    // Handle heartbeat
+    eventSource.addEventListener('heartbeat', () => {
+      // Connection alive, nothing to do
+    })
+
+    // Handle SSE errors/disconnection
     eventSource.onerror = () => {
-      logger.warn('SSE connection error', { boardId })
-
-      setState((prev) => ({
-        ...prev,
-        isConnected: false,
-      }))
-
-      // EventSource will automatically try to reconnect
-      // We update the UI to show disconnected state
-    }
-
-    // Cleanup on unmount or boardId change
-    return () => {
-      logger.info('Closing SSE connection', { boardId })
+      console.warn('[BoardStream] SSE connection error/closed')
 
       eventSource.close()
+      eventSourceRef.current = null
 
-      if (reconnectTimeoutRef.current) {
-        clearTimeout(reconnectTimeoutRef.current)
+      sseRetryCountRef.current++
+
+      if (sseRetryCountRef.current >= SSE_MAX_RETRIES) {
+        // Too many SSE failures, switch to polling permanently
+        console.log(
+          '[BoardStream] SSE failed too many times, switching to polling',
+        )
+        startPolling()
+      } else {
+        // Start polling while we retry SSE
+        startPolling()
+
+        // Schedule SSE retry
+        sseRetryTimeoutRef.current = setTimeout(() => {
+          console.log('[BoardStream] Retrying SSE connection...')
+          setupSSE()
+        }, SSE_RETRY_DELAY)
       }
 
       setState((prev) => ({
         ...prev,
-        isConnected: false,
+        mode: prev.mode === 'sse' ? 'polling' : prev.mode,
       }))
     }
-  }, [boardId])
+  }, [boardId, startPolling, stopPolling])
+
+  // Main effect - setup connection
+  useEffect(() => {
+    // Try SSE first
+    setupSSE()
+
+    // Cleanup on unmount
+    return () => {
+      console.log('[BoardStream] Cleaning up connections')
+
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close()
+        eventSourceRef.current = null
+      }
+
+      stopPolling()
+
+      if (sseRetryTimeoutRef.current) {
+        clearTimeout(sseRetryTimeoutRef.current)
+      }
+    }
+  }, [setupSSE, stopPolling])
 
   return state
 }
