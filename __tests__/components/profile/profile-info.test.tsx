@@ -106,7 +106,9 @@ describe('ProfileInfo Component', () => {
   })
 
   it('renders in two-column grid layout', () => {
-    const { container } = render(<ProfileInfo user={mockUser} stats={mockStats} />)
+    const { container } = render(
+      <ProfileInfo user={mockUser} stats={mockStats} />,
+    )
 
     const grid = container.querySelector('.grid.gap-4.md\\:grid-cols-2')
     expect(grid).toBeDefined()
@@ -122,7 +124,9 @@ describe('ProfileInfo Component', () => {
   })
 
   it('renders mail icon for email section', () => {
-    const { container } = render(<ProfileInfo user={mockUser} stats={mockStats} />)
+    const { container } = render(
+      <ProfileInfo user={mockUser} stats={mockStats} />,
+    )
 
     const mailIcon = container.querySelector('svg')
     expect(mailIcon).toBeDefined()

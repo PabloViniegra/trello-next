@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 // Mock database BEFORE importing the module
 vi.mock('@/db', () => ({
@@ -21,18 +21,18 @@ vi.mock('drizzle-orm', async () => {
 
 // Mock schema tables
 vi.mock('@/auth-schema', () => ({
-  user: { 
-    id: 'user.id', 
-    name: 'user.name', 
-    email: 'user.email', 
-    emailVerified: 'user.emailVerified', 
-    image: 'user.image', 
-    createdAt: 'user.createdAt', 
-    updatedAt: 'user.updatedAt' 
+  user: {
+    id: 'user.id',
+    name: 'user.name',
+    email: 'user.email',
+    emailVerified: 'user.emailVerified',
+    image: 'user.image',
+    createdAt: 'user.createdAt',
+    updatedAt: 'user.updatedAt',
   },
-  session: { 
-    userId: 'session.userId', 
-    expiresAt: 'session.expiresAt' 
+  session: {
+    userId: 'session.userId',
+    expiresAt: 'session.expiresAt',
   },
 }))
 
@@ -42,9 +42,13 @@ vi.mock('@/db/schema', () => ({
   boardMember: { userId: 'boardMember.userId' },
 }))
 
-// Import after mocks
-import { getUserStats, getUserDetails, getUserActiveSessions } from '@/lib/user/queries'
 import { db } from '@/db'
+// Import after mocks
+import {
+  getUserActiveSessions,
+  getUserDetails,
+  getUserStats,
+} from '@/lib/user/queries'
 
 const mockDb = db as unknown as {
   select: ReturnType<typeof vi.fn>
@@ -103,7 +107,9 @@ describe('User Queries', () => {
 
       mockDb.select.mockReturnValue(mockSelectChain)
 
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      const consoleErrorSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {})
 
       const result = await getUserStats('user-123')
 
@@ -115,7 +121,7 @@ describe('User Queries', () => {
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         'Error getting user stats:',
-        expect.any(Error)
+        expect.any(Error),
       )
 
       consoleErrorSpy.mockRestore()
@@ -227,14 +233,16 @@ describe('User Queries', () => {
 
       mockDb.select.mockReturnValue(mockSelectChain)
 
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      const consoleErrorSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {})
 
       const result = await getUserDetails('user-123')
 
       expect(result).toBeNull()
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         'Error getting user details:',
-        expect.any(Error)
+        expect.any(Error),
       )
 
       consoleErrorSpy.mockRestore()
@@ -289,14 +297,16 @@ describe('User Queries', () => {
 
       mockDb.select.mockReturnValue(mockSelectChain)
 
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      const consoleErrorSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {})
 
       const result = await getUserActiveSessions('user-123')
 
       expect(result).toBe(0)
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         'Error getting active sessions:',
-        expect.any(Error)
+        expect.any(Error),
       )
 
       consoleErrorSpy.mockRestore()

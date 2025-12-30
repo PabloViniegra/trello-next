@@ -17,7 +17,8 @@ import { FilterHeader } from './_components/filters/filter-header'
 
 export const metadata: Metadata = {
   title: 'Mis Tableros',
-  description: 'Gestiona y organiza todos tus tableros de trabajo. Visualiza, filtra y accede a tus proyectos de manera eficiente.',
+  description:
+    'Gestiona y organiza todos tus tableros de trabajo. Visualiza, filtra y accede a tus proyectos de manera eficiente.',
   openGraph: {
     title: 'Mis Tableros | Trello Clone',
     description: 'Gestiona y organiza todos tus tableros de trabajo',

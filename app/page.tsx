@@ -8,10 +8,12 @@ export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title: 'Inicio',
-  description: 'Bienvenido a Trello Clone. Organiza proyectos, gestiona tareas y colabora con tu equipo usando tableros Kanban visuales.',
+  description:
+    'Bienvenido a Trello Clone. Organiza proyectos, gestiona tareas y colabora con tu equipo usando tableros Kanban visuales.',
   openGraph: {
     title: 'Trello Clone - Gestión de Proyectos y Tareas',
-    description: 'Bienvenido a Trello Clone. Organiza proyectos, gestiona tareas y colabora con tu equipo.',
+    description:
+      'Bienvenido a Trello Clone. Organiza proyectos, gestiona tareas y colabora con tu equipo.',
   },
   alternates: {
     canonical: '/',

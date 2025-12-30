@@ -1,15 +1,16 @@
-import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
+import { redirect } from 'next/navigation'
 import { Navbar } from '@/components/navbar'
 import { getCurrentUser } from '@/lib/auth/get-user'
 import { getUserStats } from '@/lib/user/queries'
 import { ProfileHeader } from './_components/profile-header'
-import { ProfileStats } from './_components/profile-stats'
 import { ProfileInfo } from './_components/profile-info'
+import { ProfileStats } from './_components/profile-stats'
 
 export const metadata: Metadata = {
   title: 'Mi Perfil',
-  description: 'Visualiza y gestiona tu perfil de usuario. Revisa tus estadísticas, tableros y tarjetas asignadas.',
+  description:
+    'Visualiza y gestiona tu perfil de usuario. Revisa tus estadísticas, tableros y tarjetas asignadas.',
   robots: {
     index: false,
     follow: false,

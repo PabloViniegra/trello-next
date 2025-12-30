@@ -8,7 +8,8 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'Trello Clone - Gestión de Proyectos',
     short_name: 'Trello Clone',
-    description: 'Organiza tu trabajo y tu vida de manera eficiente con tableros visuales, listas y tarjetas.',
+    description:
+      'Organiza tu trabajo y tu vida de manera eficiente con tableros visuales, listas y tarjetas.',
     start_url: '/',
     display: 'standalone',
     background_color: '#ffffff',

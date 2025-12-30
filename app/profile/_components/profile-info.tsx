@@ -1,6 +1,6 @@
-import { CalendarDays, Mail, CheckCircle2, XCircle } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { CheckCircle2, Mail, XCircle } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import type { TUser } from '@/lib/auth/types'
 import type { TUserStats } from '@/lib/user/types'
 
@@ -9,7 +9,7 @@ type TProfileInfoProps = {
   stats: TUserStats
 }
 
-function formatDate(date: Date): string {
+function _formatDate(date: Date): string {
   return new Intl.DateTimeFormat('es-ES', {
     year: 'numeric',
     month: 'long',
@@ -63,21 +63,15 @@ export function ProfileInfo({ user, stats }: TProfileInfoProps) {
         <CardContent className='space-y-4'>
           <div className='space-y-2'>
             <div className='flex items-center justify-between'>
-              <p className='text-sm text-muted-foreground'>
-                Total de tableros
-              </p>
+              <p className='text-sm text-muted-foreground'>Total de tableros</p>
               <Badge variant='secondary'>{totalBoards}</Badge>
             </div>
             <div className='flex items-center justify-between'>
-              <p className='text-sm text-muted-foreground'>
-                Tarjetas activas
-              </p>
+              <p className='text-sm text-muted-foreground'>Tarjetas activas</p>
               <Badge variant='secondary'>{stats.totalCardsAssigned}</Badge>
             </div>
             <div className='flex items-center justify-between'>
-              <p className='text-sm text-muted-foreground'>
-                Rol principal
-              </p>
+              <p className='text-sm text-muted-foreground'>Rol principal</p>
               <Badge variant='outline'>
                 {stats.totalBoardsOwned > 0 ? 'Propietario' : 'Colaborador'}
               </Badge>

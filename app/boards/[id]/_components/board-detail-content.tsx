@@ -24,6 +24,7 @@ import type { TCardWithDetails } from '@/lib/card/types'
 import type { TLabelWithCardCount } from '@/lib/label/types'
 import type { TListWithCardsAndLabels } from '@/lib/list/types'
 import { useBoardStore } from '@/store/board-store'
+import { useBoardStream } from '../_hooks/use-board-stream'
 import { useDragAndDrop } from '../_hooks/use-drag-and-drop'
 import { ActivitySheet } from './activity-sheet'
 import { AddBoardMemberDialog } from './add-board-member-dialog'
@@ -51,9 +52,10 @@ type TBoardDetailContentProps = {
  * - Keyboard navigation (WCAG 2.1 AA compliant)
  * - Optimistic UI updates
  * - Automatic error recovery
+ * - Real-time synchronization via SSE
  *
  * @param board - The board data including title, description, and color
- * @param lists - Array of lists with their cards
+ * @param lists - Initial array of lists with their cards
  */
 export function BoardDetailContent({
   board,
@@ -65,9 +67,16 @@ export function BoardDetailContent({
   const [activeCard, setActiveCard] = useState<TCardWithDetails | null>(null)
   const { activeCard: activeCardId } = useBoardStore()
 
-  // Use custom hook for drag and drop logic
+  // Real-time board synchronization via SSE
+  const {
+    lists: syncedLists,
+    isConnected,
+    lastUpdate,
+  } = useBoardStream(board.id, lists)
+
+  // Use custom hook for drag and drop logic with synced lists
   const { optimisticLists, handleDragStart, handleDragEnd } =
-    useDragAndDrop(lists)
+    useDragAndDrop(syncedLists)
 
   // Find the active card for the modal
   const activeCardForModal = optimisticLists
@@ -126,6 +135,25 @@ export function BoardDetailContent({
                 <span className='font-medium'>Privado</span>
               </div>
             )}
+
+            {/* Real-time sync indicator */}
+            <div
+              className='hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs shrink-0'
+              title={
+                isConnected
+                  ? `Sincronizado en tiempo real - Última actualización: ${new Date(lastUpdate).toLocaleTimeString()}`
+                  : 'Desconectado - Refresca la página para ver cambios'
+              }
+            >
+              <div
+                className={`w-2 h-2 rounded-full ${
+                  isConnected ? 'bg-green-500 animate-pulse' : 'bg-gray-400'
+                }`}
+              />
+              <span className='font-medium text-muted-foreground'>
+                {isConnected ? 'En vivo' : 'Sin conexión'}
+              </span>
+            </div>
           </div>
 
           {/* Desktop Actions */}

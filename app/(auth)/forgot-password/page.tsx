@@ -5,7 +5,8 @@ import { ForgotPasswordForm } from './_components/forgot-password-form'
 
 export const metadata: Metadata = {
   title: 'Recuperar contraseña',
-  description: 'Solicita un enlace para restablecer tu contraseña y recuperar el acceso a tu cuenta de Trello Clone.',
+  description:
+    'Solicita un enlace para restablecer tu contraseña y recuperar el acceso a tu cuenta de Trello Clone.',
   robots: {
     index: false,
     follow: false,

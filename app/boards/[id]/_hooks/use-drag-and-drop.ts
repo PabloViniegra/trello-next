@@ -1,7 +1,7 @@
 'use client'
 
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core'
-import { useCallback, useOptimistic, useTransition } from 'react'
+import { useCallback, useOptimistic, useState, useTransition } from 'react'
 import { toast } from 'sonner'
 import { moveCardAction } from '@/lib/card/actions'
 import type { TCardWithDetails } from '@/lib/card/types'
@@ -14,15 +14,32 @@ type TCardLocation = {
 
 /**
  * Custom hook for managing drag and drop functionality in board lists.
- * Handles optimistic updates, card movement, and error recovery.
  *
- * @param initialLists - The initial lists with cards from the server
+ * Uses a two-layer state approach:
+ * 1. useState for synced lists (from SSE or server)
+ * 2. useOptimistic for drag & drop operations only
+ *
+ * This prevents the error: "optimistic state update outside transition"
+ *
+ * @param syncedLists - The synced lists from SSE/server (changes trigger re-render)
  * @returns Drag and drop handlers and optimistic state
  */
-export function useDragAndDrop(initialLists: TListWithCardsAndLabels[]) {
+export function useDragAndDrop(syncedLists: TListWithCardsAndLabels[]) {
   const [isPending, startTransition] = useTransition()
+
+  // Base state - updates when SSE sends new data
+  const [baseLists, setBaseLists] =
+    useState<TListWithCardsAndLabels[]>(syncedLists)
+
+  // Optimistic state - ONLY for drag & drop operations
   const [optimisticLists, setOptimisticLists] =
-    useOptimistic<TListWithCardsAndLabels[]>(initialLists)
+    useOptimistic<TListWithCardsAndLabels[]>(baseLists)
+
+  // Sync base lists when SSE updates arrive
+  // This is safe because it's regular setState, not optimistic
+  if (syncedLists !== baseLists) {
+    setBaseLists(syncedLists)
+  }
 
   // Create lookup maps for O(1) access
   const createLookupMaps = useCallback((lists: TListWithCardsAndLabels[]) => {

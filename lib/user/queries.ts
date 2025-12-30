@@ -1,10 +1,10 @@
 'use server'
 
+import { and, count, eq, sql } from 'drizzle-orm'
+import { session, user } from '@/auth-schema'
 import { db } from '@/db'
-import { user, session } from '@/auth-schema'
-import { board, cardMember, boardMember } from '@/db/schema'
-import { eq, count, and, sql } from 'drizzle-orm'
-import type { TUserStats, TUserDetails } from './types'
+import { board, boardMember, cardMember } from '@/db/schema'
+import type { TUserDetails, TUserStats } from './types'
 
 /**
  * Get user statistics including boards, cards, and collaboration data
@@ -47,7 +47,9 @@ export async function getUserStats(userId: string): Promise<TUserStats> {
 /**
  * Get detailed user information including account creation date
  */
-export async function getUserDetails(userId: string): Promise<TUserDetails | null> {
+export async function getUserDetails(
+  userId: string,
+): Promise<TUserDetails | null> {
   try {
     const userDetails = await db
       .select({
@@ -92,10 +94,7 @@ export async function getUserActiveSessions(userId: string): Promise<number> {
       .select({ count: count() })
       .from(session)
       .where(
-        and(
-          eq(session.userId, userId),
-          sql`${session.expiresAt} > ${now}`
-        )
+        and(eq(session.userId, userId), sql`${session.expiresAt} > ${now}`),
       )
 
     return activeSessions[0]?.count ?? 0

@@ -5,7 +5,8 @@ import type { MetadataRoute } from 'next'
  * Genera URLs para páginas públicas e indexables
  */
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://trello-clone.example.com'
+  const baseUrl =
+    process.env.NEXT_PUBLIC_APP_URL || 'https://trello-clone.example.com'
 
   return [
     {

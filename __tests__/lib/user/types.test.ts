@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { TUserStats, TUserDetails } from '@/lib/user/types'
+import type { TUserDetails, TUserStats } from '@/lib/user/types'
 
 describe('User Types', () => {
   describe('TUserStats', () => {

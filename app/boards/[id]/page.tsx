@@ -28,7 +28,8 @@ export async function generateMetadata({
   if (!success || !board) {
     return {
       title: 'Tablero no encontrado',
-      description: 'El tablero solicitado no existe o no tienes permiso para acceder a él.',
+      description:
+        'El tablero solicitado no existe o no tienes permiso para acceder a él.',
       robots: {
         index: false,
         follow: false,
@@ -38,7 +39,9 @@ export async function generateMetadata({
 
   return {
     title: board.title,
-    description: board.description || `Tablero de trabajo: ${board.title}. Gestiona tus listas y tarjetas de manera eficiente.`,
+    description:
+      board.description ||
+      `Tablero de trabajo: ${board.title}. Gestiona tus listas y tarjetas de manera eficiente.`,
     openGraph: {
       title: `${board.title} | Trello Clone`,
       description: board.description || `Tablero de trabajo: ${board.title}`,

@@ -5,7 +5,8 @@ import { LoginForm } from './_components/login-form'
 
 export const metadata: Metadata = {
   title: 'Iniciar sesión',
-  description: 'Inicia sesión en tu cuenta de Trello Clone y accede a tus tableros de proyectos. Gestiona tus tareas y colabora con tu equipo.',
+  description:
+    'Inicia sesión en tu cuenta de Trello Clone y accede a tus tableros de proyectos. Gestiona tus tareas y colabora con tu equipo.',
   robots: {
     index: false, // No indexar páginas de autenticación
     follow: true,

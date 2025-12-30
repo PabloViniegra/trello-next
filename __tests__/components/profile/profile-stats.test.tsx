@@ -29,7 +29,9 @@ describe('ProfileStats Component', () => {
   it('displays correct descriptions', () => {
     render(<ProfileStats stats={mockStats} />)
 
-    expect(screen.getByText('Tableros de los que eres propietario')).toBeDefined()
+    expect(
+      screen.getByText('Tableros de los que eres propietario'),
+    ).toBeDefined()
     expect(screen.getByText('Tableros donde colaboras')).toBeDefined()
     expect(screen.getByText('Tarjetas en las que trabajas')).toBeDefined()
   })

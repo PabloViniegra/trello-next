@@ -5,7 +5,8 @@ import { inter, jetBrainsMono, playfairDisplay } from '@/lib/fonts'
 import './globals.css'
 
 // SEO: Base URL para metadata (configurable via variable de entorno)
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://trello-clone.example.com'
+const APP_URL =
+  process.env.NEXT_PUBLIC_APP_URL || 'https://trello-clone.example.com'
 
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
@@ -45,7 +46,8 @@ export const metadata: Metadata = {
     locale: 'es_ES',
     url: APP_URL,
     title: 'Trello Clone - Gestión de Proyectos y Tareas',
-    description: 'Organiza tu trabajo y gestiona proyectos de manera eficiente con tableros visuales Kanban, listas y tarjetas. Colabora con tu equipo y aumenta tu productividad.',
+    description:
+      'Organiza tu trabajo y gestiona proyectos de manera eficiente con tableros visuales Kanban, listas y tarjetas. Colabora con tu equipo y aumenta tu productividad.',
     siteName: 'Trello Clone',
     images: [
       {
@@ -59,7 +61,8 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Trello Clone - Gestión de Proyectos y Tareas',
-    description: 'Organiza tu trabajo y gestiona proyectos de manera eficiente con tableros visuales Kanban',
+    description:
+      'Organiza tu trabajo y gestiona proyectos de manera eficiente con tableros visuales Kanban',
     images: [`${APP_URL}/og-image.png`],
     creator: '@trelloclone',
   },
@@ -104,7 +107,8 @@ export default function RootLayout({
     '@context': 'https://schema.org',
     '@type': 'WebApplication',
     name: 'Trello Clone',
-    description: 'Herramienta de gestión de proyectos con tableros visuales Kanban para organizar tareas y colaborar en equipo',
+    description:
+      'Herramienta de gestión de proyectos con tableros visuales Kanban para organizar tareas y colaborar en equipo',
     url: APP_URL,
     applicationCategory: 'BusinessApplication',
     operatingSystem: 'Web',

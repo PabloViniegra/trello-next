@@ -16,7 +16,8 @@ import { NotificationList } from './_components/notification-list'
 
 export const metadata: Metadata = {
   title: 'Notificaciones',
-  description: 'Gestiona todas tus notificaciones de actividad en tableros, tareas y colaboración.',
+  description:
+    'Gestiona todas tus notificaciones de actividad en tableros, tareas y colaboración.',
   robots: {
     index: false, // Contenido privado del usuario
     follow: false,

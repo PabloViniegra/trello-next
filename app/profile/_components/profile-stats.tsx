@@ -1,4 +1,4 @@
-import { LayoutGrid, Users, CheckSquare } from 'lucide-react'
+import { CheckSquare, LayoutGrid, Users } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import type { TUserStats } from '@/lib/user/types'
 
