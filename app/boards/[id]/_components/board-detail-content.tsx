@@ -67,12 +67,11 @@ export function BoardDetailContent({
   const [activeCard, setActiveCard] = useState<TCardWithDetails | null>(null)
   const { activeCard: activeCardId } = useBoardStore()
 
-  // Real-time board synchronization via SSE with polling fallback
+  // Real-time board synchronization via polling
   const {
     lists: syncedLists,
     isConnected,
     lastUpdate,
-    mode,
   } = useBoardStream(board.id, lists)
 
   // Use custom hook for drag and drop logic with synced lists
@@ -142,25 +141,17 @@ export function BoardDetailContent({
               className='hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs shrink-0'
               title={
                 isConnected
-                  ? `Sincronizado (${mode === 'sse' ? 'tiempo real' : 'polling'}) - Última actualización: ${new Date(lastUpdate).toLocaleTimeString()}`
+                  ? `Sincronizado - Última actualización: ${new Date(lastUpdate).toLocaleTimeString()}`
                   : 'Desconectado - Refresca la página para ver cambios'
               }
             >
               <div
                 className={`w-2 h-2 rounded-full ${
-                  isConnected
-                    ? mode === 'sse'
-                      ? 'bg-green-500 animate-pulse'
-                      : 'bg-yellow-500 animate-pulse'
-                    : 'bg-gray-400'
+                  isConnected ? 'bg-green-500 animate-pulse' : 'bg-gray-400'
                 }`}
               />
               <span className='font-medium text-muted-foreground'>
-                {isConnected
-                  ? mode === 'sse'
-                    ? 'En vivo'
-                    : 'Sincronizando'
-                  : 'Sin conexión'}
+                {isConnected ? 'Sincronizado' : 'Sin conexión'}
               </span>
             </div>
           </div>

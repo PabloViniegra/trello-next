@@ -1,30 +1,30 @@
 /**
  * useBoardStream Hook
- * Manages Server-Sent Events (SSE) connection for real-time board updates
+ * Real-time board synchronization using polling
  *
- * @param boardId - The board ID to stream updates for
+ * Why polling instead of SSE?
+ * - Vercel has a 30-second timeout for serverless functions
+ * - SSE connections get closed after this timeout
+ * - Polling every 3 seconds is reliable and provides near-real-time updates
+ *
+ * @param boardId - The board ID to sync
  * @param initialLists - Initial lists data from server
  * @returns Current lists, connection status, and last update timestamp
  */
 
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { TListWithCardsAndLabels } from '@/lib/list/types'
+
+// Poll every 3 seconds for near-real-time experience
+const POLLING_INTERVAL = 3000
 
 type TBoardStreamState = {
   lists: TListWithCardsAndLabels[]
   isConnected: boolean
   lastUpdate: number
   mode: 'sse' | 'polling' | 'disconnected'
-}
-
-type TSSEMessage = {
-  type: 'connected' | 'board_update' | 'heartbeat' | 'error'
-  boardId?: string
-  lists?: TListWithCardsAndLabels[]
-  timestamp?: number
-  message?: string
 }
 
 export function useBoardStream(
@@ -34,76 +34,86 @@ export function useBoardStream(
   const [lists, setLists] = useState<TListWithCardsAndLabels[]>(initialLists)
   const [isConnected, setIsConnected] = useState(false)
   const [lastUpdate, setLastUpdate] = useState(Date.now())
-  const [mode, setMode] = useState<'sse' | 'polling' | 'disconnected'>(
-    'disconnected',
-  )
 
-  const eventSourceRef = useRef<EventSource | null>(null)
+  const pollingRef = useRef<NodeJS.Timeout | null>(null)
+  const lastDataRef = useRef<string>('')
 
-  useEffect(() => {
-    console.log('[BoardStream] Setting up SSE for board:', boardId)
+  // Create a hash of the data to detect changes
+  const hashData = useCallback((data: TListWithCardsAndLabels[]): string => {
+    return JSON.stringify(
+      data.map((list) => ({
+        id: list.id,
+        title: list.title,
+        position: list.position,
+        cardIds: list.cards.map((c) => c.id).join(','),
+      })),
+    )
+  }, [])
 
-    const eventSource = new EventSource(`/boards/${boardId}/stream`)
-    eventSourceRef.current = eventSource
+  // Fetch latest board data
+  const fetchData = useCallback(async () => {
+    try {
+      const response = await fetch(`/boards/${boardId}/lists`, {
+        method: 'GET',
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          Pragma: 'no-cache',
+        },
+      })
 
-    // Connection established
-    eventSource.addEventListener('connection', (e: MessageEvent) => {
-      try {
-        const data: TSSEMessage = JSON.parse(e.data)
-        if (data.type === 'connected') {
-          console.log('[BoardStream] SSE connected successfully')
-          setIsConnected(true)
-          setMode('sse')
-        }
-      } catch (err) {
-        console.error('[BoardStream] Error parsing connection:', err)
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`)
       }
-    })
 
-    // Board updates
-    eventSource.addEventListener('board_update', (e: MessageEvent) => {
-      try {
-        const data: TSSEMessage = JSON.parse(e.data)
-        console.log(
-          '[BoardStream] Received update via SSE:',
-          data.lists?.length,
-          'lists',
-        )
+      const data = await response.json()
 
-        if (data.type === 'board_update' && data.lists) {
-          console.log('[BoardStream] Updating lists state with new data')
+      if (data.lists) {
+        const newHash = hashData(data.lists)
+
+        // Only update state if data actually changed
+        if (newHash !== lastDataRef.current) {
+          console.log('[BoardStream] Data changed:', data.lists.length, 'lists')
+          lastDataRef.current = newHash
           setLists(data.lists)
           setLastUpdate(Date.now())
         }
-      } catch (err) {
-        console.error('[BoardStream] Error parsing board_update:', err)
+
+        setIsConnected(true)
       }
-    })
-
-    // Heartbeat
-    eventSource.addEventListener('heartbeat', () => {
-      // Connection alive
-    })
-
-    // Errors
-    eventSource.onerror = () => {
-      console.warn('[BoardStream] SSE connection error')
+    } catch (error) {
+      console.error('[BoardStream] Fetch error:', error)
       setIsConnected(false)
-      setMode('disconnected')
     }
+  }, [boardId, hashData])
 
-    // Cleanup
+  // Setup polling on mount
+  useEffect(() => {
+    console.log('[BoardStream] Starting polling for board:', boardId)
+
+    // Initialize hash with initial data
+    lastDataRef.current = hashData(initialLists)
+
+    // First fetch immediately
+    fetchData()
+
+    // Then poll at interval
+    pollingRef.current = setInterval(fetchData, POLLING_INTERVAL)
+
+    // Cleanup on unmount
     return () => {
-      console.log('[BoardStream] Closing SSE connection')
-      eventSource.close()
-      eventSourceRef.current = null
+      console.log('[BoardStream] Stopping polling')
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current)
+        pollingRef.current = null
+      }
     }
-  }, [boardId])
+  }, [boardId, fetchData, hashData, initialLists])
 
   return {
     lists,
     isConnected,
     lastUpdate,
-    mode,
+    mode: isConnected ? 'polling' : 'disconnected',
   }
 }
