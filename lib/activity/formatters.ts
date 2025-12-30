@@ -23,6 +23,14 @@ export function formatActivityMessage(
         : (activity.newValues as Record<string, unknown>)
       : null
 
+  // Parse previousValues if available (for TActivityLogWithUser)
+  const previousValues =
+    'previousValues' in activity && activity.previousValues
+      ? typeof activity.previousValues === 'string'
+        ? (JSON.parse(activity.previousValues) as Record<string, unknown>)
+        : (activity.previousValues as Record<string, unknown>)
+      : null
+
   switch (actionType) {
     // Board activities
     case 'board.created':
@@ -62,8 +70,16 @@ export function formatActivityMessage(
     case 'list.reordered':
       return `reordenó la lista desde la posición ${(meta.fromPosition as number) ?? '?'} a ${(meta.toPosition as number) ?? '?'}`
 
-    case 'list.deleted':
-      return `eliminó la lista "${(meta.listTitle as string) || (meta.previousTitle as string) || 'sin título'}"`
+    case 'list.deleted': {
+      // Try multiple possible field names for the list title
+      // Check metadata first, then previousValues as fallback
+      const listTitle =
+        (meta.listTitle as string) ||
+        (meta.previousTitle as string) ||
+        (meta.title as string) ||
+        (previousValues?.title as string)
+      return `eliminó la lista "${listTitle || 'sin título'}"`
+    }
 
     // Card activities
     case 'card.created':
