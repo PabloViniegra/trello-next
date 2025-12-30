@@ -5,6 +5,7 @@ import {
   useCallback,
   useEffect,
   useOptimistic,
+  useRef,
   useState,
   useTransition,
 } from 'react'
@@ -42,10 +43,19 @@ export function useDragAndDrop(syncedLists: TListWithCardsAndLabels[]) {
     useOptimistic<TListWithCardsAndLabels[]>(baseLists)
 
   // Sync base lists when SSE updates arrive
-  // This is safe because it's regular setState, not optimistic
-  // We use useEffect to avoid the "setState during render" warning
+  // Use ref to track previous data and compare
+  const prevSyncedListsRef = useRef<string>('')
+
   useEffect(() => {
-    setBaseLists(syncedLists)
+    const currentKey = JSON.stringify(
+      syncedLists.map((l) => ({ id: l.id, cardCount: l.cards.length })),
+    )
+
+    if (currentKey !== prevSyncedListsRef.current) {
+      console.log('[DragAndDrop] Lists changed, updating baseLists')
+      prevSyncedListsRef.current = currentKey
+      setBaseLists(syncedLists)
+    }
   }, [syncedLists])
 
   // Create lookup maps for O(1) access
