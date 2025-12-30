@@ -120,7 +120,7 @@ export function BoardDetailContent({
               {board.title}
             </h1>
 
-            {board.isPrivate && (
+            {board.isPrivate === 'private' && (
               <div className='hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted/50 text-sm text-muted-foreground shrink-0'>
                 <Lock className='w-3.5 h-3.5' />
                 <span className='font-medium'>Privado</span>

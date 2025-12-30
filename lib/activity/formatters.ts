@@ -1,10 +1,12 @@
-import type { TActivityLog, TActivityType } from './types'
+import type { TActivityLog, TActivityLogWithUser, TActivityType } from './types'
 import { ACTIVITY_TYPES } from './types'
 
 /**
  * Formats an activity log entry into a human-readable message in Spanish
  */
-export function formatActivityMessage(activity: TActivityLog): string {
+export function formatActivityMessage(
+  activity: TActivityLog | TActivityLogWithUser,
+): string {
   const { actionType, metadata, entityType } = activity
 
   // Parse metadata if it's a string
@@ -12,6 +14,14 @@ export function formatActivityMessage(activity: TActivityLog): string {
     typeof metadata === 'string'
       ? (JSON.parse(metadata) as Record<string, unknown>)
       : (metadata as Record<string, unknown>)
+
+  // Parse newValues if available (for TActivityLogWithUser)
+  const newValues =
+    'newValues' in activity && activity.newValues
+      ? typeof activity.newValues === 'string'
+        ? (JSON.parse(activity.newValues) as Record<string, unknown>)
+        : (activity.newValues as Record<string, unknown>)
+      : null
 
   switch (actionType) {
     // Board activities
@@ -23,8 +33,9 @@ export function formatActivityMessage(activity: TActivityLog): string {
       if (meta.titleChanged) changes.push('título')
       if (meta.descriptionChanged) changes.push('descripción')
       if (meta.backgroundColorChanged) changes.push('color de fondo')
-      if (meta.privacyChanged) {
-        const privacy = meta.newIsPrivate ? 'privado' : 'público'
+      if (meta.privacyChanged && newValues) {
+        const privacy =
+          newValues.isPrivate === 'private' ? 'privado' : 'público'
         return `cambió la privacidad del tablero a ${privacy}`
       }
       return changes.length > 0
