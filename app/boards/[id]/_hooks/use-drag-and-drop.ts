@@ -57,10 +57,6 @@ export function useDragAndDrop(syncedLists: TListWithCardsAndLabels[]) {
     )
 
     if (currentKey !== prevSyncedListsRef.current) {
-      console.log('[DragAndDrop] ✅ Lists changed, updating baseLists:', {
-        listsCount: syncedLists.length,
-        summary: syncedLists.map((l) => `${l.title}: ${l.cards.length} cards`),
-      })
       prevSyncedListsRef.current = currentKey
       setBaseLists(syncedLists)
     }

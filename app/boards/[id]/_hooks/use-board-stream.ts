@@ -93,19 +93,8 @@ export function useBoardStream(
         const newHash = createDataHash(data.lists)
         const changed = newHash !== lastHashRef.current
 
-        console.log('[BoardStream] Poll result:', {
-          listsCount: data.lists.length,
-          changed,
-          serverTimestamp: data.timestamp,
-        })
-
         // Only update state if data actually changed
         if (changed) {
-          console.log(
-            '[BoardStream] Data changed! Updating UI with',
-            data.lists.length,
-            'lists',
-          )
           lastHashRef.current = newHash
           setLists(data.lists)
           setLastUpdate(Date.now())
@@ -121,8 +110,6 @@ export function useBoardStream(
 
   // Setup polling on mount - only depends on boardId
   useEffect(() => {
-    console.log('[BoardStream] Initializing for board:', boardId)
-
     // Reset hash with initial data when board changes
     lastHashRef.current = createDataHash(initialLists)
     setLists(initialLists)
@@ -137,14 +124,13 @@ export function useBoardStream(
 
     // Cleanup on unmount or board change
     return () => {
-      console.log('[BoardStream] Cleanup for board:', boardId)
       clearTimeout(initialTimeout)
       if (pollingRef.current) {
         clearInterval(pollingRef.current)
         pollingRef.current = null
       }
     }
-  }, [boardId, fetchData, initialLists])
+  }, [fetchData, initialLists])
 
   return {
     lists,
