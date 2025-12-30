@@ -52,6 +52,7 @@ export function useBoardStream(
 
   // Fetch latest board data
   const fetchData = useCallback(async () => {
+    console.log('[BoardStream] Fetching data...')
     try {
       const response = await fetch(`/boards/${boardId}/lists`, {
         method: 'GET',
@@ -62,14 +63,22 @@ export function useBoardStream(
         },
       })
 
+      console.log('[BoardStream] Response status:', response.status)
+
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`)
       }
 
       const data = await response.json()
+      console.log('[BoardStream] Received data:', data)
 
       if (data.lists) {
         const newHash = hashData(data.lists)
+        console.log('[BoardStream] Hash comparison:', {
+          newHash: newHash.substring(0, 50),
+          oldHash: lastDataRef.current.substring(0, 50),
+          changed: newHash !== lastDataRef.current,
+        })
 
         // Only update state if data actually changed
         if (newHash !== lastDataRef.current) {
