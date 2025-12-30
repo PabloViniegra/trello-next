@@ -48,11 +48,19 @@ export function useDragAndDrop(syncedLists: TListWithCardsAndLabels[]) {
 
   useEffect(() => {
     const currentKey = JSON.stringify(
-      syncedLists.map((l) => ({ id: l.id, cardCount: l.cards.length })),
+      syncedLists.map((l) => ({
+        id: l.id,
+        title: l.title,
+        cardCount: l.cards.length,
+        cardIds: l.cards.map((c) => c.id),
+      })),
     )
 
     if (currentKey !== prevSyncedListsRef.current) {
-      console.log('[DragAndDrop] Lists changed, updating baseLists')
+      console.log('[DragAndDrop] ✅ Lists changed, updating baseLists:', {
+        listsCount: syncedLists.length,
+        summary: syncedLists.map((l) => `${l.title}: ${l.cards.length} cards`),
+      })
       prevSyncedListsRef.current = currentKey
       setBaseLists(syncedLists)
     }

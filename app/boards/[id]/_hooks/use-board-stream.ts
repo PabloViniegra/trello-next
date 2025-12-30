@@ -27,6 +27,26 @@ type TBoardStreamState = {
   mode: 'sse' | 'polling' | 'disconnected'
 }
 
+/**
+ * Create a hash of the data to detect changes
+ * Includes list and card details to detect all types of changes
+ */
+function createDataHash(data: TListWithCardsAndLabels[]): string {
+  return JSON.stringify(
+    data.map((list) => ({
+      id: list.id,
+      title: list.title,
+      position: list.position,
+      cards: list.cards.map((c) => ({
+        id: c.id,
+        title: c.title,
+        position: c.position,
+        listId: c.listId,
+      })),
+    })),
+  )
+}
+
 export function useBoardStream(
   boardId: string,
   initialLists: TListWithCardsAndLabels[] = [],
@@ -35,55 +55,58 @@ export function useBoardStream(
   const [isConnected, setIsConnected] = useState(false)
   const [lastUpdate, setLastUpdate] = useState(Date.now())
 
+  // Use refs to avoid stale closures and unnecessary re-renders
   const pollingRef = useRef<NodeJS.Timeout | null>(null)
-  const lastDataRef = useRef<string>('')
+  const lastHashRef = useRef<string>(createDataHash(initialLists))
+  const boardIdRef = useRef(boardId)
 
-  // Create a hash of the data to detect changes
-  const hashData = useCallback((data: TListWithCardsAndLabels[]): string => {
-    return JSON.stringify(
-      data.map((list) => ({
-        id: list.id,
-        title: list.title,
-        position: list.position,
-        cardIds: list.cards.map((c) => c.id).join(','),
-      })),
-    )
-  }, [])
+  // Update boardId ref when it changes
+  useEffect(() => {
+    boardIdRef.current = boardId
+  }, [boardId])
 
   // Fetch latest board data
   const fetchData = useCallback(async () => {
-    console.log('[BoardStream] Fetching data...')
-    try {
-      const response = await fetch(`/boards/${boardId}/lists`, {
-        method: 'GET',
-        cache: 'no-store',
-        headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          Pragma: 'no-cache',
-        },
-      })
+    const currentBoardId = boardIdRef.current
 
-      console.log('[BoardStream] Response status:', response.status)
+    try {
+      // Add timestamp to bust any potential caching
+      const response = await fetch(
+        `/boards/${currentBoardId}/lists?_t=${Date.now()}`,
+        {
+          method: 'GET',
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            Pragma: 'no-cache',
+          },
+        },
+      )
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`)
       }
 
       const data = await response.json()
-      console.log('[BoardStream] Received data:', data)
 
       if (data.lists) {
-        const newHash = hashData(data.lists)
-        console.log('[BoardStream] Hash comparison:', {
-          newHash: newHash.substring(0, 50),
-          oldHash: lastDataRef.current.substring(0, 50),
-          changed: newHash !== lastDataRef.current,
+        const newHash = createDataHash(data.lists)
+        const changed = newHash !== lastHashRef.current
+
+        console.log('[BoardStream] Poll result:', {
+          listsCount: data.lists.length,
+          changed,
+          serverTimestamp: data.timestamp,
         })
 
         // Only update state if data actually changed
-        if (newHash !== lastDataRef.current) {
-          console.log('[BoardStream] Data changed:', data.lists.length, 'lists')
-          lastDataRef.current = newHash
+        if (changed) {
+          console.log(
+            '[BoardStream] Data changed! Updating UI with',
+            data.lists.length,
+            'lists',
+          )
+          lastHashRef.current = newHash
           setLists(data.lists)
           setLastUpdate(Date.now())
         }
@@ -94,30 +117,34 @@ export function useBoardStream(
       console.error('[BoardStream] Fetch error:', error)
       setIsConnected(false)
     }
-  }, [boardId, hashData])
+  }, [])
 
-  // Setup polling on mount
+  // Setup polling on mount - only depends on boardId
   useEffect(() => {
-    console.log('[BoardStream] Starting polling for board:', boardId)
+    console.log('[BoardStream] Initializing for board:', boardId)
 
-    // Initialize hash with initial data
-    lastDataRef.current = hashData(initialLists)
+    // Reset hash with initial data when board changes
+    lastHashRef.current = createDataHash(initialLists)
+    setLists(initialLists)
 
-    // First fetch immediately
-    fetchData()
+    // Start polling after a short delay
+    const initialTimeout = setTimeout(() => {
+      fetchData()
+    }, 1000)
 
-    // Then poll at interval
+    // Then poll at regular intervals
     pollingRef.current = setInterval(fetchData, POLLING_INTERVAL)
 
-    // Cleanup on unmount
+    // Cleanup on unmount or board change
     return () => {
-      console.log('[BoardStream] Stopping polling')
+      console.log('[BoardStream] Cleanup for board:', boardId)
+      clearTimeout(initialTimeout)
       if (pollingRef.current) {
         clearInterval(pollingRef.current)
         pollingRef.current = null
       }
     }
-  }, [boardId, fetchData, hashData, initialLists])
+  }, [boardId, fetchData, initialLists])
 
   return {
     lists,

@@ -44,6 +44,14 @@ export async function GET(
     // 3. Fetch lists with cards - NO CACHE for real-time sync
     const lists = await getListsWithCardsAndLabelsNoCacheFresh(boardId)
 
+    // Log for debugging
+    logger.info('Fetched lists for polling', {
+      boardId,
+      listsCount: lists.length,
+      cardCounts: lists.map((l) => ({ list: l.title, cards: l.cards.length })),
+      timestamp: Date.now(),
+    })
+
     // 4. Return with cache-busting headers
     return NextResponse.json(
       { lists, timestamp: Date.now() },
