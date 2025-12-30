@@ -22,6 +22,7 @@
     "@kibo-ui": "https://www.kibo-ui.com/r/{name}.json",
     "@reui": "https://reui.io/r/{name}.json",
     "@react-bits": "https://reactbits.dev/r/{name}.json",
-    "@shadcn-editor": "https://shadcn-editor.vercel.app/r/{name}.json"
+    "@shadcn-editor": "https://shadcn-editor.vercel.app/r/{name}.json",
+    "@aceternity": "https://ui.aceternity.com/registry/{name}.json"
   }
 }

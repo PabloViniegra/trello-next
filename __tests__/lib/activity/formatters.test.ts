@@ -10,7 +10,7 @@ import {
   getActivityColor,
   getActivityIcon,
 } from '@/lib/activity/formatters'
-import type { TActivityLog } from '@/lib/activity/types'
+import type { TActivityLog, TActivityLogWithUser } from '@/lib/activity/types'
 import { ACTIVITY_TYPES, ENTITY_TYPES } from '@/lib/activity/types'
 
 describe('Activity Formatters', () => {
@@ -290,17 +290,18 @@ describe('formatActivityMessage - comprehensive coverage', () => {
   })
 
   it('should format board updated with privacy change', () => {
-    const activity: TActivityLog = {
+    const activity: TActivityLogWithUser = {
       id: 'act-13',
       userId: 'user-1',
       actionType: ACTIVITY_TYPES.BOARD_UPDATED,
       entityType: ENTITY_TYPES.BOARD,
       entityId: 'board-1',
       boardId: 'board-1',
-      metadata: { privacyChanged: true, newIsPrivate: true },
-      previousValues: {},
-      newValues: {},
+      metadata: { privacyChanged: true },
+      previousValues: { isPrivate: 'public' },
+      newValues: { isPrivate: 'private' },
       createdAt: new Date(),
+      user: null,
     }
     expect(formatActivityMessage(activity)).toContain(
       'privacidad del tablero a privado',

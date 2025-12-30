@@ -8,6 +8,7 @@ import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import type { z } from 'zod'
 import { Button } from '@/components/ui/button'
+import { HoverBorderGradient } from '@/components/ui/hover-border-gradient'
 import {
   Dialog,
   DialogContent,
@@ -97,13 +98,18 @@ export function CreateBoardDialog({
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
       {!trigger && (
         <DialogTrigger asChild>
-          <Button
-            size='sm'
-            className='gap-2 font-mono font-semibold shadow-md hover:shadow-lg transition-all duration-200 hover:scale-[1.02] bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary'
-          >
-            <Plus className='h-4 w-4' />
-            Crear tablero
-          </Button>
+          <div>
+            <HoverBorderGradient
+              as='button'
+              containerClassName='rounded-md'
+              className='bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 flex items-center gap-2 font-mono font-semibold text-sm transition-colors'
+              duration={1.5}
+              clockwise={true}
+            >
+              <Plus className='h-4 w-4' />
+              Crear tablero
+            </HoverBorderGradient>
+          </div>
         </DialogTrigger>
       )}
       <DialogContent className='sm:max-w-md'>
