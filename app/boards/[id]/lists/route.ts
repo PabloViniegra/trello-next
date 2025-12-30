@@ -6,11 +6,13 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { hasUserBoardAccess } from '@/lib/board-member/queries'
-import { getListsWithCardsAndLabelsByBoardId } from '@/lib/list/queries'
+import { getListsWithCardsAndLabelsNoCacheFresh } from '@/lib/list/queries'
 import { logger } from '@/lib/utils/logger'
 
-// Force dynamic to ensure fresh data
+// Force dynamic to ensure fresh data - NO CACHING
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
+export const fetchCache = 'force-no-store'
 
 export async function GET(
   request: NextRequest,
@@ -39,8 +41,8 @@ export async function GET(
       )
     }
 
-    // 3. Fetch lists with cards
-    const lists = await getListsWithCardsAndLabelsByBoardId(boardId)
+    // 3. Fetch lists with cards - NO CACHE for real-time sync
+    const lists = await getListsWithCardsAndLabelsNoCacheFresh(boardId)
 
     // 4. Return with cache-busting headers
     return NextResponse.json(

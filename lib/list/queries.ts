@@ -20,6 +20,10 @@ async function _getListsByBoardId(boardId: string): Promise<TListWithCards[]> {
   return lists
 }
 
+/**
+ * Internal function to fetch lists with cards and labels
+ * This is the raw database query without caching
+ */
 async function _getListsWithCardsAndLabelsByBoardId(
   boardId: string,
 ): Promise<TListWithCardsAndLabels[]> {
@@ -67,6 +71,16 @@ async function _getListsWithCardsAndLabelsByBoardId(
       })),
     })),
   }))
+}
+
+/**
+ * Get lists with cards and labels WITHOUT cache
+ * Used for real-time polling endpoints where fresh data is critical
+ */
+export const getListsWithCardsAndLabelsNoCacheFresh = (
+  boardId: string,
+): Promise<TListWithCardsAndLabels[]> => {
+  return _getListsWithCardsAndLabelsByBoardId(boardId)
 }
 
 export const getListsByBoardId = (boardId: string) =>
