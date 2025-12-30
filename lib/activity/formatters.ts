@@ -63,7 +63,7 @@ export function formatActivityMessage(
       return `reordenó la lista desde la posición ${(meta.fromPosition as number) ?? '?'} a ${(meta.toPosition as number) ?? '?'}`
 
     case 'list.deleted':
-      return `eliminó la lista "${(meta.previousTitle as string) || 'sin título'}"`
+      return `eliminó la lista "${(meta.listTitle as string) || (meta.previousTitle as string) || 'sin título'}"`
 
     // Card activities
     case 'card.created':
