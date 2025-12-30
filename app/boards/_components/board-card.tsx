@@ -59,7 +59,7 @@ export function BoardCard({ board }: TBoardCardProps) {
           <CardContent className='pt-0 shrink-0 mt-auto'>
             <div className='flex items-center gap-1.5 text-xs text-muted-foreground'>
               <Calendar className='h-3 w-3' />
-              <span>Creado {createdAtFormatted}</span>
+              <span className='font-mono'>Creado {createdAtFormatted}</span>
             </div>
           </CardContent>
         </Card>

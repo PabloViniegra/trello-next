@@ -113,7 +113,7 @@ export function CardItem({ card }: TCardItemProps) {
                   <LabelBadge key={label.id} label={label} size='sm' />
                 ))}
                 {remainingLabels > 0 && (
-                  <span className='inline-flex items-center h-5 px-2 text-xs font-medium text-muted-foreground bg-muted rounded-md'>
+                  <span className='inline-flex items-center h-5 px-2 text-xs font-mono font-medium text-muted-foreground bg-muted rounded-md'>
                     +{remainingLabels}
                   </span>
                 )}
@@ -133,7 +133,7 @@ export function CardItem({ card }: TCardItemProps) {
                   <Badge
                     variant='secondary'
                     className={cn(
-                      'text-xs px-2 py-1 font-medium flex items-center gap-1.5 transition-colors',
+                      'text-xs px-2 py-1 font-mono font-medium flex items-center gap-1.5 transition-colors',
                       dueDateStatus.status === 'overdue' &&
                         'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-950 dark:text-red-400 dark:hover:bg-red-900',
                       dueDateStatus.status === 'today' &&

@@ -62,6 +62,7 @@ export function AddBoardMemberDialog({
   const [selectedValue, setSelectedValue] = useState<string>('')
   const [availableUsers, setAvailableUsers] = useState<TUser[]>([])
   const [currentMembers, setCurrentMembers] = useState<TUser[]>([])
+  const [membersCount, setMembersCount] = useState<number>(1) // Al menos el propietario
   const [isLoadingUsers, setIsLoadingUsers] = useState(false)
   const [isLoadingMembers, setIsLoadingMembers] = useState(false)
   const [isPending, startTransition] = useTransition()
@@ -86,10 +87,22 @@ export function AddBoardMemberDialog({
     const membersResult = await getBoardMembers(boardId)
     if (membersResult.success && membersResult.data) {
       setCurrentMembers(membersResult.data)
+      setMembersCount(membersResult.data.length)
     } else {
       toast.error(membersResult.error ?? 'Error al cargar miembros')
     }
     setIsLoadingMembers(false)
+  }, [boardId])
+
+  // Cargar el conteo inicial de miembros al montar el componente
+  useEffect(() => {
+    const loadInitialCount = async () => {
+      const membersResult = await getBoardMembers(boardId)
+      if (membersResult.success && membersResult.data) {
+        setMembersCount(membersResult.data.length)
+      }
+    }
+    loadInitialCount()
   }, [boardId])
 
   // Cargar usuarios disponibles y miembros actuales cuando se abre el dialog
@@ -177,14 +190,12 @@ export function AddBoardMemberDialog({
           <div className='flex items-center gap-2'>
             <UserPlus className='h-4 w-4' />
             <span className='font-medium'>Colaboradores</span>
-            {currentMembers.length > 0 && (
-              <Badge
-                variant='secondary'
-                className='ml-0.5 h-5 min-w-[20px] rounded-full px-1.5 text-xs font-semibold bg-primary/10 text-primary hover:bg-primary/20'
-              >
-                {currentMembers.length}
-              </Badge>
-            )}
+            <Badge
+              variant='secondary'
+              className='ml-0.5 h-5 min-w-[20px] rounded-full px-1.5 text-xs font-mono font-semibold bg-primary/10 text-primary hover:bg-primary/20'
+            >
+              {membersCount}
+            </Badge>
           </div>
         </Button>
       </DialogTrigger>
@@ -280,7 +291,7 @@ export function AddBoardMemberDialog({
                   Colaboradores actuales
                 </h3>
               </div>
-              <Badge variant='outline' className='text-xs'>
+              <Badge variant='outline' className='text-xs font-mono'>
                 {currentMembers.length}{' '}
                 {currentMembers.length === 1 ? 'miembro' : 'miembros'}
               </Badge>

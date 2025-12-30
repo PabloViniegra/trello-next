@@ -97,7 +97,10 @@ export function CreateBoardDialog({
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
       {!trigger && (
         <DialogTrigger asChild>
-          <Button size='sm' className='gap-2'>
+          <Button
+            size='sm'
+            className='gap-2 font-mono font-semibold shadow-md hover:shadow-lg transition-all duration-200 hover:scale-[1.02] bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary'
+          >
             <Plus className='h-4 w-4' />
             Crear tablero
           </Button>

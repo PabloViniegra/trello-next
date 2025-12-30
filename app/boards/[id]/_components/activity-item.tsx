@@ -91,11 +91,11 @@ export function ActivityItem({ activity }: TActivityItemProps) {
 
         {/* Timestamp */}
         <div className='flex items-center gap-2'>
-          <time className='text-xs text-muted-foreground/60 font-medium'>
+          <time className='text-xs text-muted-foreground/60 font-mono font-medium'>
             {relativeTime}
           </time>
           <span className='text-xs text-muted-foreground/40'>•</span>
-          <time className='text-xs text-muted-foreground/40'>
+          <time className='text-xs text-muted-foreground/40 font-mono'>
             {new Date(activity.createdAt).toLocaleString('es-ES', {
               day: '2-digit',
               month: 'short',
