@@ -83,13 +83,15 @@ export async function GET(
             const lists = await getListsWithCardsAndLabelsByBoardId(boardId)
 
             // Create checksum from lists data to detect changes
-            // Using JSON stringify + length as simple change detection
+            // Include all relevant fields to detect any change
             const currentChecksum = JSON.stringify({
               listCount: lists.length,
               lists: lists.map((list) => ({
                 id: list.id,
                 title: list.title,
                 position: list.position,
+                boardId: list.boardId,
+                createdAt: list.createdAt,
                 cardCount: list.cards.length,
                 cards: list.cards.map((card) => ({
                   id: card.id,
@@ -98,6 +100,7 @@ export async function GET(
                   listId: card.listId,
                   description: card.description,
                   dueDate: card.dueDate,
+                  createdAt: card.createdAt,
                 })),
               })),
             })

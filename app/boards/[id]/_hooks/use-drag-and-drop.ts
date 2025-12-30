@@ -1,7 +1,13 @@
 'use client'
 
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core'
-import { useCallback, useOptimistic, useState, useTransition } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useOptimistic,
+  useState,
+  useTransition,
+} from 'react'
 import { toast } from 'sonner'
 import { moveCardAction } from '@/lib/card/actions'
 import type { TCardWithDetails } from '@/lib/card/types'
@@ -37,9 +43,10 @@ export function useDragAndDrop(syncedLists: TListWithCardsAndLabels[]) {
 
   // Sync base lists when SSE updates arrive
   // This is safe because it's regular setState, not optimistic
-  if (syncedLists !== baseLists) {
+  // We use useEffect to avoid the "setState during render" warning
+  useEffect(() => {
     setBaseLists(syncedLists)
-  }
+  }, [syncedLists])
 
   // Create lookup maps for O(1) access
   const createLookupMaps = useCallback((lists: TListWithCardsAndLabels[]) => {
