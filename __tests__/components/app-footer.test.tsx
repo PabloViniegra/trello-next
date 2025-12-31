@@ -11,25 +11,22 @@ describe('AppFooter', () => {
       // Check for "Acerca de" link
       expect(screen.getByRole('link', { name: /acerca de/i })).toBeDefined()
 
-      // Check for "Términos y Condiciones" button
-      expect(
-        screen.getByRole('button', { name: /términos y condiciones/i }),
-      ).toBeDefined()
+      // Check for "Términos" button
+      expect(screen.getByRole('button', { name: /términos/i })).toBeDefined()
 
       // Check for copyright with current year
       const currentYear = new Date().getFullYear()
-      expect(screen.getByText(String(currentYear))).toBeDefined()
+      expect(screen.getByText(`© ${currentYear}`)).toBeDefined()
       expect(screen.getByText('Trello Clone')).toBeDefined()
 
-      // Check for GitHub star button
-      expect(
-        screen.getByRole('link', { name: /dale una estrella en github/i }),
-      ).toBeDefined()
+      // Check for GitHub link
+      expect(screen.getByRole('link', { name: /github/i })).toBeDefined()
     })
 
-    it('should render the copyright symbol', () => {
+    it('should render the copyright text', () => {
       render(<AppFooter />)
-      expect(screen.getByText('©')).toBeDefined()
+      const currentYear = new Date().getFullYear()
+      expect(screen.getByText(`© ${currentYear}`)).toBeDefined()
     })
 
     it('should have correct href for "Acerca de" link', () => {
@@ -40,9 +37,7 @@ describe('AppFooter', () => {
 
     it('should have correct href for GitHub link', () => {
       render(<AppFooter />)
-      const link = screen.getByRole('link', {
-        name: /dale una estrella en github/i,
-      })
+      const link = screen.getByRole('link', { name: /github/i })
       expect(link.getAttribute('href')).toBe(
         'https://github.com/PabloViniegra/trello-next',
       )
@@ -63,9 +58,7 @@ describe('AppFooter', () => {
       const user = userEvent.setup()
       render(<AppFooter />)
 
-      const button = screen.getByRole('button', {
-        name: /términos y condiciones/i,
-      })
+      const button = screen.getByRole('button', { name: /términos/i })
       await user.click(button)
 
       await waitFor(() => {
@@ -79,9 +72,7 @@ describe('AppFooter', () => {
       const user = userEvent.setup()
       render(<AppFooter />)
 
-      const button = screen.getByRole('button', {
-        name: /términos y condiciones/i,
-      })
+      const button = screen.getByRole('button', { name: /términos/i })
       await user.click(button)
 
       await waitFor(() => {
@@ -97,9 +88,7 @@ describe('AppFooter', () => {
       const user = userEvent.setup()
       render(<AppFooter />)
 
-      const button = screen.getByRole('button', {
-        name: /términos y condiciones/i,
-      })
+      const button = screen.getByRole('button', { name: /términos/i })
       await user.click(button)
 
       const currentYear = new Date().getFullYear()
@@ -114,12 +103,8 @@ describe('AppFooter', () => {
   describe('Accessibility', () => {
     it('should have accessible GitHub link with aria-label', () => {
       render(<AppFooter />)
-      const link = screen.getByRole('link', {
-        name: /dale una estrella en github/i,
-      })
-      expect(link.getAttribute('aria-label')).toBe(
-        'Dale una estrella en GitHub',
-      )
+      const link = screen.getByRole('link', { name: /github/i })
+      expect(link.getAttribute('aria-label')).toBe('GitHub')
     })
 
     it('should have semantic footer element', () => {
@@ -143,7 +128,7 @@ describe('AppFooter', () => {
       // Check that footer exists and has proper structure
       expect(footer).toBeDefined()
       expect(footer?.querySelector('.flex-col')).toBeDefined()
-      expect(footer?.querySelector('.md\\:flex-row')).toBeDefined()
+      expect(footer?.querySelector('.sm\\:flex-row')).toBeDefined()
     })
   })
 })
