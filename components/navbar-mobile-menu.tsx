@@ -4,6 +4,7 @@ import { Menu } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
+import { NAV_LINKS } from '@/components/nav-links'
 import { Button } from '@/components/ui/button'
 import {
   Sheet,
@@ -14,13 +15,6 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
-
-type TNavLink = {
-  href: string
-  label: string
-}
-
-const NAV_LINKS: TNavLink[] = [{ href: '/boards', label: 'Tableros' }]
 
 export function NavbarMobileMenu() {
   const pathname = usePathname()

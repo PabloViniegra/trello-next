@@ -172,14 +172,15 @@ export function CardComments({
             }
           }}
         />
-        <div className='flex justify-between items-center'>
-          <p className='text-xs text-muted-foreground'>
+        <div className='flex flex-col-reverse sm:flex-row justify-between items-start sm:items-center gap-2'>
+          <p className='text-xs text-muted-foreground hidden sm:block'>
             Presiona Cmd/Ctrl + Enter para enviar
           </p>
           <Button
             onClick={handleSubmitComment}
             disabled={isSubmitting || !newComment.trim()}
             size='sm'
+            className='w-full sm:w-auto'
           >
             {isSubmitting ? (
               <Loader2 className='w-4 h-4 animate-spin' />
@@ -205,19 +206,19 @@ export function CardComments({
           {comments.map((comment) => (
             <div
               key={comment.id}
-              className='flex gap-3 p-3 rounded-lg bg-muted/50'
+              className='flex gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg bg-muted/50'
             >
-              <Avatar className='w-8 h-8'>
+              <Avatar className='w-7 h-7 sm:w-8 sm:h-8 shrink-0'>
                 <AvatarImage src={comment.user.image || undefined} />
                 <AvatarFallback>
                   {comment.user.name.charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
 
-              <div className='flex-1 space-y-1'>
-                <div className='flex items-center justify-between'>
-                  <div className='flex items-center gap-2'>
-                    <span className='font-medium text-sm'>
+              <div className='flex-1 min-w-0 space-y-1'>
+                <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2'>
+                  <div className='flex flex-wrap items-center gap-x-2 gap-y-0.5'>
+                    <span className='font-medium text-sm truncate max-w-[150px] sm:max-w-none'>
                       {comment.user.name}
                     </span>
                     <span className='text-xs text-muted-foreground'>
@@ -234,7 +235,7 @@ export function CardComments({
 
                   {/* Action buttons */}
                   {canModifyComment(comment) && !editingCommentId && (
-                    <div className='flex gap-1'>
+                    <div className='flex gap-1 self-start sm:self-auto'>
                       <Button
                         variant='ghost'
                         size='sm'

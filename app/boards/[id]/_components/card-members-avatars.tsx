@@ -32,7 +32,7 @@ export function CardMembersAvatars({
   return (
     <div className='flex items-center gap-1'>
       <Users className='w-3.5 h-3.5 text-muted-foreground' />
-      <div className='flex -space-x-2'>
+      <div className='flex gap-1'>
         {visibleMembers.map((member) => {
           const initials = member.user.name
             ? member.user.name
