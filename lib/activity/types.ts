@@ -31,6 +31,11 @@ export const ACTIVITY_TYPES = {
   CARD_MEMBER_ADDED: 'card.member.added',
   CARD_MEMBER_REMOVED: 'card.member.removed',
 
+  // Comment actions
+  COMMENT_CREATED: 'comment.created',
+  COMMENT_UPDATED: 'comment.updated',
+  COMMENT_DELETED: 'comment.deleted',
+
   // Label actions
   LABEL_CREATED: 'label.created',
   LABEL_UPDATED: 'label.updated',
@@ -51,6 +56,7 @@ export const ENTITY_TYPES = {
   CARD: 'card',
   LABEL: 'label',
   MEMBER: 'member',
+  COMMENT: 'comment',
 } as const
 
 export type TEntityType = (typeof ENTITY_TYPES)[keyof typeof ENTITY_TYPES]

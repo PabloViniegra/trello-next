@@ -64,6 +64,13 @@
       "when": 1766711460545,
       "tag": "0008_deep_iceman",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1767193763210,
+      "tag": "0009_chunky_george_stacy",
+      "breakpoints": true
     }
   ]
 }

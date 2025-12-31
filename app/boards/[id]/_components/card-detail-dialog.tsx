@@ -36,6 +36,7 @@ import {
   plainTextToEditorState,
 } from '@/lib/utils/editor'
 import { useBoardStore } from '@/store/board-store'
+import { CardComments } from './card-comments'
 import { CardLabelsSelector } from './card-labels-selector'
 import { CardMembersAvatars } from './card-members-avatars'
 import { CardMembersSelector } from './card-members-selector'
@@ -60,12 +61,16 @@ type TCardDetailDialogProps = {
   card: TCardWithDetails
   boardLabels: TLabel[]
   boardId: string
+  currentUserId: string
+  isBoardOwner: boolean
 }
 
 export function CardDetailDialog({
   card,
   boardLabels,
   boardId,
+  currentUserId,
+  isBoardOwner,
 }: TCardDetailDialogProps) {
   const router = useRouter()
   const { isCardModalOpen, closeCardModal, activeCard } = useBoardStore()
@@ -345,6 +350,15 @@ export function CardDetailDialog({
                 </Button>
               )}
             </div>
+          </div>
+
+          {/* Comments Section */}
+          <div className='border-t pt-4'>
+            <CardComments
+              cardId={card.id}
+              currentUserId={currentUserId}
+              isBoardOwner={isBoardOwner}
+            />
           </div>
 
           {/* Footer Actions */}
