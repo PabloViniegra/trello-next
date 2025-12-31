@@ -85,7 +85,7 @@ export function ActivityItem({ activity }: TActivityItemProps) {
         </div>
 
         {/* Activity Message */}
-        <p className='text-sm text-muted-foreground leading-relaxed break-words'>
+        <p className='text-sm text-muted-foreground leading-relaxed wrap-break-words'>
           {message}
         </p>
 

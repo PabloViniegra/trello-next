@@ -145,7 +145,7 @@ export function NotificationDropdown({
                 >
                   <div className='flex gap-3'>
                     {/* Icon */}
-                    <div className={cn('mt-0.5 flex-shrink-0', iconColor)}>
+                    <div className={cn('mt-0.5 shrink-0', iconColor)}>
                       <Icon className='h-5 w-5' />
                     </div>
 
