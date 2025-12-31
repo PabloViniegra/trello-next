@@ -55,7 +55,9 @@ export function useDragAndDrop(syncedLists: TListWithCardsAndLabels[]) {
         cards: l.cards.map((c) => ({
           id: c.id,
           title: c.title,
+          description: c.description,
           position: c.position,
+          dueDate: c.dueDate?.toISOString() || null,
           // Include labels and members to detect changes
           labelIds: c.labels?.map((label) => label.id).sort() || [],
           memberIds: c.members?.map((m) => m.userId).sort() || [],
