@@ -1,7 +1,7 @@
 'use server'
 
 import { and, eq } from 'drizzle-orm'
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { db } from '@/db'
 import { board, card, cardLabel, label } from '@/db/schema'
 import { logActivity } from '@/lib/activity/logger'
@@ -107,8 +107,9 @@ export async function createLabel(
       },
     })
 
-    // 6. Revalidate board page
+    // 6. Revalidate board page and lists cache
     revalidatePath(`/boards/${validated.data.boardId}`)
+    revalidateTag(`board:${validated.data.boardId}:lists`, { expire: 0 })
 
     return {
       success: true,
@@ -216,8 +217,9 @@ export async function updateLabel(
       },
     })
 
-    // 7. Revalidate board page
+    // 7. Revalidate board page and lists cache
     revalidatePath(`/boards/${labelRecord.boardId}`)
+    revalidateTag(`board:${labelRecord.boardId}:lists`, { expire: 0 })
 
     return {
       success: true,
@@ -301,8 +303,9 @@ export async function deleteLabel(
       },
     })
 
-    // 6. Revalidate board page
+    // 6. Revalidate board page and lists cache
     revalidatePath(`/boards/${labelRecord.boardId}`)
+    revalidateTag(`board:${labelRecord.boardId}:lists`, { expire: 0 })
 
     return {
       success: true,
@@ -418,8 +421,9 @@ export async function assignLabelToCard(
         },
       })
 
-      // 7. Revalidate board page
+      // 7. Revalidate board page and lists cache
       revalidatePath(`/boards/${cardRecord.list.boardId}`)
+      revalidateTag(`board:${cardRecord.list.boardId}:lists`, { expire: 0 })
 
       return {
         success: true,
@@ -536,8 +540,9 @@ export async function removeLabelFromCard(
       })
     }
 
-    // 7. Revalidate board page
+    // 7. Revalidate board page and lists cache
     revalidatePath(`/boards/${cardRecord.list.boardId}`)
+    revalidateTag(`board:${cardRecord.list.boardId}:lists`, { expire: 0 })
 
     return {
       success: true,
