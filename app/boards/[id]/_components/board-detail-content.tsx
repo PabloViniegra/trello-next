@@ -258,6 +258,8 @@ export function BoardDetailContent({
           card={activeCardForModal}
           boardLabels={labels}
           boardId={board.id}
+          currentUserId={currentUserId}
+          isBoardOwner={currentUserId === board.ownerId}
         />
       )}
     </DndContext>

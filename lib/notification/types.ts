@@ -10,6 +10,8 @@ export const NOTIFICATION_TYPES = {
   BOARD_SHARED: 'board.shared',
   CARD_MOVED: 'card.moved',
   LABEL_ASSIGNED: 'label.assigned',
+  COMMENT_CREATED: 'comment.created',
+  COMMENT_MENTION: 'comment.mention',
 } as const
 
 export type TNotificationType =
