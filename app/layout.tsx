@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next'
+import { RootLayoutWrapper } from '@/components/root-layout-wrapper'
 import { ThemeProvider } from '@/components/theme-provider'
 import { Toaster } from '@/components/ui/sonner'
 import { inter, jetBrainsMono, playfairDisplay } from '@/lib/fonts'
@@ -146,8 +147,10 @@ export default function RootLayout({
         className={`${inter.variable} ${playfairDisplay.variable} ${jetBrainsMono.variable} font-sans antialiased`}
       >
         <ThemeProvider attribute='class' defaultTheme='system' enableSystem>
-          {children}
-          <Toaster />
+          <RootLayoutWrapper>
+            {children}
+            <Toaster />
+          </RootLayoutWrapper>
         </ThemeProvider>
       </body>
     </html>
