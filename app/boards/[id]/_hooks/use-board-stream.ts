@@ -29,7 +29,7 @@ type TBoardStreamState = {
 
 /**
  * Create a hash of the data to detect changes
- * Includes list and card details to detect all types of changes
+ * Includes list, card, label, and member details to detect all types of changes
  */
 function createDataHash(data: TListWithCardsAndLabels[]): string {
   return JSON.stringify(
@@ -42,6 +42,10 @@ function createDataHash(data: TListWithCardsAndLabels[]): string {
         title: c.title,
         position: c.position,
         listId: c.listId,
+        // Include labels to detect label changes
+        labelIds: c.labels?.map((l) => l.id).sort() || [],
+        // Include members to detect member changes
+        memberIds: c.members?.map((m) => m.userId).sort() || [],
       })),
     })),
   )
