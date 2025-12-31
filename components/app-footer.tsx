@@ -1,10 +1,8 @@
 'use client'
 
-import { Star } from 'lucide-react'
 import Link from 'next/link'
 import type { JSX } from 'react'
 import { useState } from 'react'
-import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -41,64 +39,47 @@ export function AppFooter(): JSX.Element {
 
   return (
     <>
-      <footer className='border-t bg-card mt-auto'>
-        <div className='container mx-auto px-4 py-8'>
-          <div className='flex flex-col items-center justify-center gap-6 md:flex-row md:justify-between'>
-            {/* Links Section */}
-            <nav className='flex flex-wrap items-center justify-center gap-6 text-sm'>
-              <Link
-                href='/about'
-                className='group relative font-medium text-muted-foreground transition-colors hover:text-foreground'
-              >
-                <span className='relative'>
-                  Acerca de
-                  <span className='absolute -bottom-1 left-0 h-px w-0 bg-primary transition-all duration-300 group-hover:w-full' />
-                </span>
-              </Link>
-
-              <button
-                type='button'
-                onClick={() => setIsTermsOpen(true)}
-                className='group relative font-medium text-muted-foreground transition-colors hover:text-foreground'
-              >
-                <span className='relative'>
-                  Términos y Condiciones
-                  <span className='absolute -bottom-1 left-0 h-px w-0 bg-primary transition-all duration-300 group-hover:w-full' />
-                </span>
-              </button>
-            </nav>
-
-            {/* Copyright */}
-            <div className='flex items-center gap-1 text-sm text-muted-foreground'>
-              <span>©</span>
-              <span className='font-mono tabular-nums'>{CURRENT_YEAR}</span>
+      <footer className='border-t bg-card/50 backdrop-blur-sm mt-auto'>
+        <div className='container mx-auto px-4 py-3'>
+          <div className='flex flex-col items-center justify-between gap-3 sm:flex-row'>
+            {/* Copyright & Brand */}
+            <div className='flex items-center gap-2 text-xs text-muted-foreground'>
               <span className='font-display font-medium text-foreground'>
                 Trello Clone
               </span>
+              <span className='text-border'>•</span>
+              <span>© {CURRENT_YEAR}</span>
             </div>
 
-            {/* GitHub Star Button */}
-            <Button
-              asChild
-              variant='outline'
-              size='sm'
-              className='group gap-2 transition-all hover:border-primary hover:bg-primary/5'
-            >
+            {/* Links */}
+            <nav className='flex items-center gap-4 text-xs'>
+              <Link
+                href='/about'
+                className='text-muted-foreground transition-colors hover:text-foreground'
+              >
+                Acerca de
+              </Link>
+              <span className='text-border'>•</span>
+              <button
+                type='button'
+                onClick={() => setIsTermsOpen(true)}
+                className='text-muted-foreground transition-colors hover:text-foreground'
+              >
+                Términos
+              </button>
+              <span className='text-border'>•</span>
               <a
                 href='https://github.com/PabloViniegra/trello-next'
                 target='_blank'
                 rel='noopener noreferrer'
-                aria-label='Dale una estrella en GitHub'
+                className='flex items-center gap-1.5 text-muted-foreground transition-colors hover:text-foreground'
+                aria-label='GitHub'
               >
-                <GithubIcon className='h-4 w-4 transition-transform group-hover:scale-110' />
-                <Star className='h-4 w-4 fill-primary/20 transition-all group-hover:fill-primary group-hover:scale-110' />
-                <span className='font-medium'>Estrella</span>
+                <GithubIcon className='h-3.5 w-3.5' />
+                <span>GitHub</span>
               </a>
-            </Button>
+            </nav>
           </div>
-
-          {/* Decorative line */}
-          <div className='mx-auto mt-6 h-px w-24 bg-gradient-to-r from-transparent via-border to-transparent' />
         </div>
       </footer>
 
