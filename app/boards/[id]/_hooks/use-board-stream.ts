@@ -43,7 +43,12 @@ function createDataHash(data: TListWithCardsAndLabels[]): string {
         description: c.description,
         position: c.position,
         listId: c.listId,
-        dueDate: c.dueDate?.toISOString() || null,
+        // Handle dueDate as both Date object and string (from JSON)
+        dueDate: c.dueDate
+          ? typeof c.dueDate === 'string'
+            ? c.dueDate
+            : c.dueDate.toISOString()
+          : null,
         // Include labels to detect label changes
         labelIds: c.labels?.map((l) => l.id).sort() || [],
         // Include members to detect member changes

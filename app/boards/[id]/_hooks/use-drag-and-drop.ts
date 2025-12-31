@@ -57,7 +57,12 @@ export function useDragAndDrop(syncedLists: TListWithCardsAndLabels[]) {
           title: c.title,
           description: c.description,
           position: c.position,
-          dueDate: c.dueDate?.toISOString() || null,
+          // Handle dueDate as both Date object and string (from JSON)
+          dueDate: c.dueDate
+            ? typeof c.dueDate === 'string'
+              ? c.dueDate
+              : c.dueDate.toISOString()
+            : null,
           // Include labels and members to detect changes
           labelIds: c.labels?.map((label) => label.id).sort() || [],
           memberIds: c.members?.map((m) => m.userId).sort() || [],
