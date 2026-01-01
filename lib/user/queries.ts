@@ -3,8 +3,17 @@
 import { and, count, eq, sql } from 'drizzle-orm'
 import { session, user } from '@/auth-schema'
 import { db } from '@/db'
-import { board, boardMember, cardMember } from '@/db/schema'
-import type { TUserDetails, TUserStats } from './types'
+import {
+  board,
+  boardMember,
+  card,
+  cardLabel,
+  cardMember,
+  comment,
+  label,
+  list,
+} from '@/db/schema'
+import type { TUserAnalytics, TUserDetails, TUserStats } from './types'
 
 /**
  * Get user statistics including boards, cards, and collaboration data
@@ -101,5 +110,143 @@ export async function getUserActiveSessions(userId: string): Promise<number> {
   } catch (error) {
     console.error('Error getting active sessions:', error)
     return 0
+  }
+}
+
+/**
+ * Get user analytics data for visualizations
+ */
+export async function getUserAnalytics(
+  userId: string,
+): Promise<TUserAnalytics> {
+  try {
+    // Get board activity data
+    const boardActivityQuery = db
+      .select({
+        boardName: board.title,
+        boardId: board.id,
+        totalCards: sql<number>`count(distinct ${card.id})`.as('total_cards'),
+        completedCards:
+          sql<number>`count(distinct case when ${card.dueDate} is not null and ${card.dueDate} < now() then ${card.id} end)`.as(
+            'completed_cards',
+          ),
+        activeMembers: sql<number>`count(distinct ${boardMember.userId})`.as(
+          'active_members',
+        ),
+      })
+      .from(board)
+      .leftJoin(list, eq(list.boardId, board.id))
+      .leftJoin(card, eq(card.listId, list.id))
+      .leftJoin(boardMember, eq(boardMember.boardId, board.id))
+      .where(
+        sql`${board.ownerId} = ${userId} or ${board.id} in (
+          select ${boardMember.boardId} from ${boardMember} where ${boardMember.userId} = ${userId}
+        )`,
+      )
+      .groupBy(board.id, board.title)
+      .limit(5)
+
+    // Get label usage data
+    const labelUsageQuery = db
+      .select({
+        labelName: sql<string>`coalesce(${label.name}, 'Sin nombre')`.as(
+          'label_name',
+        ),
+        color: label.color,
+        count: sql<number>`count(${cardLabel.id})`.as('count'),
+      })
+      .from(cardLabel)
+      .innerJoin(label, eq(label.id, cardLabel.labelId))
+      .innerJoin(card, eq(card.id, cardLabel.cardId))
+      .innerJoin(cardMember, eq(cardMember.cardId, card.id))
+      .where(eq(cardMember.userId, userId))
+      .groupBy(label.id, label.name, label.color)
+      .orderBy(sql`count desc`)
+      .limit(8)
+
+    // Get activity timeline for last 8 weeks
+    const activityTimelineQuery = db
+      .select({
+        week: sql<string>`to_char(date_trunc('week', ${card.createdAt}), 'DD/MM')`.as(
+          'week',
+        ),
+        cards: sql<number>`count(distinct ${card.id})`.as('cards'),
+        comments: sql<number>`count(distinct ${comment.id})`.as('comments'),
+        boards: sql<number>`count(distinct ${board.id})`.as('boards'),
+      })
+      .from(card)
+      .leftJoin(cardMember, eq(cardMember.cardId, card.id))
+      .leftJoin(comment, eq(comment.cardId, card.id))
+      .leftJoin(list, eq(list.id, card.listId))
+      .leftJoin(board, eq(board.id, list.boardId))
+      .where(
+        sql`${cardMember.userId} = ${userId} and ${card.createdAt} > now() - interval '8 weeks'`,
+      )
+      .groupBy(sql`date_trunc('week', ${card.createdAt})`)
+      .orderBy(sql`date_trunc('week', ${card.createdAt})`)
+
+    // Get card status over time (last 30 days)
+    const cardStatusQuery = db
+      .select({
+        date: sql<string>`to_char(${card.createdAt}, 'DD/MM')`.as('date'),
+        total: sql<number>`count(${card.id})`.as('total'),
+        completed:
+          sql<number>`count(case when ${card.dueDate} is not null and ${card.dueDate} < now() then 1 end)`.as(
+            'completed',
+          ),
+        pending:
+          sql<number>`count(case when ${card.dueDate} is null or ${card.dueDate} >= now() then 1 end)`.as(
+            'pending',
+          ),
+      })
+      .from(card)
+      .innerJoin(cardMember, eq(cardMember.cardId, card.id))
+      .where(
+        sql`${cardMember.userId} = ${userId} and ${card.createdAt} > now() - interval '30 days'`,
+      )
+      .groupBy(sql`to_char(${card.createdAt}, 'DD/MM')`)
+      .orderBy(sql`to_char(${card.createdAt}, 'DD/MM')`)
+
+    const [boardActivity, labelUsage, activityTimeline, cardStatus] =
+      await Promise.all([
+        boardActivityQuery,
+        labelUsageQuery,
+        activityTimelineQuery,
+        cardStatusQuery,
+      ])
+
+    return {
+      boardActivity: boardActivity.map((row) => ({
+        boardName: row.boardName,
+        totalCards: Number(row.totalCards),
+        completedCards: Number(row.completedCards),
+        activeMembers: Number(row.activeMembers),
+      })),
+      labelUsage: labelUsage.map((row) => ({
+        labelName: row.labelName,
+        color: row.color,
+        count: Number(row.count),
+      })),
+      activityTimeline: activityTimeline.map((row) => ({
+        week: row.week,
+        cards: Number(row.cards),
+        comments: Number(row.comments),
+        boards: Number(row.boards),
+      })),
+      cardStatusOverTime: cardStatus.map((row) => ({
+        date: row.date,
+        total: Number(row.total),
+        completed: Number(row.completed),
+        pending: Number(row.pending),
+      })),
+    }
+  } catch (error) {
+    console.error('Error getting user analytics:', error)
+    return {
+      boardActivity: [],
+      labelUsage: [],
+      activityTimeline: [],
+      cardStatusOverTime: [],
+    }
   }
 }

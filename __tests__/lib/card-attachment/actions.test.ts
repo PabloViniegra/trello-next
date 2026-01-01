@@ -195,9 +195,10 @@ describe('Card Attachment Actions', () => {
       expect(result.success).toBe(true)
       expect(result.data).toBeDefined()
       expect(put).toHaveBeenCalled()
-      expect(revalidateTag).toHaveBeenCalledWith(`board:${mockBoardId}:lists`, {
-        expire: 0,
-      })
+      expect(revalidateTag).toHaveBeenCalledWith(
+        `board:${mockBoardId}:lists`,
+        'max',
+      )
       expect(revalidatePath).toHaveBeenCalledWith(`/boards/${mockBoardId}`)
     })
 
@@ -274,9 +275,10 @@ describe('Card Attachment Actions', () => {
 
       expect(result.success).toBe(true)
       expect(del).toHaveBeenCalledWith(mockFileUrl)
-      expect(revalidateTag).toHaveBeenCalledWith(`board:${mockBoardId}:lists`, {
-        expire: 0,
-      })
+      expect(revalidateTag).toHaveBeenCalledWith(
+        `board:${mockBoardId}:lists`,
+        'max',
+      )
       expect(revalidatePath).toHaveBeenCalledWith(`/boards/${mockBoardId}`)
     })
 
@@ -299,9 +301,10 @@ describe('Card Attachment Actions', () => {
 
       // Should succeed - the attachment record is deleted even if blob cleanup fails
       expect(result.success).toBe(true)
-      expect(revalidateTag).toHaveBeenCalledWith(`board:${mockBoardId}:lists`, {
-        expire: 0,
-      })
+      expect(revalidateTag).toHaveBeenCalledWith(
+        `board:${mockBoardId}:lists`,
+        'max',
+      )
     })
   })
 })
