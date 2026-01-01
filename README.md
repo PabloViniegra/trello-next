@@ -111,6 +111,9 @@ RESEND_FROM="Trello Clone <onboarding@resend.dev>"
 
 # Environment
 NODE_ENV="development"
+
+# Vercel Storage
+BLOB_READ_WRITE_TOKEN="<vercel_blob_token_here>"
 ```
 
 **Notes:**

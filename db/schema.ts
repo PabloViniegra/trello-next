@@ -196,6 +196,34 @@ export const comment = pgTable(
 )
 
 // =============================================================================
+// CARD ATTACHMENTS (File attachments for cards)
+// =============================================================================
+
+export const cardAttachment = pgTable(
+  'card_attachment',
+  {
+    id: text('id').primaryKey(),
+    cardId: text('card_id')
+      .notNull()
+      .references(() => card.id, { onDelete: 'cascade' }),
+    fileName: varchar('file_name', { length: 255 }).notNull(),
+    fileUrl: text('file_url').notNull(),
+    downloadUrl: text('download_url').notNull(),
+    contentType: varchar('content_type', { length: 100 }).notNull(),
+    fileSize: integer('file_size').notNull(),
+    uploadedBy: text('uploaded_by')
+      .notNull()
+      .references(() => user.id, { onDelete: 'set null' }),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => [
+    index('card_attachment_card_id_idx').on(table.cardId),
+    index('card_attachment_uploaded_by_idx').on(table.uploadedBy),
+    index('card_attachment_created_at_idx').on(table.cardId, table.createdAt),
+  ],
+)
+
+// =============================================================================
 // BOARD MEMBERS (Many-to-Many for collaboration)
 // =============================================================================
 
@@ -343,6 +371,7 @@ export const cardRelations = relations(card, ({ one, many }) => ({
   cardLabels: many(cardLabel),
   cardMembers: many(cardMember),
   comments: many(comment),
+  attachments: many(cardAttachment),
 }))
 
 export const labelRelations = relations(label, ({ one, many }) => ({
@@ -425,6 +454,17 @@ export const commentRelations = relations(comment, ({ one }) => ({
   }),
   user: one(user, {
     fields: [comment.userId],
+    references: [user.id],
+  }),
+}))
+
+export const cardAttachmentRelations = relations(cardAttachment, ({ one }) => ({
+  card: one(card, {
+    fields: [cardAttachment.cardId],
+    references: [card.id],
+  }),
+  uploader: one(user, {
+    fields: [cardAttachment.uploadedBy],
     references: [user.id],
   }),
 }))

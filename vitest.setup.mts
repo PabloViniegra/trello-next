@@ -1,7 +1,10 @@
-import { vi } from 'vitest'
+import { vi } from "vitest";
+
+// Mock server-only
+vi.mock("server-only", () => ({}));
 
 // Mock next/navigation
-vi.mock('next/navigation', () => ({
+vi.mock("next/navigation", () => ({
   useRouter: vi.fn(() => ({
     push: vi.fn(),
     replace: vi.fn(),
@@ -10,17 +13,17 @@ vi.mock('next/navigation', () => ({
     forward: vi.fn(),
     refresh: vi.fn(),
   })),
-  usePathname: vi.fn(() => '/'),
+  usePathname: vi.fn(() => "/"),
   useSearchParams: vi.fn(() => new URLSearchParams()),
   useParams: vi.fn(() => ({})),
   redirect: vi.fn(),
   notFound: vi.fn(),
-}))
+}));
 
 // Mock next/cache
-vi.mock('next/cache', () => ({
+vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
   revalidateTag: vi.fn(),
   unstable_cache: vi.fn((fn) => fn),
   unstable_noStore: vi.fn(),
-}))
+}));

@@ -44,12 +44,17 @@ async function _getListsWithCardsAndLabelsByBoardId(
               user: true,
             },
           },
+          attachments: {
+            with: {
+              uploader: true,
+            },
+          },
         },
       },
     },
   })
 
-  // Transform to flatten labels and members
+  // Transform to flatten labels, members, and attachments
   return lists.map((list) => ({
     ...list,
     cards: list.cards.map((card) => ({
@@ -68,6 +73,18 @@ async function _getListsWithCardsAndLabelsByBoardId(
         userId: cm.userId,
         createdAt: cm.createdAt,
         user: cm.user,
+      })),
+      attachments: card.attachments.map((attachment) => ({
+        id: attachment.id,
+        cardId: attachment.cardId,
+        fileName: attachment.fileName,
+        fileUrl: attachment.fileUrl,
+        downloadUrl: attachment.downloadUrl,
+        contentType: attachment.contentType,
+        fileSize: attachment.fileSize,
+        uploadedBy: attachment.uploadedBy,
+        createdAt: attachment.createdAt,
+        uploader: attachment.uploader,
       })),
     })),
   }))

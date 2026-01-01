@@ -36,6 +36,7 @@ import {
   plainTextToEditorState,
 } from '@/lib/utils/editor'
 import { useBoardStore } from '@/store/board-store'
+import { CardAttachments } from './card-attachments'
 import { CardComments } from './card-comments'
 import { CardLabelsSelector } from './card-labels-selector'
 import { CardMembersAvatars } from './card-members-avatars'
@@ -297,6 +298,15 @@ export function CardDetailDialog({
                 {errors.description.message}
               </p>
             )}
+          </div>
+
+          {/* Attachments Section */}
+          <div className='border-t pt-4'>
+            <CardAttachments
+              cardId={card.id}
+              attachments={card.attachments}
+              canEdit={isBoardOwner}
+            />
           </div>
 
           {/* Due Date Field */}

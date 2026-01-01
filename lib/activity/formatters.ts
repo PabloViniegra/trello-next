@@ -137,6 +137,13 @@ export function formatActivityMessage(
     case 'member.removed':
       return `eliminó a ${(meta.memberName as string) || (meta.memberEmail as string)} del tablero`
 
+    // Attachment activities
+    case 'card.attachment.added':
+      return `adjuntó "${(meta.fileName as string) || 'archivo'}" a la tarjeta`
+
+    case 'card.attachment.removed':
+      return `eliminó el adjunto "${(meta.fileName as string) || 'archivo'}" de la tarjeta`
+
     default:
       return `realizó una acción en ${entityType.toLowerCase()}`
   }
@@ -237,6 +244,11 @@ export function getActivityIcon(activityType: TActivityType): string {
     case ACTIVITY_TYPES.MEMBER_REMOVED:
       return 'user-minus'
 
+    case ACTIVITY_TYPES.ATTACHMENT_ADDED:
+      return 'paperclip'
+    case ACTIVITY_TYPES.ATTACHMENT_REMOVED:
+      return 'x'
+
     default:
       return 'activity'
   }
@@ -253,6 +265,7 @@ export function getActivityColor(activityType: TActivityType): string {
     case ACTIVITY_TYPES.LABEL_CREATED:
     case ACTIVITY_TYPES.MEMBER_ADDED:
     case ACTIVITY_TYPES.LABEL_ASSIGNED:
+    case ACTIVITY_TYPES.ATTACHMENT_ADDED:
       return 'text-green-600 dark:text-green-400'
 
     case ACTIVITY_TYPES.BOARD_DELETED:
@@ -261,6 +274,7 @@ export function getActivityColor(activityType: TActivityType): string {
     case ACTIVITY_TYPES.LABEL_DELETED:
     case ACTIVITY_TYPES.MEMBER_REMOVED:
     case ACTIVITY_TYPES.LABEL_REMOVED:
+    case ACTIVITY_TYPES.ATTACHMENT_REMOVED:
       return 'text-red-600 dark:text-red-400'
 
     case ACTIVITY_TYPES.BOARD_UPDATED:
