@@ -5,7 +5,7 @@
 
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { TActivityLogWithUser } from '@/lib/activity/types'
 
 type TActivityStreamState = {
@@ -32,6 +32,26 @@ export function useActivityStream(
   })
 
   const eventSourceRef = useRef<EventSource | null>(null)
+
+  // Function to append more activities (for pagination)
+  const appendActivities = useCallback(
+    (newActivities: TActivityLogWithUser[]) => {
+      setState((prev) => {
+        // Filter out duplicates by id
+        const existingIds = new Set(prev.activities.map((a) => a.id))
+        const uniqueNewActivities = newActivities.filter(
+          (a) => !existingIds.has(a.id),
+        )
+
+        return {
+          ...prev,
+          activities: [...prev.activities, ...uniqueNewActivities],
+          lastUpdate: Date.now(),
+        }
+      })
+    },
+    [],
+  )
 
   useEffect(() => {
     // Create SSE connection
@@ -79,5 +99,5 @@ export function useActivityStream(
     }
   }, [boardId])
 
-  return state
+  return { ...state, appendActivities }
 }

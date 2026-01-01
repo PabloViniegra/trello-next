@@ -43,12 +43,10 @@ describe('NavLinks Component', () => {
     mockPathname.mockReturnValue('/boards')
     render(<NavLinks />)
 
-    const _boardsLink = screen.getByRole('link', { name: /Tableros/ })
+    const boardsLink = screen.getByRole('link', { name: /Tableros/ })
 
-    // Verify active link has the active indicator text
-    const activeIndicator = screen.getByText('Página actual: Tableros')
-    expect(activeIndicator).toBeDefined()
-    expect(activeIndicator.classList.contains('sr-only')).toBe(true)
+    // Verify active link has aria-current="page" attribute
+    expect(boardsLink.getAttribute('aria-current')).toBe('page')
   })
 
   it('marks active link when on nested path', () => {
@@ -56,17 +54,17 @@ describe('NavLinks Component', () => {
     render(<NavLinks />)
 
     // Should mark /boards as active even when on /boards/123
-    const activeIndicator = screen.getByText('Página actual: Tableros')
-    expect(activeIndicator).toBeDefined()
+    const boardsLink = screen.getByRole('link', { name: /Tableros/ })
+    expect(boardsLink.getAttribute('aria-current')).toBe('page')
   })
 
   it('does not mark link as active when on different path', () => {
     mockPathname.mockReturnValue('/boards')
     render(<NavLinks />)
 
-    // About link should not be active
-    const aboutText = screen.queryByText('Página actual: Acerca de')
-    expect(aboutText).toBeNull()
+    // About link should not be active (no aria-current attribute)
+    const aboutLink = screen.getByRole('link', { name: /Acerca de/ })
+    expect(aboutLink.getAttribute('aria-current')).toBeNull()
   })
 
   it('applies correct classes to active link', () => {

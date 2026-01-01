@@ -22,6 +22,8 @@ export function SignupForm() {
   const emailId = useId()
   const passwordId = useId()
   const confirmPasswordId = useId()
+  const errorId = useId()
+  const passwordHintId = useId()
   const [state, formAction, isPending] = useActionState(signUpAction, null)
   const [showVerificationMessage, setShowVerificationMessage] = useState(false)
 
@@ -83,6 +85,17 @@ export function SignupForm() {
       </CardHeader>
       <form action={formAction}>
         <CardContent className='space-y-4'>
+          {/* Error message for screen readers */}
+          {state?.error && (
+            <p
+              id={errorId}
+              className='sr-only'
+              role='alert'
+              aria-live='assertive'
+            >
+              {state.error}
+            </p>
+          )}
           <div className='space-y-2'>
             <Label htmlFor={nameId} className='text-foreground font-medium'>
               Nombre completo
@@ -94,6 +107,8 @@ export function SignupForm() {
               placeholder='Juan Perez'
               disabled={isPending}
               required
+              aria-describedby={state?.error ? errorId : undefined}
+              aria-invalid={!!state?.error}
               className='h-11 bg-card border-input focus:border-ring focus:ring-ring/20'
             />
           </div>
@@ -108,6 +123,8 @@ export function SignupForm() {
               placeholder='nombre@ejemplo.com'
               disabled={isPending}
               required
+              aria-describedby={state?.error ? errorId : undefined}
+              aria-invalid={!!state?.error}
               className='h-11 bg-card border-input focus:border-ring focus:ring-ring/20'
             />
           </div>
@@ -122,9 +139,14 @@ export function SignupForm() {
               placeholder='Minimo 8 caracteres'
               disabled={isPending}
               required
+              aria-describedby={passwordHintId}
+              aria-invalid={!!state?.error}
               className='h-11 bg-card border-input focus:border-ring focus:ring-ring/20'
             />
-            <p className='text-xs text-muted-foreground flex items-center gap-1.5'>
+            <p
+              id={passwordHintId}
+              className='text-xs text-muted-foreground flex items-center gap-1.5'
+            >
               <svg
                 className='w-3.5 h-3.5'
                 fill='none'
@@ -157,6 +179,7 @@ export function SignupForm() {
               placeholder='Repite tu contrasena'
               disabled={isPending}
               required
+              aria-invalid={!!state?.error}
               className='h-11 bg-card border-input focus:border-ring focus:ring-ring/20'
             />
           </div>

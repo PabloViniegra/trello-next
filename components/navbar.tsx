@@ -39,27 +39,29 @@ function UserSkeleton() {
 
 export function Navbar() {
   return (
-    <AnimatedNavbar className='border-b bg-background'>
-      <div className='container mx-auto flex h-16 items-center justify-between px-4 gap-3'>
-        {/* Menú hamburguesa (móvil) + Logo */}
-        <div className='flex items-center gap-3'>
-          <NavbarMobileMenu />
-          <NavbarLogo />
-        </div>
+    <header>
+      <AnimatedNavbar className='border-b bg-background'>
+        <div className='container mx-auto flex h-16 items-center justify-between px-4 gap-3'>
+          {/* Menú hamburguesa (móvil) + Logo */}
+          <div className='flex items-center gap-3'>
+            <NavbarMobileMenu />
+            <NavbarLogo />
+          </div>
 
-        {/* NavLinks - centro (desktop only) */}
-        <div className='hidden md:flex flex-1 justify-center'>
-          <NavLinks />
-        </div>
+          {/* NavLinks - centro (desktop only) */}
+          <div className='hidden md:flex flex-1 justify-center'>
+            <NavLinks />
+          </div>
 
-        {/* Acciones - derecha */}
-        <div className='flex items-center gap-2 md:gap-4'>
-          <ThemeSwitcher />
-          <Suspense fallback={<UserSkeleton />}>
-            <UserSection />
-          </Suspense>
+          {/* Acciones - derecha */}
+          <div className='flex items-center gap-2 md:gap-4'>
+            <ThemeSwitcher />
+            <Suspense fallback={<UserSkeleton />}>
+              <UserSection />
+            </Suspense>
+          </div>
         </div>
-      </div>
-    </AnimatedNavbar>
+      </AnimatedNavbar>
+    </header>
   )
 }

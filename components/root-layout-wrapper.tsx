@@ -19,7 +19,7 @@ export function RootLayoutWrapper({
 
   return (
     <div className='flex min-h-screen flex-col'>
-      <div className='flex-1'>{children}</div>
+      <main className='flex-1'>{children}</main>
       {!shouldHideFooter && <AppFooter />}
     </div>
   )

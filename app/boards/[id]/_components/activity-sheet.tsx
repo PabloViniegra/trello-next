@@ -30,10 +30,8 @@ export function ActivitySheet({
   const [isOpen, setIsOpen] = useState(false)
 
   // Use SSE for real-time updates
-  const { activities, isConnected, lastUpdate } = useActivityStream(
-    boardId,
-    initialActivities,
-  )
+  const { activities, isConnected, lastUpdate, appendActivities } =
+    useActivityStream(boardId, initialActivities)
 
   const [isLoading, setIsLoading] = useState(false)
   const [hasMore, setHasMore] = useState(true)
@@ -64,6 +62,9 @@ export function ActivitySheet({
       }
 
       const newActivities: TActivityLogWithUser[] = result.activities || []
+
+      // Add the new activities to the stream state
+      appendActivities(newActivities)
 
       setOffset((prev) => prev + 20)
       setHasMore(newActivities.length === 20)

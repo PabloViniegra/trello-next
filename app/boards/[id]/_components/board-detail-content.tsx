@@ -137,23 +137,25 @@ export function BoardDetailContent({
             )}
 
             {/* Real-time sync indicator */}
-            <div
+            <output
               className='hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs shrink-0'
-              title={
+              aria-live='polite'
+              aria-label={
                 isConnected
                   ? `Sincronizado - Última actualización: ${new Date(lastUpdate).toLocaleTimeString()}`
-                  : 'Desconectado - Refresca la página para ver cambios'
+                  : 'Sin conexión - Refresca la página para ver cambios'
               }
             >
-              <div
+              <span
                 className={`w-2 h-2 rounded-full ${
                   isConnected ? 'bg-green-500 animate-pulse' : 'bg-gray-400'
                 }`}
+                aria-hidden='true'
               />
               <span className='font-medium text-muted-foreground'>
                 {isConnected ? 'Sincronizado' : 'Sin conexión'}
               </span>
-            </div>
+            </output>
           </div>
 
           {/* Desktop Actions */}
@@ -224,6 +226,14 @@ export function BoardDetailContent({
             </DropdownMenu>
           </div>
         </div>
+
+        {/* Instrucciones de accesibilidad para drag and drop */}
+        <p className='sr-only'>
+          Para mover tarjetas con el teclado: navega hasta una tarjeta con Tab,
+          presiona Espacio o Enter para seleccionarla, usa las flechas para
+          moverla, y presiona Espacio o Enter para soltarla. Presiona Escape
+          para cancelar.
+        </p>
 
         {/* Lists Container with Horizontal Scroll */}
         <div className='flex-1 flex gap-3 md:gap-4 overflow-x-auto p-4 md:p-6'>

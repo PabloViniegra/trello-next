@@ -22,10 +22,8 @@ export function ActivityFeed({
   className,
 }: TActivityFeedProps) {
   // Use SSE for real-time updates
-  const { activities, isConnected, lastUpdate } = useActivityStream(
-    boardId,
-    initialActivities,
-  )
+  const { activities, isConnected, lastUpdate, appendActivities } =
+    useActivityStream(boardId, initialActivities)
 
   const [isLoading, setIsLoading] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
@@ -60,7 +58,9 @@ export function ActivityFeed({
 
       const newActivities: TActivityLogWithUser[] = result.activities || []
 
-      // Note: SSE provides real-time updates, load more is for pagination only
+      // Add the new activities to the stream state
+      appendActivities(newActivities)
+
       setOffset((prev) => prev + 20)
       setHasMore(newActivities.length === 20)
     } catch (error) {

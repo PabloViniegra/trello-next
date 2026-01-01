@@ -10,17 +10,17 @@ const themes = [
   {
     key: 'system',
     icon: Monitor,
-    label: 'System theme',
+    label: 'Tema del sistema',
   },
   {
     key: 'light',
     icon: Sun,
-    label: 'Light theme',
+    label: 'Tema claro',
   },
   {
     key: 'dark',
     icon: Moon,
-    label: 'Dark theme',
+    label: 'Tema oscuro',
   },
 ]
 

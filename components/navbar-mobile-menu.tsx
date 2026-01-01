@@ -48,6 +48,7 @@ export function NavbarMobileMenu() {
                 key={link.href}
                 href={link.href}
                 onClick={() => setOpen(false)}
+                aria-current={isActive ? 'page' : undefined}
                 className={cn(
                   'flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium transition-all duration-200',
                   isActive
@@ -56,7 +57,6 @@ export function NavbarMobileMenu() {
                 )}
               >
                 {link.label}
-                {isActive && <span className='sr-only'>(página actual)</span>}
               </Link>
             )
           })}

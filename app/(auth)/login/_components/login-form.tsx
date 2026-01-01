@@ -21,6 +21,7 @@ export function LoginForm() {
   const router = useRouter()
   const emailId = useId()
   const passwordId = useId()
+  const errorId = useId()
   const [state, formAction, isPending] = useActionState(signInAction, null)
 
   useEffect(() => {
@@ -48,6 +49,17 @@ export function LoginForm() {
       </CardHeader>
       <form action={formAction}>
         <CardContent className='space-y-5'>
+          {/* Error message for screen readers */}
+          {state?.error && (
+            <p
+              id={errorId}
+              className='sr-only'
+              role='alert'
+              aria-live='assertive'
+            >
+              {state.error}
+            </p>
+          )}
           <div className='space-y-2'>
             <Label htmlFor={emailId} className='text-foreground font-medium'>
               Correo electrónico
@@ -59,6 +71,8 @@ export function LoginForm() {
               placeholder='nombre@ejemplo.com'
               disabled={isPending}
               required
+              aria-describedby={state?.error ? errorId : undefined}
+              aria-invalid={!!state?.error}
               className='h-11 bg-card border-input focus:border-ring focus:ring-ring/20'
             />
           </div>
@@ -84,6 +98,8 @@ export function LoginForm() {
               placeholder='Ingresa tu contraseña'
               disabled={isPending}
               required
+              aria-describedby={state?.error ? errorId : undefined}
+              aria-invalid={!!state?.error}
               className='h-11 bg-card border-input focus:border-ring focus:ring-ring/20'
             />
           </div>
