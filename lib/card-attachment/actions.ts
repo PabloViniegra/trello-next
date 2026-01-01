@@ -114,7 +114,7 @@ export async function uploadAttachment(
     })
 
     // 8. Revalidar cache
-    revalidateTag(`board:${boardId}:lists`, { expire: 0 })
+    revalidateTag(`board:${boardId}:lists`, 'max')
     revalidatePath(`/boards/${boardId}`)
 
     return { success: true, data: newAttachment }
@@ -182,7 +182,7 @@ export async function deleteAttachment(data: {
     })
 
     // 8. Revalidar cache
-    revalidateTag(`board:${boardId}:lists`, { expire: 0 })
+    revalidateTag(`board:${boardId}:lists`, 'max')
     revalidatePath(`/boards/${boardId}`)
 
     return { success: true }
