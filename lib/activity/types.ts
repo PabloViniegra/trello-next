@@ -31,6 +31,10 @@ export const ACTIVITY_TYPES = {
   CARD_MEMBER_ADDED: 'card.member.added',
   CARD_MEMBER_REMOVED: 'card.member.removed',
 
+  // Card attachment actions
+  ATTACHMENT_ADDED: 'card.attachment.added',
+  ATTACHMENT_REMOVED: 'card.attachment.removed',
+
   // Comment actions
   COMMENT_CREATED: 'comment.created',
   COMMENT_UPDATED: 'comment.updated',

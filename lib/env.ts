@@ -19,6 +19,10 @@ const envSchema = z
       .string()
       .min(1, 'RESEND_FROM must be a valid email or email with name')
       .optional(),
+    BLOB_READ_WRITE_TOKEN: z
+      .string()
+      .min(1, 'BLOB_READ_WRITE_TOKEN is required')
+      .optional(),
   })
   .refine((data) => data.BETTER_AUTH_URL || data.NEXT_PUBLIC_BETTER_AUTH_URL, {
     message:

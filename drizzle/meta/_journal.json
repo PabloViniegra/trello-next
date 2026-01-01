@@ -71,6 +71,13 @@
       "when": 1767193763210,
       "tag": "0009_chunky_george_stacy",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1767290079817,
+      "tag": "0010_lame_sister_grimm",
+      "breakpoints": true
     }
   ]
 }
