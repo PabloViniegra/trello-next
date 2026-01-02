@@ -41,3 +41,13 @@ export const moveCardSchema = z.object({
 })
 
 export type TMoveCardInput = z.infer<typeof moveCardSchema>
+
+export const generateCardWithAISchema = z.object({
+  prompt: z
+    .string()
+    .min(1, 'El prompt es obligatorio')
+    .max(500, 'El prompt debe tener menos de 500 caracteres'),
+  listId: z.string().min(1, 'El ID de lista es obligatorio'),
+})
+
+export type TGenerateCardWithAIInput = z.infer<typeof generateCardWithAISchema>
