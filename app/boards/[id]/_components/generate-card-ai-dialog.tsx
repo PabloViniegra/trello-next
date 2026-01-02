@@ -3,6 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Sparkles } from 'lucide-react'
 import { useId, useState, useTransition } from 'react'
+import { createPortal } from 'react-dom'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import type { z } from 'zod'
@@ -78,49 +79,55 @@ export function GenerateCardAIDialog({
   })
 
   const onSubmit = (data: TFormData) => {
+    // Close modal immediately to show loading overlay
+    setOpen(false)
+
     startTransition(async () => {
       const result = await generateCardWithAI(data)
 
       if (result.success && result.data) {
         toast.success(`Tarjeta creada: ${result.data.title}`)
-        setOpen(false)
         reset()
       } else {
         toast.error(result.error || 'Error al generar la tarjeta')
+        // Reopen modal on error so user can retry
+        setOpen(true)
       }
     })
   }
 
   return (
     <>
-      {/* Loading overlay - blocks all UI interaction during generation */}
-      {isPending && (
-        <div className='fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm'>
-          <div className='flex flex-col items-center gap-4 text-center'>
-            <Spinner className='h-12 w-12 text-primary' />
-            <div>
-              <p className='text-lg font-semibold'>
-                Generando tarjeta con IA...
-              </p>
-              <p className='text-sm text-muted-foreground'>
-                Esto puede tardar unos segundos
-              </p>
+      {/* Loading overlay - rendered in portal to avoid layout issues */}
+      {isPending &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <div className='fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm'>
+            <div className='flex flex-col items-center gap-4 text-center'>
+              <Spinner className='h-12 w-12 text-primary' />
+              <div>
+                <p className='text-lg font-semibold'>
+                  Generando tarjeta con IA...
+                </p>
+                <p className='text-sm text-muted-foreground'>
+                  Esto puede tardar unos segundos
+                </p>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body,
+        )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
           <Button
             variant='ghost'
             size='sm'
-            className='gap-2 hover:bg-accent/50 border border-transparent hover:border-border transition-all'
+            className='md:w-auto w-full md:justify-center justify-start gap-2 hover:bg-accent/50 border border-transparent hover:border-border transition-all'
             aria-label='Generar tarjeta con IA'
           >
             <Sparkles className='h-4 w-4' aria-hidden='true' />
-            <span className='font-medium hidden sm:inline'>Generar con IA</span>
-            <span className='font-medium sm:hidden'>IA</span>
+            <span className='font-medium'>Generar con IA</span>
           </Button>
         </DialogTrigger>
 
