@@ -23,6 +23,7 @@ const envSchema = z
       .string()
       .min(1, 'BLOB_READ_WRITE_TOKEN is required')
       .optional(),
+    GROQ_API_KEY: z.string().min(1, 'GROQ_API_KEY is required').optional(),
   })
   .refine((data) => data.BETTER_AUTH_URL || data.NEXT_PUBLIC_BETTER_AUTH_URL, {
     message:

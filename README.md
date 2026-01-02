@@ -180,6 +180,9 @@ BLOB_READ_WRITE_TOKEN="<vercel_blob_token_here>"
 
 # Better Auth Secret (auto-generated or custom)
 BETTER_AUTH_SECRET="your-secret-here"
+
+# AI Integration
+GROQ_API_KEY="your-groq-api-key"
 ```
 
 **Notes:**
@@ -190,6 +193,7 @@ BETTER_AUTH_SECRET="your-secret-here"
 - Email variables are optional in development (verification links appear in console).
 - `BLOB_READ_WRITE_TOKEN` is required for file upload functionality (get from Vercel dashboard).
 - `NEXT_PUBLIC_APP_URL` is required for proper email links and SEO metadata.
+- `GROQ_API_KEY` is required for AI integration (get from Groq dashboard).
 
 ### Database setup and migrations
 

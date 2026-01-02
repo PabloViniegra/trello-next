@@ -35,6 +35,7 @@ import { CreateListDialog } from './create-list-dialog'
 import { DeleteBoardButton } from './delete-board-button'
 import { DroppableList } from './droppable-list'
 import { EditBoardDialog } from './edit-board-dialog'
+import { GenerateCardAIDialog } from './generate-card-ai-dialog'
 import { LabelManagerDialog } from './label-manager-dialog'
 
 type TBoardDetailContentProps = {
@@ -160,6 +161,12 @@ export function BoardDetailContent({
 
           {/* Desktop Actions */}
           <div className='hidden md:flex items-center gap-2'>
+            <GenerateCardAIDialog
+              lists={syncedLists.map((list) => ({
+                id: list.id,
+                title: list.title,
+              }))}
+            />
             <LabelManagerDialog
               boardId={board.id}
               labels={labels}
@@ -199,6 +206,12 @@ export function BoardDetailContent({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align='end' className='w-64 p-2 space-y-2'>
+                <GenerateCardAIDialog
+                  lists={syncedLists.map((list) => ({
+                    id: list.id,
+                    title: list.title,
+                  }))}
+                />
                 <LabelManagerDialog
                   boardId={board.id}
                   labels={labels}
