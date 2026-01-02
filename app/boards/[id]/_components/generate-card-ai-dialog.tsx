@@ -123,7 +123,7 @@ export function GenerateCardAIDialog({
           <Button
             variant='ghost'
             size='sm'
-            className='md:w-auto w-full md:justify-center justify-start gap-2 hover:bg-accent/50 border border-transparent hover:border-border transition-all'
+            className='w-full justify-start gap-2 hover:bg-accent/50 border border-transparent hover:border-border transition-all'
             aria-label='Generar tarjeta con IA'
           >
             <Sparkles className='h-4 w-4' aria-hidden='true' />
