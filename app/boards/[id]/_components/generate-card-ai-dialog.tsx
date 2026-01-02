@@ -78,15 +78,19 @@ export function GenerateCardAIDialog({
   })
 
   const onSubmit = (data: TFormData) => {
+    // Close modal immediately to show loading overlay
+    setOpen(false)
+
     startTransition(async () => {
       const result = await generateCardWithAI(data)
 
       if (result.success && result.data) {
         toast.success(`Tarjeta creada: ${result.data.title}`)
-        setOpen(false)
         reset()
       } else {
         toast.error(result.error || 'Error al generar la tarjeta')
+        // Reopen modal on error so user can retry
+        setOpen(true)
       }
     })
   }
@@ -115,12 +119,11 @@ export function GenerateCardAIDialog({
           <Button
             variant='ghost'
             size='sm'
-            className='gap-2 hover:bg-accent/50 border border-transparent hover:border-border transition-all'
+            className='w-full justify-start gap-2 hover:bg-accent/50 border border-transparent hover:border-border transition-all'
             aria-label='Generar tarjeta con IA'
           >
             <Sparkles className='h-4 w-4' aria-hidden='true' />
-            <span className='font-medium hidden sm:inline'>Generar con IA</span>
-            <span className='font-medium sm:hidden'>IA</span>
+            <span className='font-medium'>Generar con IA</span>
           </Button>
         </DialogTrigger>
 
