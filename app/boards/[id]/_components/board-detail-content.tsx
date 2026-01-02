@@ -211,6 +211,7 @@ export function BoardDetailContent({
                     id: list.id,
                     title: list.title,
                   }))}
+                  fullWidth
                 />
                 <LabelManagerDialog
                   boardId={board.id}

@@ -3,6 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Sparkles } from 'lucide-react'
 import { useId, useState, useTransition } from 'react'
+import { createPortal } from 'react-dom'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import type { z } from 'zod'
@@ -21,10 +22,13 @@ import { Label } from '@/components/ui/label'
 import { Spinner } from '@/components/ui/spinner'
 import { generateCardWithAI } from '@/lib/card/ai'
 import { generateCardWithAISchema } from '@/lib/card/schemas'
+import { cn } from '@/lib/utils'
 
 type TGenerateCardAIDialogProps = {
   defaultListId?: string
   lists: Array<{ id: string; title: string }>
+  /** When true, button spans full width (for mobile dropdown) */
+  fullWidth?: boolean
 }
 
 type TFormData = z.infer<typeof generateCardWithAISchema>
@@ -43,18 +47,19 @@ type TFormData = z.infer<typeof generateCardWithAISchema>
  * 1. User opens dialog and enters prompt
  * 2. Optionally selects target list
  * 3. Clicks "Generar" button
- * 4. UI shows loading overlay (blocks interaction)
+ * 4. Modal closes, loading overlay appears
  * 5. AI generates card content
- * 6. Card is created and dialog closes
- * 7. Success/error toast notification
+ * 6. On success: toast notification
+ * 7. On error: modal reopens for retry
  *
- * @param boardId - ID of the current board
  * @param defaultListId - Optional default list for the card
  * @param lists - Available lists for selection
+ * @param fullWidth - When true, button spans full width (for mobile dropdown)
  */
 export function GenerateCardAIDialog({
   defaultListId,
   lists,
+  fullWidth = false,
 }: TGenerateCardAIDialogProps) {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
@@ -97,29 +102,35 @@ export function GenerateCardAIDialog({
 
   return (
     <>
-      {/* Loading overlay - blocks all UI interaction during generation */}
-      {isPending && (
-        <div className='fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm'>
-          <div className='flex flex-col items-center gap-4 text-center'>
-            <Spinner className='h-12 w-12 text-primary' />
-            <div>
-              <p className='text-lg font-semibold'>
-                Generando tarjeta con IA...
-              </p>
-              <p className='text-sm text-muted-foreground'>
-                Esto puede tardar unos segundos
-              </p>
+      {/* Loading overlay - rendered in portal to avoid layout issues */}
+      {isPending &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <div className='fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm'>
+            <div className='flex flex-col items-center gap-4 text-center'>
+              <Spinner className='h-12 w-12 text-primary' />
+              <div>
+                <p className='text-lg font-semibold'>
+                  Generando tarjeta con IA...
+                </p>
+                <p className='text-sm text-muted-foreground'>
+                  Esto puede tardar unos segundos
+                </p>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body,
+        )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
           <Button
             variant='ghost'
             size='sm'
-            className='w-full justify-start gap-2 hover:bg-accent/50 border border-transparent hover:border-border transition-all'
+            className={cn(
+              'gap-2 hover:bg-accent/50 border border-transparent hover:border-border transition-all',
+              fullWidth && 'w-full justify-start',
+            )}
             aria-label='Generar tarjeta con IA'
           >
             <Sparkles className='h-4 w-4' aria-hidden='true' />
