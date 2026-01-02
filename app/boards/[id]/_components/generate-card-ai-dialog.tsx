@@ -26,6 +26,8 @@ import { generateCardWithAISchema } from '@/lib/card/schemas'
 type TGenerateCardAIDialogProps = {
   defaultListId?: string
   lists: Array<{ id: string; title: string }>
+  /** When true, button spans full width (for mobile dropdown) */
+  fullWidth?: boolean
 }
 
 type TFormData = z.infer<typeof generateCardWithAISchema>
