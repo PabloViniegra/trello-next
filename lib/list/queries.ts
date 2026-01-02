@@ -49,12 +49,17 @@ async function _getListsWithCardsAndLabelsByBoardId(
               uploader: true,
             },
           },
+          comments: {
+            with: {
+              user: true,
+            },
+          },
         },
       },
     },
   })
 
-  // Transform to flatten labels, members, and attachments
+  // Transform to flatten labels, members, attachments, and comments
   return lists.map((list) => ({
     ...list,
     cards: list.cards.map((card) => ({
@@ -85,6 +90,15 @@ async function _getListsWithCardsAndLabelsByBoardId(
         uploadedBy: attachment.uploadedBy,
         createdAt: attachment.createdAt,
         uploader: attachment.uploader,
+      })),
+      comments: card.comments.map((comment) => ({
+        id: comment.id,
+        content: comment.content,
+        cardId: comment.cardId,
+        userId: comment.userId,
+        createdAt: comment.createdAt,
+        updatedAt: comment.updatedAt,
+        user: comment.user,
       })),
     })),
   }))

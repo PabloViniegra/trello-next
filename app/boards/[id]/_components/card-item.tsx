@@ -1,6 +1,6 @@
 'use client'
 
-import { AlignLeft, Clock } from 'lucide-react'
+import { AlignLeft, Clock, MessageSquare, Paperclip } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
@@ -85,13 +85,22 @@ export function CardItem({ card }: TCardItemProps) {
       })()
     : ''
 
-  const cardWithLabels = card as TCardWithLabels
-  const cardWithDetails = card as TCardWithDetails
-  const hasLabels = cardWithLabels.labels && cardWithLabels.labels.length > 0
-  const visibleLabels = hasLabels ? cardWithLabels.labels.slice(0, 3) : []
-  const remainingLabels = hasLabels ? cardWithLabels.labels.length - 3 : 0
+  // Type-safe checks with proper existence validation
+  const hasLabels = 'labels' in card && card.labels && card.labels.length > 0
+  const visibleLabels = hasLabels ? card.labels.slice(0, 3) : []
+  const remainingLabels = hasLabels ? card.labels.length - 3 : 0
+
   const hasMembers =
-    cardWithDetails.members && cardWithDetails.members.length > 0
+    'members' in card && card.members && card.members.length > 0
+
+  const hasAttachments =
+    'attachments' in card && card.attachments && card.attachments.length > 0
+  const attachmentCount =
+    'attachments' in card ? (card.attachments?.length ?? 0) : 0
+
+  const hasComments =
+    'comments' in card && card.comments && card.comments.length > 0
+  const commentCount = 'comments' in card ? (card.comments?.length ?? 0) : 0
 
   return (
     <div className='relative group'>
@@ -126,7 +135,11 @@ export function CardItem({ card }: TCardItemProps) {
             </h3>
 
             {/* Card Metadata Section - Always visible with conditional content */}
-            {(isClient && card.dueDate) || hasDescription || hasMembers ? (
+            {(isClient && card.dueDate) ||
+            hasDescription ||
+            hasMembers ||
+            hasAttachments ||
+            hasComments ? (
               <div className='flex flex-wrap gap-2 items-center'>
                 {/* Due Date Badge - Only render on client to avoid hydration mismatch */}
                 {isClient && dueDateStatus && card.dueDate && (
@@ -163,10 +176,36 @@ export function CardItem({ card }: TCardItemProps) {
                   </Badge>
                 )}
 
+                {/* Attachments Indicator */}
+                {hasAttachments && (
+                  <Badge
+                    variant='secondary'
+                    className='text-xs px-2 py-1 font-normal flex items-center gap-1.5 bg-muted hover:bg-muted/80'
+                  >
+                    <Paperclip className='w-3.5 h-3.5' />
+                    <span className='text-muted-foreground'>
+                      {attachmentCount}
+                    </span>
+                  </Badge>
+                )}
+
+                {/* Comments Indicator */}
+                {hasComments && (
+                  <Badge
+                    variant='secondary'
+                    className='text-xs px-2 py-1 font-normal flex items-center gap-1.5 bg-muted hover:bg-muted/80'
+                  >
+                    <MessageSquare className='w-3.5 h-3.5' />
+                    <span className='text-muted-foreground'>
+                      {commentCount}
+                    </span>
+                  </Badge>
+                )}
+
                 {/* Members Avatars */}
-                {hasMembers && (
+                {hasMembers && 'members' in card && (
                   <CardMembersAvatars
-                    members={cardWithDetails.members}
+                    members={card.members}
                     size='sm'
                     maxVisible={3}
                   />
