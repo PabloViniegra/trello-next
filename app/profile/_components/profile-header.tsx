@@ -1,5 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import type { TUser } from '@/lib/auth/types'
+import { EditProfileDialog } from './edit-profile-dialog'
 
 type TProfileHeaderProps = {
   user: TUser
@@ -26,8 +27,13 @@ export function ProfileHeader({ user }: TProfileHeaderProps) {
         </Avatar>
 
         <div className='flex-1 space-y-2'>
-          <h2 className='text-2xl font-bold'>{user.name}</h2>
-          <p className='text-muted-foreground'>{user.email}</p>
+          <div className='flex items-start justify-between'>
+            <div className='space-y-1'>
+              <h2 className='text-2xl font-bold'>{user.name}</h2>
+              <p className='text-muted-foreground'>{user.email}</p>
+            </div>
+            <EditProfileDialog user={user} />
+          </div>
         </div>
       </div>
     </div>

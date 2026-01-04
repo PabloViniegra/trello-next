@@ -68,3 +68,26 @@ export type TUserAnalytics = {
   labelUsage: TLabelUsageData[]
   activityTimeline: TActivityTimelineData[]
 }
+
+// =============================================================================
+// PROFILE UPDATE RESULT TYPES
+// =============================================================================
+
+/**
+ * Result type for profile update operations (following TAuthResult pattern)
+ */
+export type TProfileUpdateResult = {
+  success: boolean
+  error?: string
+}
+
+/**
+ * Avatar upload result with URL
+ */
+export type TAvatarUploadResult = {
+  success: boolean
+  data?: {
+    imageUrl: string
+  }
+  error?: string
+}
