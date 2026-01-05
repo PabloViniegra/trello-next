@@ -17,20 +17,24 @@ function getInitials(name: string): string {
 
 export function ProfileHeader({ user }: TProfileHeaderProps) {
   return (
-    <div className='rounded-lg border bg-card p-6'>
-      <div className='flex items-start gap-6'>
-        <Avatar className='h-24 w-24'>
+    <div className='rounded-lg border bg-card p-4 sm:p-6'>
+      <div className='flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-6'>
+        <Avatar className='h-20 w-20 sm:h-24 sm:w-24'>
           <AvatarImage src={user.image} alt={user.name} />
-          <AvatarFallback className='text-2xl'>
+          <AvatarFallback className='text-xl sm:text-2xl'>
             {getInitials(user.name)}
           </AvatarFallback>
         </Avatar>
 
-        <div className='flex-1 space-y-2'>
-          <div className='flex items-start justify-between'>
-            <div className='space-y-1'>
-              <h2 className='text-2xl font-bold'>{user.name}</h2>
-              <p className='text-muted-foreground'>{user.email}</p>
+        <div className='flex flex-1 flex-col gap-3 sm:gap-2'>
+          <div className='flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between'>
+            <div className='min-w-0 flex-1 space-y-1'>
+              <h2 className='truncate text-xl font-bold sm:text-2xl'>
+                {user.name}
+              </h2>
+              <p className='truncate text-sm text-muted-foreground sm:text-base'>
+                {user.email}
+              </p>
             </div>
             <EditProfileDialog user={user} />
           </div>

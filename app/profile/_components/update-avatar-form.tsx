@@ -117,15 +117,15 @@ export function UpdateAvatarForm({
   const isLoading = isUploading || isDeleting
 
   return (
-    <div className='flex items-center gap-6'>
-      <Avatar className='h-24 w-24'>
+    <div className='flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:gap-6'>
+      <Avatar className='h-20 w-20 sm:h-24 sm:w-24'>
         <AvatarImage src={previewUrl} alt={userName} />
-        <AvatarFallback className='text-2xl'>
+        <AvatarFallback className='text-xl sm:text-2xl'>
           {getInitials(userName)}
         </AvatarFallback>
       </Avatar>
 
-      <div className='flex flex-col gap-2'>
+      <div className='flex w-full flex-col gap-2 sm:w-auto'>
         <input
           ref={fileInputRef}
           type='file'
@@ -141,16 +141,19 @@ export function UpdateAvatarForm({
           size='sm'
           onClick={handleUploadClick}
           disabled={isLoading}
+          className='w-full sm:w-auto'
         >
           {isUploading ? (
             <>
               <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-              Subiendo...
+              <span className='truncate'>Subiendo...</span>
             </>
           ) : (
             <>
-              <Camera className='mr-2 h-4 w-4' />
-              {previewUrl ? 'Cambiar avatar' : 'Subir avatar'}
+              <Camera className='mr-2 h-4 w-4 shrink-0' />
+              <span className='truncate'>
+                {previewUrl ? 'Cambiar avatar' : 'Subir avatar'}
+              </span>
             </>
           )}
         </Button>
@@ -162,16 +165,17 @@ export function UpdateAvatarForm({
             size='sm'
             onClick={handleDelete}
             disabled={isLoading}
+            className='w-full sm:w-auto'
           >
             {isDeleting ? (
               <>
                 <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                Eliminando...
+                <span className='truncate'>Eliminando...</span>
               </>
             ) : (
               <>
-                <Trash2 className='mr-2 h-4 w-4' />
-                Eliminar avatar
+                <Trash2 className='mr-2 h-4 w-4 shrink-0' />
+                <span className='truncate'>Eliminar avatar</span>
               </>
             )}
           </Button>

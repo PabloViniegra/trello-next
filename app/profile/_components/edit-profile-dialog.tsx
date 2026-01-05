@@ -35,25 +35,32 @@ export function EditProfileDialog({ user }: TEditProfileDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant='outline' size='sm'>
-          <Settings className='mr-2 h-4 w-4' />
-          Editar perfil
+        <Button variant='outline' size='sm' className='shrink-0'>
+          <Settings className='h-4 w-4 sm:mr-2' />
+          <span className='hidden sm:inline'>Editar perfil</span>
+          <span className='sm:hidden'>Editar</span>
         </Button>
       </DialogTrigger>
 
-      <DialogContent className='max-w-2xl'>
+      <DialogContent className='max-h-[90vh] max-w-2xl overflow-y-auto sm:max-h-[85vh]'>
         <DialogHeader>
           <DialogTitle>Editar perfil</DialogTitle>
-          <DialogDescription>
+          <DialogDescription className='text-sm'>
             Actualiza tu información personal, avatar y contraseña
           </DialogDescription>
         </DialogHeader>
 
         <Tabs defaultValue='general' className='w-full'>
           <TabsList className='grid w-full grid-cols-3'>
-            <TabsTrigger value='general'>General</TabsTrigger>
-            <TabsTrigger value='avatar'>Avatar</TabsTrigger>
-            <TabsTrigger value='password'>Contraseña</TabsTrigger>
+            <TabsTrigger value='general' className='text-xs sm:text-sm'>
+              General
+            </TabsTrigger>
+            <TabsTrigger value='avatar' className='text-xs sm:text-sm'>
+              Avatar
+            </TabsTrigger>
+            <TabsTrigger value='password' className='text-xs sm:text-sm'>
+              Contraseña
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value='general' className='space-y-4'>

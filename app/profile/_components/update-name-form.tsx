@@ -84,16 +84,21 @@ export function UpdateNameForm({
           )}
         />
 
-        <div className='flex justify-end gap-2'>
+        <div className='flex flex-col-reverse gap-2 sm:flex-row sm:justify-end'>
           <Button
             type='button'
             variant='outline'
             disabled={isSubmitting}
             onClick={() => form.reset()}
+            className='w-full sm:w-auto'
           >
             Cancelar
           </Button>
-          <Button type='submit' disabled={isSubmitting}>
+          <Button
+            type='submit'
+            disabled={isSubmitting}
+            className='w-full sm:w-auto'
+          >
             {isSubmitting && <Loader2 className='mr-2 h-4 w-4 animate-spin' />}
             Guardar cambios
           </Button>
