@@ -5,7 +5,6 @@
  * Displays list of notifications in a popover dropdown
  */
 
-import { Settings } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -22,6 +21,7 @@ import {
 } from '@/lib/notification/icons'
 import type { TNotificationWithActivity } from '@/lib/notification/types'
 import { cn } from '@/lib/utils'
+import { NotificationSettingsDialog } from './notification-settings-dialog'
 
 interface NotificationDropdownProps {
   notifications: TNotificationWithActivity[]
@@ -107,12 +107,7 @@ export function NotificationDropdown({
               Marcar todas leídas
             </Button>
           )}
-          <Button variant='ghost' size='icon' className='h-8 w-8' asChild>
-            <Link href='/settings/notifications' onClick={onClose}>
-              <Settings className='h-4 w-4' />
-              <span className='sr-only'>Configuración</span>
-            </Link>
-          </Button>
+          <NotificationSettingsDialog />
         </div>
       </div>
 
