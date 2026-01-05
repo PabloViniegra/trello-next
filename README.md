@@ -57,12 +57,13 @@ A modern Trello-inspired Kanban application built with Next.js 16 App Router. Th
   - Predefined color palette for labels
 
 - **Notifications**
-  - Real-time in-app notifications
-  - Customizable user notification preferences
-  - Activity feed per board
-  - Email digest options
+  - Real-time in-app notifications with bell dropdown
+  - Customizable user notification preferences (modal dialog)
+  - Activity feed per board with streaming updates
+  - Email digest options (instant, daily, weekly)
   - Notification priority levels
   - Mark as read/unread functionality
+  - Dedicated notifications page with full history
 
 - **Activity Tracking**
   - Comprehensive activity logging for all actions
@@ -79,18 +80,34 @@ A modern Trello-inspired Kanban application built with Next.js 16 App Router. Th
 - **File Attachments**
   - Upload files to cards (images, documents, etc.)
   - Secure storage with Vercel Blob
-  - File size validation and type checking
+  - File size validation (10MB limit) and type checking
   - Download and preview attachments
   - Track upload history and user attribution
+  - Activity logging for all attachment operations
+
+- **AI Integration**
+  - AI-powered card generation with Groq API
+  - Intelligent card suggestions based on board context
+  - Automated task breakdown and descriptions
+  - Natural language processing for card creation
+
+- **User Profile**
+  - Comprehensive user dashboard with analytics
+  - Board statistics and activity metrics
+  - Profile customization (name, avatar, password)
+  - Activity history and contribution tracking
+  - Responsive charts with Recharts
 
 ## Key Features Highlights
 
 ### 🎨 Modern UI/UX
 
-- **Responsive Design**: Mobile-first design with Tailwind CSS v4
+- **Responsive Design**: Mobile-first design with Tailwind CSS v4 and adaptive layouts
 - **Dark Mode**: System-aware theme switching with next-themes
-- **Smooth Animations**: Framer Motion for polished interactions
+- **Smooth Animations**: Framer Motion and Motion One for polished interactions
 - **Accessible**: WCAG-compliant components from Radix UI
+- **Custom Components**: Dropzone, theme switcher, and specialized UI elements
+- **Interactive Charts**: Recharts for data visualization in profile analytics
 
 ### 🚀 Performance
 
@@ -128,13 +145,17 @@ A modern Trello-inspired Kanban application built with Next.js 16 App Router. Th
 - **Authentication**: better-auth 1.4.6
 - **Email**: Resend 6.6.0 + React Email 5.1.0
 - **File Storage**: Vercel Blob 2.0.0
-- **UI Components**: Tailwind CSS v4, shadcn/ui (Radix UI), Lucide icons 0.559.0
+- **AI Integration**: Vercel AI SDK 6.0.5 + Groq API (@ai-sdk/groq 3.0.2)
+- **UI Components**: Tailwind CSS v4, shadcn/ui (Radix UI), Lucide icons 0.559.0, Base UI 1.0.0-rc.0
 - **Rich Text Editor**: Lexical 0.39.0
-- **Drag and Drop**: dnd-kit 6.3.1
-- **Animations**: Framer Motion 12.23.26
+- **Drag and Drop**: dnd-kit 6.3.1 + @dnd-kit/sortable 10.0.0
+- **Animations**: Framer Motion 12.23.26 + Motion 12.23.26
+- **Charts**: Recharts 2.15.4 (for analytics visualizations)
 - **State Management**: Zustand 5.0.9 (client-only UI state)
 - **Form Handling**: React Hook Form 7.68.0 + Zod 4.1.13
-- **Date Handling**: date-fns 4.1.0
+- **Date Handling**: date-fns 4.1.0 + react-day-picker 9.12.0
+- **File Upload**: react-dropzone 14.3.8
+- **Notifications**: Sonner 2.0.7 (toast notifications)
 - **Linting / Formatting**: Biome 2.2.0
 - **Testing**: Vitest 4.0.16 + Testing Library 16.3.1
 
@@ -274,24 +295,54 @@ pnpm email:dev              # Preview email templates
 ```
 trello-clone/
 ├── app/                          # Next.js App Router
-│   ├── (auth)/                   # Auth pages (login, signup, verify-email, forgot-password)
+│   ├── (auth)/                   # Auth pages (login, signup, verify-email, forgot-password, reset-password)
 │   ├── boards/                   # Board listing and detail pages
-│   │   ├── [id]/                 # Board detail view
-│   │   └── _components/          # Board-specific components
+│   │   ├── [id]/                 # Board detail view with streaming
+│   │   │   ├── activity/         # Activity tracking API routes
+│   │   │   ├── stream/           # Board real-time updates
+│   │   │   ├── _hooks/           # Custom hooks (drag-drop, streams)
+│   │   │   └── _components/      # Board-specific components (40+ components)
+│   │   └── _components/          # Shared board components (grid, filters, pagination)
 │   ├── notifications/            # Notification pages and components
-│   ├── profile/                  # User profile and analytics
-│   ├── settings/                 # User settings (notifications)
-│   ├── api/                      # API routes (auth, send)
+│   ├── profile/                  # User profile and analytics dashboard
+│   │   └── _components/          # Profile components (8 components)
+│   ├── settings/                 # User settings
+│   │   └── notifications/        # Notification preferences page (fallback)
+│   ├── api/                      # API routes
+│   │   ├── auth/                 # Authentication endpoints
+│   │   ├── debug/                # Debug utilities
+│   │   └── send/                 # Email sending
 │   ├── about/                    # About page
-│   └── _components/              # Shared app components (dialogs, dropdowns)
+│   ├── editor-00/                # Editor demo page
+│   └── _components/              # Shared app components
+│       ├── create-board-dialog.tsx
+│       ├── notification-bell.tsx
+│       ├── notification-dropdown.tsx
+│       ├── notification-settings-dialog.tsx
+│       └── sign-out-button.tsx
 ├── components/                   # UI components
-│   ├── ui/                       # shadcn/ui components (25+ components)
-│   ├── animations/               # Animation components (FadeIn, StaggerChildren)
-│   ├── editor/                   # Lexical rich text editor components
+│   ├── ui/                       # shadcn/ui components (28 components)
+│   │   ├── avatar.tsx, badge.tsx, button.tsx, calendar.tsx
+│   │   ├── dialog.tsx, dropdown-menu.tsx, input.tsx, label.tsx
+│   │   ├── popover.tsx, scroll-area.tsx, select.tsx, separator.tsx
+│   │   ├── skeleton.tsx, tabs.tsx, textarea.tsx, toggle.tsx
+│   │   ├── tooltip.tsx, and more...
+│   ├── animations/               # Animation components (FadeIn, StaggerChildren, AnimatedNavbar)
+│   ├── editor/                   # Lexical rich text editor
+│   │   ├── editor-ui/            # Editor UI components
+│   │   ├── plugins/              # Lexical plugins
+│   │   ├── themes/               # Editor themes
+│   │   └── ui/                   # Editor UI primitives
 │   ├── blocks/                   # Pre-built editor blocks
-│   ├── kibo-ui/                  # Custom UI components (Dropzone, ThemeSwitcher)
+│   │   └── editor-00/            # Default editor configuration
+│   ├── kibo-ui/                  # Custom UI components
+│   │   ├── dropzone/             # File upload dropzone
+│   │   └── theme-switcher/       # Theme toggle component
 │   ├── base-autocomplete/        # Autocomplete component base
-│   └── profile/                  # Profile-specific components
+│   ├── hero-section.tsx          # Landing page hero
+│   ├── navbar.tsx                # Main navigation
+│   ├── user-nav.tsx              # User navigation dropdown
+│   └── app-footer.tsx            # Application footer
 ├── lib/                          # Business logic (domain-driven organization)
 │   ├── auth/                     # Authentication (actions, schemas, session)
 │   ├── board/                    # Board domain (actions, queries, schemas)
@@ -317,8 +368,12 @@ trello-clone/
 │   ├── index.ts                  # Drizzle connection
 │   └── schema.ts                 # Application schema
 ├── drizzle/                      # SQL migrations (11 migrations)
-│   ├── meta/                     # Migration metadata
-│   └── *.sql                     # Migration files
+│   ├── meta/                     # Migration metadata and journal
+│   ├── 0000_greedy_risque.sql    # Initial schema
+│   ├── 0001_real_green_goblin.sql # Board updates
+│   ├── ...                       # Additional migrations
+│   ├── 0010_lame_sister_grimm.sql # Latest migration
+│   └── relations.ts, schema.ts   # Generated schema files
 ├── store/                        # Zustand stores
 │   └── board-store.ts            # Board UI state management
 ├── scripts/                      # Utility scripts
@@ -347,8 +402,10 @@ trello-clone/
 - **Routing**: Next.js App Router with server components by default
 - **Data access**: Drizzle ORM queries in `lib/**/queries.ts`
 - **Mutations**: Next.js Server Actions (e.g., `lib/*/actions.ts`)
+- **Streaming**: Server-Sent Events (SSE) for real-time board and activity updates
 - **Caching**: `unstable_cache` with tags for targeted revalidation
 - **Access control**: Server-side enforcement (see `lib/board-member/queries.ts`)
+- **AI Integration**: Vercel AI SDK with streaming responses for card generation
 
 ### Key Patterns
 
@@ -596,34 +653,45 @@ pnpm vercel:env
 - [x] Rich text editor for card descriptions (Lexical)
 - [x] Real-time notifications system
 - [x] Activity tracking and audit logs
-- [x] User profile and analytics
-- [x] Customizable notification preferences
-- [x] Dark mode support
-- [x] Responsive mobile design
-- [x] Comprehensive test coverage
+- [x] User profile and analytics with interactive charts
+- [x] Customizable notification preferences (modal-based)
+- [x] AI-powered card generation with Groq
+- [x] Real-time board updates with SSE streaming
+- [x] Dark mode support with system detection
+- [x] Responsive mobile design with adaptive navigation
+- [x] Comprehensive test coverage (80%+ on critical paths)
+- [x] Profile management (name, avatar, password updates)
 
 ### 🚧 Known Limitations
 
-- File attachments limited to images and common document types
-- No real-time collaboration (WebSocket/Server-Sent Events)
+- File attachments limited to 10MB and common file types
+- No real-time collaborative editing (multiple users editing same card)
 - Board templates not implemented
-- No card cover images
-- Limited search functionality
+- No card cover images or custom card backgrounds
+- Limited search functionality (no full-text search)
+- No keyboard shortcuts for power users
+- No offline support or PWA capabilities
+- No mobile native app (web-only)
 
 ### 🎯 Potential Enhancements
 
-- [ ] Real-time collaboration with presence indicators
-- [ ] Board templates and starter kits
-- [ ] Advanced search and filtering
-- [ ] Card cover images and custom backgrounds
-- [ ] Calendar view for cards with due dates
-- [ ] Time tracking and estimates
-- [ ] Board archiving and restore
-- [ ] Bulk card operations
-- [ ] Keyboard shortcuts
-- [ ] Export boards to JSON/CSV
-- [ ] Integration with third-party services (Slack, GitHub)
-- [ ] Mobile native app (React Native)
+- [ ] Real-time collaborative editing with presence indicators and cursors
+- [ ] Board templates and starter kits (Personal, Team, Agile Sprint)
+- [ ] Advanced search with full-text indexing and filters
+- [ ] Card cover images and custom card backgrounds
+- [ ] Calendar view and timeline view for cards with due dates
+- [ ] Time tracking, estimates, and burndown charts
+- [ ] Board archiving and restore functionality
+- [ ] Bulk card operations (move, assign, label)
+- [ ] Keyboard shortcuts for power users (vim-style navigation)
+- [ ] Export boards to JSON/CSV/PDF formats
+- [ ] Integration with third-party services (Slack, GitHub, Jira)
+- [ ] Mobile native app (React Native or Capacitor)
+- [ ] Offline support with local-first architecture
+- [ ] Card dependencies and blocking relationships
+- [ ] Custom fields for cards (text, number, date, select)
+- [ ] Recurring cards and automation rules
+- [ ] Board-level permissions (view-only, comment-only, edit)
 
 ## License
 
